@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { routeCatalog } from '../mocks/placeMockData';
+import { routeCatalog } from '../../mocks/user/placeMockData';
 
 const initialPosts = [
   {

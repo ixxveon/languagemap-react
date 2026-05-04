@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import DemoFlowCompact from '../../components/DemoFlowCompact';
+import DemoFlowCompact from '../../components/user/DemoFlowCompact';
 
 const growthCards = [
   {

@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useMapingoStore } from '../store/useMapingoStore';
+import { useMapingoStore } from '../../store/user/useMapingoStore';
 
 function ProtectedRoute({ redirectTo = '/login', requirePremium = false, requireAdmin = false }) {
   const location = useLocation();

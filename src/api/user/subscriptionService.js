@@ -1,4 +1,4 @@
-import { premiumFeatureAccess, subscriptionProducts } from '../mocks/subscriptionMockData';
+import { premiumFeatureAccess, subscriptionProducts } from '../../mocks/user/subscriptionMockData';
 
 function fetchSubscriptionProducts() {
   return subscriptionProducts;

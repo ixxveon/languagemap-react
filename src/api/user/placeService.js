@@ -1,4 +1,4 @@
-import { placeTabOptions, routeCatalog } from '../mocks/placeMockData';
+import { placeTabOptions, routeCatalog } from '../../mocks/user/placeMockData';
 
 function fetchPlaceTabs() {
   return placeTabOptions;

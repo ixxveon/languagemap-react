@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { subscriptionService } from '../../api/subscriptionService';
-import { useMapingoStore } from '../../store/useMapingoStore';
+import { subscriptionService } from '../../api/user/subscriptionService';
+import { useMapingoStore } from '../../store/user/useMapingoStore';
 
 function PremiumPlansPage() {
   const navigate = useNavigate();

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DemoFlowCompact from '../../components/DemoFlowCompact';
-import '../../styles/CommunityPage.css';
+import DemoFlowCompact from '../../components/user/DemoFlowCompact';
+import '../../styles/user/CommunityPage.css';
 
 const communityEntryCards = [
   {

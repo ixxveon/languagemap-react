@@ -3,7 +3,7 @@ import {
   MapingoMetricGrid,
   MapingoPageSection,
 } from '../../components/MapingoPageBlocks';
-import { communityService } from '../../api/communityService';
+import { communityService } from '../../api/user/communityService';
 
 function CommunityRankingPage() {
   const navigate = useNavigate();

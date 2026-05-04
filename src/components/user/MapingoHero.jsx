@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import PingPopStarterLogo from './PingPopStarterLogo';
+import { useNavigate } from 'react-router-dom';
 
 const MAP_WIDTH = 480;
 const MAP_HEIGHT = 360;
@@ -58,6 +59,41 @@ function loadGoogleMaps(apiKey) {
 }
 
 function MapingoHero({ onPrimaryAction }) {
+
+  const navigate = useNavigate();
+  const mapWidth = 480;
+  const mapHeight = 360;
+  const routeStops = [
+    {
+      id: 'start',
+      label: 'START',
+      title: '카페 주문 표현',
+      point: { x: 74, y: 176 },
+      cardClassName: 'mapingo-home-stop-start',
+      nodeClassName: 'mapingo-home-node-start',
+      colorClassName: 'is-start',
+    },
+    {
+      id: 'middle',
+      label: 'STOP 02',
+      title: '길 묻기 표현',
+      point: { x: 232, y: 126 },
+      cardClassName: 'mapingo-home-stop-middle',
+      nodeClassName: 'mapingo-home-node-middle',
+      colorClassName: 'is-middle',
+    },
+    {
+      id: 'goal',
+      label: 'GOAL',
+      title: '스몰토크 표현',
+      point: { x: 426, y: 100 },
+      cardClassName: 'mapingo-home-stop-goal',
+      nodeClassName: 'mapingo-home-node-goal',
+      colorClassName: 'is-goal',
+    },
+  ];
+
+
   const [activeStopId, setActiveStopId] = useState('goal');
   const activeStop = ROUTE_STOPS.find((stop) => stop.id === activeStopId) ?? ROUTE_STOPS[ROUTE_STOPS.length - 1];
   const [startStop, middleStop, goalStop] = ROUTE_STOPS;
@@ -167,7 +203,7 @@ function MapingoHero({ onPrimaryAction }) {
         </p>
 
         <div className="mapingo-hero-actions">
-          <button type="button" className="mapingo-home-primary" onClick={onPrimaryAction}>
+          <button type="button" className="mapingo-home-primary" onClick={() => navigate('/login')}>
             무료로 시작하기
           </button>
         </div>

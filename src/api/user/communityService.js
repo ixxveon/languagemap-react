@@ -1,4 +1,4 @@
-import { friendComparisonList, rankingList } from '../mocks/communityMockData';
+import { friendComparisonList, rankingList } from '../../mocks/user/communityMockData';
 
 function fetchFriendComparison() {
   return friendComparisonList;

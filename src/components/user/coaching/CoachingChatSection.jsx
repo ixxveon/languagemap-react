@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CoachingModeSelector from './CoachingModeSelector';
 import VoiceMessageBubble from './VoiceMessageBubble';
-import { scenarioByMode } from '../data/coachingMockData';
+import { scenarioByMode } from '../../../mocks/user/coaching/coachingMockData';
 
 function createTextMessage(role, speaker, text, extra = {}) {
   return {

@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { useMapingoStore } from '../../../store/useMapingoStore';
-import CoachingChatSection from '../components/CoachingChatSection';
-import CoachingSummaryCard from '../components/CoachingSummaryCard';
-import PronunciationPracticeSection from '../components/PronunciationPracticeSection';
-import YoutubeRecommendationSection from '../components/YoutubeRecommendationSection';
+import { useMapingoStore } from '../../store/user/useMapingoStore';
+import CoachingChatSection from '../../components/user/coaching/CoachingChatSection';
+import CoachingSummaryCard from '../../components/user/coaching/CoachingSummaryCard';
+import PronunciationPracticeSection from '../../components/user/coaching/PronunciationPracticeSection';
+import YoutubeRecommendationSection from '../../components/user/coaching/YoutubeRecommendationSection';
 import {
     coachingModes,
     evaluationResult,
@@ -12,11 +12,11 @@ import {
     scenarioByMode,
     voiceConversation,
     youtubeRecommendations,
-} from '../data/coachingMockData';
-import '../styles/coachingPage.css';
-import '../styles/coachingChatSection.css';
-import '../styles/pronunciationPractice.css';
-import '../styles/youtubeRecommendation.css';
+} from '../../mocks/user/coaching/coachingMockData';
+import '../../styles/user/coaching/coachingPage.css';
+import '../../styles/user/coaching/coachingChatSection.css';
+import '../../styles/user/coaching/pronunciationPractice.css';
+import '../../styles/user/coaching/youtubeRecommendation.css';
 
 function CoachingPage() {
     const [phase, setPhase] = useState('intro');

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
-import { adminService } from '../../api/adminService';
+import { adminService } from '../../api/admin/adminService';
 
 const EMPTY_PLACE_FORM = {
   googlePlaceId: '',

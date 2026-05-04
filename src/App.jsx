@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import MapingoLayout from './components/MapingoLayout';
+import MapingoLayout from './components/user/MapingoLayout';
 import LandingHomePage from './pages/home-support-common/LandingHomePage';
 import MapPage from './pages/place/MapPage';
 import GrowthPage from './pages/history-analysis/GrowthPage';
@@ -28,12 +28,9 @@ import AdminPaymentsPage from './pages/admin/AdminPaymentsPage';
 import SignupPage from './pages/user/SignupPage';
 import ProfilePage from './pages/user/ProfilePage';
 import LoginPage from './pages/user/LoginPage';
-import AiChatPage from './pages/ai-content/AiChatPage';
-import SttPracticePage from './pages/ai-content/SttPracticePage';
-import PronunciationReviewPage from './pages/ai-content/PronunciationReviewPage';
-import ProtectedRoute from './components/ProtectedRoute';
-import GuestRoute from './components/GuestRoute';
-import CoachingPage from './domains/coaching/pages/CoachingPage';
+import ProtectedRoute from './components/user/ProtectedRoute';
+import GuestRoute from './components/user/GuestRoute';
+import CoachingPage from './pages/coaching/CoachingPage';
 
 function App() {
   return (
@@ -60,9 +57,6 @@ function App() {
         <Route path="/settings/learning" element={<SettingsLearningPage />} />
         <Route path="/settings/account" element={<SettingsAccountPage />} />
         <Route path="/settings/account/delete" element={<AccountDeletePage />} />
-        <Route path="/ai-chat" element={<AiChatPage />} />
-        <Route path="/ai/stt" element={<SttPracticePage />} />
-        <Route path="/ai/pronunciation" element={<PronunciationReviewPage />} />
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />

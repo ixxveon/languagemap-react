@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMapingoStore } from '../../store/useMapingoStore';
-import '../../styles/SettingsPage.css';
+import { useMapingoStore } from '../../store/user/useMapingoStore';
+import '../../styles/user/SettingsPage.css';
 
 // ── 설정 옵션 데이터 ─────────────────────────────────────
 

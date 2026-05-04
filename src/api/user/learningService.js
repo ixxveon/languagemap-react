@@ -3,7 +3,7 @@ import {
   defaultBadgeProgress,
   resolveBadgeCatalog,
   resolveLearningSummary,
-} from '../data/badgeSystem';
+} from '../../data/user/badgeSystem';
 import {
   growthHighlights,
   learningActivities,
@@ -11,7 +11,7 @@ import {
   learningGoalSuggestions,
   learningLevelOptions,
   learningSummary,
-} from '../mocks/learningMockData';
+} from '../../mocks/user/learningMockData';
 
 function fetchLearningSummary(progress = null) {
   if (!progress) {

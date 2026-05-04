@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supportService } from '../../api/supportService';
-import { useMapingoStore } from '../../store/useMapingoStore';
-import '../../styles/SupportPage.css';
+import { supportService } from '../../api/user/supportService';
+import { useMapingoStore } from '../../store/user/useMapingoStore';
+import '../../styles/user/SupportPage.css';
 
 const TABS = [
   { id: 'notices', label: '공지사항' },
