@@ -131,12 +131,17 @@ function LoginPage() {
           <span>또는</span>
         </div>
 
-        <button type="button" className="mapingo-login-social">
-          G 구글로 계속하기
-        </button>
-        <button type="button" className="mapingo-login-social is-kakao">
+        // 변경 후
+        <button
+            type="button"
+            className="mapingo-login-social"
+            onClick={() => authService.loginWithGoogle()}
+        >
+            G 구글로 계속하기
+</button>
+        {/* <button type="button" className="mapingo-login-social is-kakao">
           K 카카오로 계속하기
-        </button>
+        </button> */}
 
         <div className="mapingo-login-test-hint">
           <strong>개발용 관리자 계정</strong>
