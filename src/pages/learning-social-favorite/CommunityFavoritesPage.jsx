@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
 import { placeService } from '../../api/placeService';
 import '../../styles/CommunityFavoritesPage.css';
@@ -7,68 +7,6 @@ const MAX_ACTIVE_GOALS = 3;
 const INITIAL_AVAILABLE_GOAL_COUNT = 2;
 const GOAL_PAGE_SIZE = 2;
 const TODAY = '2026-04-21';
-
-const learningProfileRow = {
-  learning_profile_id: 1,
-  user_id: 1,
-  level: 4,
-  exp: 420,
-  total_study_count: 18,
-};
-
-const badgeRows = [
-  {
-    badge_id: 1,
-    badge_name: '첫 학습 배지',
-    description: '처음 학습을 완료하면 받을 수 있는 시작 배지예요.',
-    condition_type: 'STUDY_COUNT',
-    condition_value: 1,
-    image_url: '/assets/characters/FirstLearning_Badge.png',
-    created_at: '2026-04-01 09:00:00',
-  },
-  {
-    badge_id: 2,
-    badge_name: '꾸준한 학습 배지',
-    description: '누적 학습 10회를 달성하면 받을 수 있어요.',
-    condition_type: 'STUDY_COUNT',
-    condition_value: 10,
-    image_url: '/assets/characters/ConsLearning_Badge.png',
-    created_at: '2026-04-01 09:00:00',
-  },
-  {
-    badge_id: 3,
-    badge_name: '주간 목표 달성 배지',
-    description: '주간 학습 목표를 끝까지 달성한 사용자에게 주어져요.',
-    condition_type: 'WEEKLY_GOAL',
-    condition_value: 1,
-    image_url: '/assets/characters/WeekLearning_Badge.png',
-    created_at: '2026-04-01 09:00:00',
-  },
-  {
-    badge_id: 4,
-    badge_name: '발음 집중 배지',
-    description: '발음 점수 목표를 달성하면 획득할 수 있어요.',
-    condition_type: 'PRONUNCIATION_SCORE',
-    condition_value: 85,
-    image_url: '/assets/characters/PronLearning_Badge.png',
-    created_at: '2026-04-01 09:00:00',
-  },
-];
-
-const initialUserBadgeRows = [
-  {
-    user_badge_id: 1,
-    user_id: 1,
-    badge_id: 1,
-    earned_at: '2026-04-03 10:15:00',
-  },
-  {
-    user_badge_id: 2,
-    user_id: 1,
-    badge_id: 2,
-    earned_at: '2026-04-17 19:30:00',
-  },
-];
 
 const goalMasterRows = [
   {
@@ -98,7 +36,7 @@ const goalMasterRows = [
     badge_id: 2,
     goal_type: 'SPEAKING_COUNT',
     goal_title: '말하기 연습 3회 완료',
-    goal_description: '짧아도 꾸준히 말하기 세션을 유지해보는 목표예요.',
+    goal_description: '짧아도 꾸준히 말하기 세션을 이어가는 목표예요.',
     target_value: 3,
     period_type: 'WEEKLY',
     is_active: true,
@@ -109,7 +47,7 @@ const goalMasterRows = [
     badge_id: 1,
     goal_type: 'STUDY_TIME',
     goal_title: '학습 시간 60분 누적',
-    goal_description: '짧은 세션을 모아서 한 주 60분을 채워보세요.',
+    goal_description: '짧은 세션을 모아 이번 주 60분을 채워보세요.',
     target_value: 60,
     period_type: 'WEEKLY',
     is_active: true,
@@ -195,7 +133,7 @@ const placeCatalogRows = routeRows.map((route, index) => ({
 
 const scenarioCatalogRows = routeRows.map((route, index) => ({
   scenario_id: index + 201,
-  title: `${route.title} 대표 시나리오`,
+  title: `${route.title} 추천 시나리오`,
   category: route.category,
   difficulty: route.difficulty,
   summary: route.scenario,
@@ -273,69 +211,11 @@ function calculateGoalEndDate(periodType) {
 }
 
 function StatusBadge({ label, tone = 'neutral' }) {
-  return (
-    <span className={`community-favorites-status-badge is-${tone}`}>
-      {label}
-    </span>
-  );
-}
-
-function ProfileStatCard({ label, value, hint }) {
-  return (
-    <article className="community-favorites-stat-card">
-      <p className="community-favorites-stat-label">{label}</p>
-      <strong className="community-favorites-stat-value">{value}</strong>
-      <p className="community-favorites-stat-hint">{hint}</p>
-    </article>
-  );
-}
-
-function BadgeCard({ badge }) {
-  return (
-    <article
-      className={`community-favorites-badge-card ${
-        badge.isEarned ? 'is-earned' : 'is-locked'
-      }`}
-    >
-      <div className="community-favorites-badge-media">
-        <img
-          src={badge.image_url}
-          alt={badge.badge_name}
-          className="community-favorites-badge-image"
-        />
-      </div>
-      <div className="community-favorites-badge-content">
-        <div className="community-favorites-badge-head">
-          <h4>{badge.badge_name}</h4>
-          <StatusBadge
-            label={badge.isEarned ? '획득 완료' : '미획득'}
-            tone={badge.isEarned ? 'success' : 'muted'}
-          />
-        </div>
-        <p>{badge.description}</p>
-        <div className="community-favorites-chip-row">
-          <span className="community-favorites-chip is-goal">
-            조건 {badge.condition_value}
-          </span>
-          <span className="community-favorites-chip is-progress">
-            {getGoalTypeLabel(badge.condition_type)}
-          </span>
-        </div>
-        <small>
-          {badge.isEarned
-            ? `획득일 ${formatDate(badge.earned_at)}`
-            : '아직 획득하지 않은 배지예요.'}
-        </small>
-      </div>
-    </article>
-  );
+  return <span className={`community-favorites-status-badge is-${tone}`}>{label}</span>;
 }
 
 function GoalCard({ goal, onCancel }) {
-  const progressPercent = Math.min(
-    100,
-    Math.round((goal.current_value / goal.target_value) * 100),
-  );
+  const progressPercent = Math.min(100, Math.round((goal.current_value / goal.target_value) * 100));
 
   return (
     <article className="community-favorites-goal-card">
@@ -344,25 +224,11 @@ function GoalCard({ goal, onCancel }) {
           <div className="community-favorites-goal-title-row">
             <h4>{goal.goal_title}</h4>
             <StatusBadge
-              label={
-                goal.status === 'COMPLETED'
-                  ? '완료'
-                  : goal.status === 'ACTIVE'
-                    ? '진행 중'
-                    : '종료'
-              }
-              tone={
-                goal.status === 'COMPLETED'
-                  ? 'success'
-                  : goal.status === 'ACTIVE'
-                    ? 'info'
-                    : 'muted'
-              }
+              label={goal.status === 'COMPLETED' ? '완료' : goal.status === 'ACTIVE' ? '진행 중' : '종료'}
+              tone={goal.status === 'COMPLETED' ? 'success' : goal.status === 'ACTIVE' ? 'info' : 'muted'}
             />
           </div>
-          <p className="community-favorites-goal-description">
-            {goal.goal_description}
-          </p>
+          <p className="community-favorites-goal-description">{goal.goal_description}</p>
         </div>
         {goal.status === 'ACTIVE' ? (
           <button
@@ -376,27 +242,19 @@ function GoalCard({ goal, onCancel }) {
       </div>
 
       <div className="community-favorites-chip-row">
-        <span className="community-favorites-chip is-progress">
-          {getPeriodLabel(goal.period_type)}
-        </span>
-        <span className="community-favorites-chip is-goal">
-          {getGoalTypeLabel(goal.goal_type)}
-        </span>
+        <span className="community-favorites-chip is-progress">{getPeriodLabel(goal.period_type)}</span>
+        <span className="community-favorites-chip is-goal">{getGoalTypeLabel(goal.goal_type)}</span>
         <span className="community-favorites-chip is-goal">
           {goal.current_value} / {goal.target_value}
         </span>
       </div>
 
-      <progress
-        className="community-favorites-progress"
-        value={progressPercent}
-        max="100"
-      />
+      <progress className="community-favorites-progress" value={progressPercent} max="100" />
 
       <div className="community-favorites-meta-row">
-        <span>시작일 {formatDate(goal.start_date)}</span>
+        <span>{`시작일 ${formatDate(goal.start_date)}`}</span>
         <span>{goal.end_date ? `종료일 ${formatDate(goal.end_date)}` : '상시 진행'}</span>
-        {goal.completed_at ? <span>완료 {formatDate(goal.completed_at)}</span> : null}
+        {goal.completed_at ? <span>{`완료 ${formatDate(goal.completed_at)}`}</span> : null}
       </div>
     </article>
   );
@@ -409,20 +267,14 @@ function GoalMasterCard({ goal, disabled, onAdd }) {
         <strong>{goal.goal_title}</strong>
         <p>{goal.goal_description}</p>
         <div className="community-favorites-chip-row">
-          <span className="community-favorites-chip is-progress">
-            {getPeriodLabel(goal.period_type)}
-          </span>
-          <span className="community-favorites-chip is-goal">
-            목표값 {goal.target_value}
-          </span>
+          <span className="community-favorites-chip is-progress">{getPeriodLabel(goal.period_type)}</span>
+          <span className="community-favorites-chip is-goal">{`목표값 ${goal.target_value}`}</span>
         </div>
       </div>
 
       <button
         type="button"
-        className={`community-favorites-select-button ${
-          disabled ? 'is-disabled' : ''
-        }`}
+        className={`community-favorites-select-button ${disabled ? 'is-disabled' : ''}`}
         onClick={() => onAdd(goal.goal_master_id)}
         disabled={disabled}
       >
@@ -441,10 +293,7 @@ function FavoriteCard({ title, description, metaChips, subCopy, onRemove }) {
           <p className="community-favorites-route-description">{description}</p>
           <div className="community-favorites-chip-row">
             {metaChips.map((chip) => (
-              <span
-                key={`${title}-${chip}`}
-                className="community-favorites-chip is-progress"
-              >
+              <span key={`${title}-${chip}`} className="community-favorites-chip is-progress">
                 {chip}
               </span>
             ))}
@@ -452,11 +301,7 @@ function FavoriteCard({ title, description, metaChips, subCopy, onRemove }) {
           <small className="community-favorites-favorite-meta">{subCopy}</small>
         </div>
 
-        <button
-          type="button"
-          className="community-favorites-danger-button"
-          onClick={onRemove}
-        >
+        <button type="button" className="community-favorites-danger-button" onClick={onRemove}>
           즐겨찾기 해제
         </button>
       </div>
@@ -466,31 +311,10 @@ function FavoriteCard({ title, description, metaChips, subCopy, onRemove }) {
 
 export default function CommunityFavoritesPage() {
   const [userGoalRows, setUserGoalRows] = useState(initialUserGoalRows);
-  const [userBadgeRows] = useState(initialUserBadgeRows);
   const [favoritePlaceRows, setFavoritePlaceRows] = useState(initialFavoritePlaceRows);
-  const [favoriteScenarioRows, setFavoriteScenarioRows] = useState(
-    initialFavoriteScenarioRows,
-  );
+  const [favoriteScenarioRows, setFavoriteScenarioRows] = useState(initialFavoriteScenarioRows);
   const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [visibleAvailableGoalCount, setVisibleAvailableGoalCount] = useState(
-    INITIAL_AVAILABLE_GOAL_COUNT,
-  );
-
-  const badgeCards = useMemo(
-    () =>
-      badgeRows.map((badge) => {
-        const earnedRow = userBadgeRows.find(
-          (userBadge) => userBadge.badge_id === badge.badge_id,
-        );
-
-        return {
-          ...badge,
-          isEarned: Boolean(earnedRow),
-          earned_at: earnedRow?.earned_at,
-        };
-      }),
-    [userBadgeRows],
-  );
+  const [visibleAvailableGoalCount, setVisibleAvailableGoalCount] = useState(INITIAL_AVAILABLE_GOAL_COUNT);
 
   const activeGoals = useMemo(
     () =>
@@ -498,9 +322,7 @@ export default function CommunityFavoritesPage() {
         .filter((goal) => goal.status === 'ACTIVE')
         .map((goal) => ({
           ...goal,
-          ...goalMasterRows.find(
-            (goalMaster) => goalMaster.goal_master_id === goal.goal_master_id,
-          ),
+          ...goalMasterRows.find((goalMaster) => goalMaster.goal_master_id === goal.goal_master_id),
         }))
         .slice(0, MAX_ACTIVE_GOALS),
     [userGoalRows],
@@ -512,9 +334,7 @@ export default function CommunityFavoritesPage() {
         .filter((goal) => goal.status === 'COMPLETED')
         .map((goal) => ({
           ...goal,
-          ...goalMasterRows.find(
-            (goalMaster) => goalMaster.goal_master_id === goal.goal_master_id,
-          ),
+          ...goalMasterRows.find((goalMaster) => goalMaster.goal_master_id === goal.goal_master_id),
         })),
     [userGoalRows],
   );
@@ -524,10 +344,7 @@ export default function CommunityFavoritesPage() {
       goalMasterRows
         .filter((goal) => goal.is_active)
         .filter(
-          (goal) =>
-            !activeGoals.some(
-              (activeGoal) => activeGoal.goal_master_id === goal.goal_master_id,
-            ),
+          (goal) => !activeGoals.some((activeGoal) => activeGoal.goal_master_id === goal.goal_master_id),
         )
         .sort((a, b) => a.display_order - b.display_order),
     [activeGoals],
@@ -538,8 +355,7 @@ export default function CommunityFavoritesPage() {
     [availableGoalMasters, visibleAvailableGoalCount],
   );
 
-  const hasMoreAvailableGoals =
-    visibleAvailableGoalCount < availableGoalMasters.length;
+  const hasMoreAvailableGoals = visibleAvailableGoalCount < availableGoalMasters.length;
 
   const favoritePlaces = useMemo(
     () =>
@@ -557,9 +373,7 @@ export default function CommunityFavoritesPage() {
       favoriteScenarioRows
         .map((favorite) => ({
           ...favorite,
-          ...scenarioCatalogRows.find(
-            (scenario) => scenario.scenario_id === favorite.scenario_id,
-          ),
+          ...scenarioCatalogRows.find((scenario) => scenario.scenario_id === favorite.scenario_id),
         }))
         .filter((scenario) => scenario.scenario_id),
     [favoriteScenarioRows],
@@ -571,10 +385,7 @@ export default function CommunityFavoritesPage() {
       return;
     }
 
-    const selectedGoal = goalMasterRows.find(
-      (goal) => goal.goal_master_id === goalMasterId,
-    );
-
+    const selectedGoal = goalMasterRows.find((goal) => goal.goal_master_id === goalMasterId);
     if (!selectedGoal) return;
 
     setUserGoalRows((current) => [
@@ -613,16 +424,12 @@ export default function CommunityFavoritesPage() {
   };
 
   const handleRemoveFavoritePlace = (favoritePlaceId) => {
-    setFavoritePlaceRows((current) =>
-      current.filter((favorite) => favorite.favorite_place_id !== favoritePlaceId),
-    );
+    setFavoritePlaceRows((current) => current.filter((favorite) => favorite.favorite_place_id !== favoritePlaceId));
   };
 
   const handleRemoveFavoriteScenario = (favoriteExpressionId) => {
     setFavoriteScenarioRows((current) =>
-      current.filter(
-        (favorite) => favorite.favorite_expression_id !== favoriteExpressionId,
-      ),
+      current.filter((favorite) => favorite.favorite_expression_id !== favoriteExpressionId),
     );
   };
 
@@ -638,9 +445,7 @@ export default function CommunityFavoritesPage() {
         <div className="mapingo-list-card">
           <div className="mapingo-card-header-row">
             <h3>학습 목표</h3>
-            <span className="mapingo-muted-copy">
-              진행 중 {activeGoals.length} / {MAX_ACTIVE_GOALS}
-            </span>
+            <span className="mapingo-muted-copy">{`진행 중 ${activeGoals.length} / ${MAX_ACTIVE_GOALS}`}</span>
           </div>
 
           <p className="community-favorites-section-copy">
@@ -655,17 +460,11 @@ export default function CommunityFavoritesPage() {
               </div>
 
               {activeGoals.length === 0 ? (
-                <div className="community-favorites-empty-card">
-                  아직 진행 중인 목표가 없어요.
-                </div>
+                <div className="community-favorites-empty-card">아직 진행 중인 목표가 없어요.</div>
               ) : (
                 <div className="community-favorites-goal-list">
                   {activeGoals.map((goal) => (
-                    <GoalCard
-                      key={goal.user_goal_id}
-                      goal={goal}
-                      onCancel={handleCancelGoal}
-                    />
+                    <GoalCard key={goal.user_goal_id} goal={goal} onCancel={handleCancelGoal} />
                   ))}
                 </div>
               )}
@@ -674,13 +473,11 @@ export default function CommunityFavoritesPage() {
             <div className="community-favorites-column">
               <div className="community-favorites-subsection-head">
                 <h4>추가 가능한 목표</h4>
-                <span>나중에 페이징하기 쉽게 일부만 먼저 보여줘요</span>
+                <span>원하는 목표를 골라 새로 시작해보세요</span>
               </div>
 
               {availableGoalMasters.length === 0 ? (
-                <div className="community-favorites-empty-card">
-                  지금 추가 가능한 목표가 없어요.
-                </div>
+                <div className="community-favorites-empty-card">지금 추가 가능한 목표가 없어요.</div>
               ) : (
                 <>
                   <div className="mapingo-selectable-list">
@@ -706,13 +503,8 @@ export default function CommunityFavoritesPage() {
                 </>
               )}
 
-              <p
-                className={`community-favorites-selection-message ${
-                  feedbackMessage ? 'is-error' : ''
-                }`}
-              >
-                {feedbackMessage ||
-                  '완료된 목표는 아래 완료 이력에서 다시 확인할 수 있어요.'}
+              <p className={`community-favorites-selection-message ${feedbackMessage ? 'is-error' : ''}`}>
+                {feedbackMessage || '완료된 목표는 아래 완료 이력에서 다시 확인할 수 있어요.'}
               </p>
             </div>
           </div>
@@ -724,35 +516,14 @@ export default function CommunityFavoritesPage() {
             </div>
 
             {completedGoals.length === 0 ? (
-              <div className="community-favorites-empty-card">
-                완료된 목표가 아직 없어요.
-              </div>
+              <div className="community-favorites-empty-card">완료된 목표가 아직 없어요.</div>
             ) : (
               <div className="community-favorites-goal-list">
                 {completedGoals.map((goal) => (
-                  <GoalCard
-                    key={goal.user_goal_id}
-                    goal={goal}
-                    onCancel={handleCancelGoal}
-                  />
+                  <GoalCard key={goal.user_goal_id} goal={goal} onCancel={handleCancelGoal} />
                 ))}
               </div>
             )}
-          </div>
-        </div>
-      </section>
-
-      <section className="mapingo-page-section">
-        <div className="mapingo-list-card">
-          <div className="mapingo-card-header-row">
-            <h3>배지 현황</h3>
-            <span className="mapingo-muted-copy">획득 현황 한눈에 보기</span>
-          </div>
-
-          <div className="community-favorites-badge-grid">
-            {badgeCards.map((badge) => (
-              <BadgeCard key={badge.badge_id} badge={badge} />
-            ))}
           </div>
         </div>
       </section>
@@ -767,20 +538,16 @@ export default function CommunityFavoritesPage() {
 
             <div className="community-favorites-route-list">
               {favoritePlaces.length === 0 ? (
-                <div className="community-favorites-route-list-empty">
-                  저장한 장소 즐겨찾기가 없어요.
-                </div>
+                <div className="community-favorites-route-list-empty">저장한 장소 즐겨찾기가 없어요.</div>
               ) : (
                 favoritePlaces.map((place) => (
                   <FavoriteCard
                     key={place.favorite_place_id}
                     title={place.title}
                     description={place.description}
-                    metaChips={[place.category, place.difficulty, place.duration]}
+                    metaChips={[place.category, place.difficulty]}
                     subCopy={`등록일 ${formatDate(place.created_at)}`}
-                    onRemove={() =>
-                      handleRemoveFavoritePlace(place.favorite_place_id)
-                    }
+                    onRemove={() => handleRemoveFavoritePlace(place.favorite_place_id)}
                   />
                 ))
               )}
@@ -795,9 +562,7 @@ export default function CommunityFavoritesPage() {
 
             <div className="community-favorites-route-list">
               {favoriteScenarios.length === 0 ? (
-                <div className="community-favorites-route-list-empty">
-                  저장한 시나리오 즐겨찾기가 없어요.
-                </div>
+                <div className="community-favorites-route-list-empty">저장한 시나리오 즐겨찾기가 없어요.</div>
               ) : (
                 favoriteScenarios.map((scenario) => (
                   <FavoriteCard
@@ -806,11 +571,7 @@ export default function CommunityFavoritesPage() {
                     description={scenario.summary}
                     metaChips={[scenario.category, scenario.difficulty]}
                     subCopy={`등록일 ${formatDate(scenario.created_at)}`}
-                    onRemove={() =>
-                      handleRemoveFavoriteScenario(
-                        scenario.favorite_expression_id,
-                      )
-                    }
+                    onRemove={() => handleRemoveFavoriteScenario(scenario.favorite_expression_id)}
                   />
                 ))
               )}

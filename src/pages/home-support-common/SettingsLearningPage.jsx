@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 
-// Deprecated: learning settings moved to Growth > Goals.
+// Deprecated: learning settings moved to Growth > Insights.
 export default function SettingsLearningPage() {
-  return <Navigate to="/growth/goals" replace />;
+  return <Navigate to="/growth/insights" replace />;
 }

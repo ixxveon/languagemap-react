@@ -5,19 +5,13 @@ const growthCards = [
   {
     id: 'progress',
     title: '성장 지표',
-    description: '발음 점수, 유창성 점수, 학습 횟수를 요약해서 볼 수 있어요.',
+    description: '발음, 유창성, 학습 횟수를 한눈에 확인할 수 있어요.',
     path: '/growth/progress',
   },
   {
-    id: 'goals',
-    title: '레벨 · 목표 조정',
-    description: '현재 레벨과 주간 목표 달성 횟수를 직접 조정할 수 있어요.',
-    path: '/growth/goals',
-  },
-  {
     id: 'insights',
-    title: '인사이트 · 추천',
-    description: '최근 학습 흐름과 다음 추천 행동을 묶어서 확인해요.',
+    title: '학습 기록',
+    description: '설정과 최근 완료 기록, 진행 현황을 함께 볼 수 있어요.',
     path: '/growth/insights',
   },
 ];
@@ -29,11 +23,11 @@ function GrowthPage() {
     <div className="mapingo-dashboard">
       <section className="mapingo-domain-entry">
         <p className="mapingo-eyebrow">성장 리포트</p>
-        <h1>성장 지표 · 목표 · 인사이트</h1>
-        <p className="mapingo-domain-entry-copy">원하는 영역을 먼저 고른 뒤 상세 화면으로 들어가는 방식으로 정리했어요.</p>
-        <div className="mapingo-domain-entry-grid">
+        <h1>성장 리포트</h1>
+        <p className="mapingo-domain-entry-copy">보고 싶은 항목을 선택해 자세한 내용을 확인해보세요.</p>
+        <div className="mapingo-domain-entry-grid growth-entry-grid">
           {growthCards.map((card) => (
-            <button key={card.id} type="button" className="mapingo-domain-entry-card" onClick={() => navigate(card.path)}>
+            <button key={card.id} type="button" className="mapingo-domain-entry-card growth-entry-card" onClick={() => navigate(card.path)}>
               <h3>{card.title}</h3>
               <p>{card.description}</p>
             </button>

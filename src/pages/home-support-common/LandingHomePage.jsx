@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DemoFlowCompact from '../../components/DemoFlowCompact';
 import { homeRecentLearning } from '../../data/mapingoDomainData';
@@ -13,7 +14,24 @@ function LandingHomePage() {
   const subscriptionPlan = useMapingoStore((state) => state.subscriptionPlan);
   const subscriptionProductId = useMapingoStore((state) => state.subscriptionProductId);
   const subscriptionUpdatedAt = useMapingoStore((state) => state.subscriptionUpdatedAt);
-  const summary = learningService.fetchLearningSummary();
+  const weeklyLearnCount = useMapingoStore((state) => state.weeklyLearnCount);
+  const weeklyGoalCompleted = useMapingoStore((state) => state.weeklyGoalCompleted);
+  const weeklyGoal = useMapingoStore((state) => state.weeklyGoal);
+  const learningStreak = useMapingoStore((state) => state.streakDays);
+  const storedBadgeProgress = useMapingoStore((state) => state.badgeProgress);
+  const badgeProgress = useMemo(
+    () =>
+      learningService.buildBadgeProgressFromStore({
+        recentLearning,
+        weeklyLearnCount,
+        weeklyGoalCompleted,
+        weeklyGoal,
+        learningStreak,
+        badgeProgress: storedBadgeProgress,
+      }),
+    [recentLearning, weeklyLearnCount, weeklyGoalCompleted, weeklyGoal, learningStreak, storedBadgeProgress],
+  );
+  const summary = useMemo(() => learningService.fetchLearningSummary(badgeProgress), [badgeProgress]);
   const recommendations = homeService.fetchHomeRecommendations();
 
   const recentCards = recentLearning.length > 0 ? recentLearning : homeRecentLearning;

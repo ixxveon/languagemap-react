@@ -1,0 +1,366 @@
+html{
+  /* 스크롤바 너비 고정 */
+  overflow-y: scroll; 
+  scrollbar-gutter: stable;
+}
+
+.community-favorites-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.community-favorites-stat-card {
+  padding: 18px;
+  border: 1px solid #d8eeea;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.community-favorites-stat-label {
+  margin: 0 0 8px;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.community-favorites-stat-value {
+  display: block;
+  color: #0f3f42;
+  font-size: 1.35rem;
+}
+
+.community-favorites-stat-hint {
+  margin: 10px 0 0;
+  color: #5f7477;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.community-favorites-section-copy {
+  margin: 10px 0 0;
+  color: #5f7477;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.community-favorites-goal-layout,
+.community-favorites-favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.community-favorites-column,
+.community-favorites-history {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.community-favorites-history {
+  margin-top: 18px;
+}
+
+.community-favorites-subsection-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.community-favorites-subsection-head h4 {
+  margin: 0;
+  color: var(--mapingo-deep);
+  font-size: 1rem;
+}
+
+.community-favorites-subsection-head span {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.community-favorites-goal-list,
+.community-favorites-route-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.community-favorites-goal-card,
+.community-favorites-favorite-card,
+.community-favorites-empty-card,
+.community-favorites-route-list-empty,
+.community-favorites-badge-card {
+  padding: 18px;
+  border: 1px solid #d8eeea;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.community-favorites-goal-head,
+.community-favorites-favorite-head,
+.community-favorites-badge-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.community-favorites-goal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.community-favorites-goal-title-row h4,
+.community-favorites-badge-head h4,
+.community-favorites-route-heading {
+  margin: 0;
+  color: var(--mapingo-deep);
+  font-size: 1rem;
+}
+
+.community-favorites-goal-description,
+.community-favorites-route-description,
+.community-favorites-badge-content p {
+  margin: 8px 0 0;
+  color: #4f6570;
+  line-height: 1.6;
+}
+
+.community-favorites-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.community-favorites-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.community-favorites-chip.is-progress {
+  background: #eef9f6;
+  color: #135f5a;
+}
+
+.community-favorites-chip.is-goal {
+  background: #f2f6fb;
+  color: #436175;
+}
+
+.community-favorites-progress {
+  width: 100%;
+  height: 10px;
+  margin-top: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: none;
+  background: #ecf5f4;
+}
+
+.community-favorites-progress::-webkit-progress-bar {
+  background: #ecf5f4;
+}
+
+.community-favorites-progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #14b8a6 0%, #4fd1c5 100%);
+}
+
+.community-favorites-progress::-moz-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #14b8a6 0%, #4fd1c5 100%);
+}
+
+.community-favorites-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  color: #718096;
+  font-size: 0.82rem;
+}
+
+.community-favorites-route-main,
+.community-favorites-route-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.community-favorites-favorite-meta,
+.community-favorites-badge-content small {
+  display: block;
+  margin-top: 12px;
+  color: #718096;
+  font-size: 0.82rem;
+}
+
+.community-favorites-select-button,
+.community-favorites-danger-button {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.community-favorites-select-button {
+  border: 1px solid #bfe4dc;
+  background: #ffffff;
+  color: #11766f;
+}
+
+.community-favorites-more-button {
+  align-self: flex-start;
+  margin-top: 12px;
+  padding: 11px 16px;
+  border: 1px solid #c9e8e1;
+  border-radius: 12px;
+  background: #f7fcfb;
+  color: #0f6f68;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.community-favorites-select-button.is-disabled {
+  border-color: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.community-favorites-danger-button {
+  border: none;
+  background: #ffecec;
+  color: #d64545;
+}
+
+.community-favorites-selection-message {
+  min-height: 18px;
+  margin: 2px 0 0;
+  color: #6f8a88;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.community-favorites-selection-message.is-error {
+  color: #c05656;
+}
+
+.community-favorites-empty-card,
+.community-favorites-route-list-empty {
+  color: #6f8a88;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.community-favorites-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.community-favorites-status-badge.is-success {
+  background: #eafbf2;
+  color: #1f8f5f;
+}
+
+.community-favorites-status-badge.is-info {
+  background: #e8f7f5;
+  color: #0f7c75;
+}
+
+.community-favorites-status-badge.is-muted {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.community-favorites-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.community-favorites-badge-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.community-favorites-badge-card.is-locked {
+  background: #fafcfc;
+}
+
+.community-favorites-badge-media {
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid #d9ece7;
+  border-radius: 18px;
+  background: #f4fcfa;
+}
+
+.community-favorites-badge-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+}
+
+.community-favorites-badge-content {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 1080px) {
+  .community-favorites-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .community-favorites-goal-layout,
+  .community-favorites-favorites-grid,
+  .community-favorites-badge-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .community-favorites-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .community-favorites-goal-head,
+  .community-favorites-favorite-head,
+  .community-favorites-badge-head,
+  .community-favorites-subsection-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .community-favorites-select-button,
+  .community-favorites-danger-button {
+    width: 100%;
+  }
+
+  .community-favorites-badge-card {
+    flex-direction: column;
+  }
+}

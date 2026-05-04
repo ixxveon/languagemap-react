@@ -210,7 +210,6 @@ function MapPage() {
           activeCapitalId={currentCapitalId}
           selectedCapital={selectedCapital}
           selectedPlace={selectedPlace}
-          visiblePlaceCount={visiblePlaces.length}
           panelVisible={panelVisible}
           panelMode={panelMode}
           chatLog={chatLog}
@@ -226,7 +225,6 @@ function MapPage() {
           onStartLearning={handleStartLearning}
           onBackToDetail={handleBackToDetail}
           onOpenCoaching={() => navigate('/coaching')}
-          onOpenPremium={() => navigate('/premium')}
         />
       </section>
     </div>

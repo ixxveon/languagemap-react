@@ -205,6 +205,8 @@ function FriendProfileCard({
   onAccept,
   onReject,
   onDelete,
+  onBlock,
+  onUnblock,
   compact = false,
 }) {
   const otherUserId =
@@ -269,10 +271,29 @@ function FriendProfileCard({
           <div className="community-friends-compact-actions">
             <button
               type="button"
+              className="mapingo-ghost-button community-friends-block-button"
+              onClick={() => onBlock(relation.friendship_id)}
+            >
+              친구 차단
+            </button>
+            <button
+              type="button"
               className="mapingo-ghost-button"
               onClick={() => onDelete(relation.friendship_id)}
             >
               친구 삭제
+            </button>
+          </div>
+        ) : null}
+
+        {relation.status === 'BLOCKED' ? (
+          <div className="community-friends-compact-actions">
+            <button
+              type="button"
+              className="mapingo-submit-button"
+              onClick={() => onUnblock(relation.friendship_id)}
+            >
+              차단 취소
             </button>
           </div>
         ) : null}
@@ -310,6 +331,15 @@ function FriendProfileCard({
 
         <div className="community-friends-actions">
           <StatusPill status={relation.status} />
+          {isAccepted ? (
+            <button
+              type="button"
+              className="mapingo-ghost-button community-friends-block-button"
+              onClick={() => onBlock(relation.friendship_id)}
+            >
+              친구 차단
+            </button>
+          ) : null}
           {isAccepted ? (
             <button
               type="button"
@@ -464,12 +494,8 @@ function CommunityFriendsPage() {
         (row.requester_id === targetUserId && row.addressee_id === currentUserId),
     );
 
-  const recommendedFriends = useMemo(
-    () =>
-      recommendedFriendSeeds.filter(
-        (item) => !hasExistingRelation(item.userId) && userDirectory[item.userId],
-      ),
-    [friendshipRows],
+  const recommendedFriends = recommendedFriendSeeds.filter(
+    (item) => !hasExistingRelation(item.userId) && userDirectory[item.userId],
   );
 
   const sendFriendRequest = (targetUserId) => {
@@ -558,6 +584,36 @@ function CommunityFriendsPage() {
     setFeedbackMessage('친구 목록에서 삭제했어요.');
   };
 
+  const handleBlock = (friendshipId) => {
+    setFriendshipRows((current) =>
+      current.map((row) =>
+        row.friendship_id === friendshipId
+          ? {
+              ...row,
+              status: 'BLOCKED',
+              responded_at: `${TODAY} 11:00:00`,
+            }
+          : row,
+      ),
+    );
+    setFeedbackMessage('친구를 차단했어요. 차단 이력에서 확인할 수 있어요.');
+  };
+
+  const handleUnblock = (friendshipId) => {
+    setFriendshipRows((current) =>
+      current.map((row) =>
+        row.friendship_id === friendshipId
+          ? {
+              ...row,
+              status: 'ACCEPTED',
+              responded_at: `${TODAY} 11:30:00`,
+            }
+          : row,
+      ),
+    );
+    setFeedbackMessage('차단을 취소했어요. 다시 친구 목록에서 확인할 수 있어요.');
+  };
+
   const handleSubmitReport = () => {
     if (!reportReason.trim()) {
       setFeedbackMessage('신고 사유를 입력해 주세요.');
@@ -622,6 +678,8 @@ function CommunityFriendsPage() {
                       onAccept={handleAccept}
                       onReject={handleReject}
                       onDelete={handleDelete}
+                      onBlock={handleBlock}
+                      onUnblock={handleUnblock}
                     />
                   ))}
                 </div>
@@ -649,6 +707,8 @@ function CommunityFriendsPage() {
                         onAccept={handleAccept}
                         onReject={handleReject}
                         onDelete={handleDelete}
+                        onBlock={handleBlock}
+                        onUnblock={handleUnblock}
                         compact
                       />
                     ))}
@@ -676,6 +736,8 @@ function CommunityFriendsPage() {
                         onAccept={handleAccept}
                         onReject={handleReject}
                         onDelete={handleDelete}
+                        onBlock={handleBlock}
+                        onUnblock={handleUnblock}
                         compact
                       />
                     ))}

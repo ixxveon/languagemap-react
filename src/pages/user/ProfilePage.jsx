@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
 import PingPopCharacterImage from '../../components/PingPopCharacterImage';
@@ -16,27 +17,50 @@ function getBadgeStatusLabel(status) {
   return '\uBBF8\uD68D\uB4DD';
 }
 
+function getBadgeProgressCopy(badge) {
+  if (badge.status === 'earned') {
+    return `${badge.condition} \u00b7 \uC644\uB8CC`;
+  }
+
+  return `${badge.condition} \u00b7 ${badge.currentValue} / ${badge.targetValue}`;
+}
+
 function ProfilePage() {
   const navigate = useNavigate();
   const profileName = useMapingoStore((state) => state.profileName);
   const subscriptionUpdatedAt = useMapingoStore((state) => state.subscriptionUpdatedAt);
   const currentLevelId = useMapingoStore((state) => state.currentLevelId);
-  const weeklyLearnCount = useMapingoStore((state) => state.weeklyLearnCount);
-  const badgeCount = useMapingoStore((state) => state.badgeCount);
   const recentLearning = useMapingoStore((state) => state.recentLearning);
   const weeklyGoalCompleted = useMapingoStore((state) => state.weeklyGoalCompleted);
-  const badgeCatalog = learningService.fetchBadgeCatalog();
+  const weeklyLearnCount = useMapingoStore((state) => state.weeklyLearnCount);
+  const weeklyGoal = useMapingoStore((state) => state.weeklyGoal);
+  const learningStreak = useMapingoStore((state) => state.streakDays);
+  const storedBadgeProgress = useMapingoStore((state) => state.badgeProgress);
+  const badgeProgress = useMemo(
+    () =>
+      learningService.buildBadgeProgressFromStore({
+        recentLearning,
+        weeklyLearnCount,
+        weeklyGoalCompleted,
+        weeklyGoal,
+        learningStreak,
+        badgeProgress: storedBadgeProgress,
+      }),
+    [recentLearning, weeklyLearnCount, weeklyGoalCompleted, weeklyGoal, learningStreak, storedBadgeProgress],
+  );
+  const badgeCatalog = useMemo(() => learningService.fetchBadgeCatalog(badgeProgress), [badgeProgress]);
   const profileLevelNumber =
     currentLevelId === 'advanced' ? 60 : currentLevelId === 'intermediate' ? 40 : 10;
 
   const earnedBadges = badgeCatalog.filter((badge) => badge.status === 'earned');
+  const badgeCount = earnedBadges.length;
   const topBadge = earnedBadges[0]?.name ?? '\uCCAB \uAC78\uC74C \uBC30\uC9C0';
   const topBadgeDetail = earnedBadges[0]?.condition ?? '\uD559\uC2B5 3\uD68C \uC644\uB8CC';
   const latestLearning = recentLearning[0];
-  const badgePreviewList = badgeCatalog.slice(0, 4);
+  const badgePreviewList = [...earnedBadges, ...badgeCatalog.filter((badge) => badge.status !== 'earned')].slice(0, 4);
   const completionPercent = Math.min(100, Math.max(12, badgeCount * 12 + weeklyGoalCompleted * 4));
   const cumulativeExperience = profileLevelNumber * 10 + badgeCount * 4;
-  const totalStudyCount = recentLearning.length + weeklyLearnCount + weeklyGoalCompleted;
+  const totalStudyCount = badgeProgress.totalStudyCount;
   const nextLevelRemaining = Math.max(0, (profileLevelNumber + 10) * 10 - cumulativeExperience);
   const profileEmail = `${profileName.toLowerCase().replace(/\s+/g, '.')}@mapingo.ai`;
 
@@ -142,9 +166,16 @@ function ProfilePage() {
               <div className="mapingo-profile-badge-status-list">
                 {badgePreviewList.map((badge) => (
                   <div key={badge.id} className="mapingo-profile-badge-status-item">
+                    <div className="mapingo-profile-badge-status-media">
+                      <img
+                        src={badge.imageUrl}
+                        alt={badge.name}
+                        className="mapingo-profile-badge-status-image"
+                      />
+                    </div>
                     <div className="mapingo-profile-badge-status-copy">
                       <strong>{badge.name}</strong>
-                      <p>{badge.condition}</p>
+                      <p>{getBadgeProgressCopy(badge)}</p>
                     </div>
                     <span
                       className={`mapingo-profile-badge-status-pill is-${getBadgeTone(
