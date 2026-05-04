@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
-import { useMapingoStore } from '../../store/useMapingoStore';
+import { useMapingoStore } from '../../store/user/useMapingoStore';
 
 function GrowthInsightsPage() {
   const navigate = useNavigate();

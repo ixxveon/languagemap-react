@@ -2,10 +2,10 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
 import MapingoHeader from './MapingoHeader';
 import MapingoHero from './MapingoHero';
-import { mapingoPalette } from '../data/mapingoData';
-import { pathToPage, pageToPath } from '../data/mapingoPageData';
-import { useMapingoStore } from '../store/useMapingoStore';
-import '../styles/mapingoLanding.css';
+import { mapingoPalette } from '../../data/user/mapingoData';
+import { pathToPage, pageToPath } from '../../data/user/mapingoPageData';
+import { useMapingoStore } from '../../store/user/useMapingoStore';
+import '../../styles/user/mapingoLanding.css';
 
 function MapingoLayout() {
   const location = useLocation();

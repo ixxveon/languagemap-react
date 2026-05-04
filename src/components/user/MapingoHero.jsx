@@ -59,7 +59,7 @@ function loadGoogleMaps(apiKey) {
 }
 
 function MapingoHero({ onPrimaryAction }) {
-<<<<<<< HEAD
+
   const navigate = useNavigate();
   const mapWidth = 480;
   const mapHeight = 360;
@@ -93,8 +93,7 @@ function MapingoHero({ onPrimaryAction }) {
     },
   ];
 
-=======
->>>>>>> 19136599c4424658e67a8193960e7166f8012d46
+
   const [activeStopId, setActiveStopId] = useState('goal');
   const activeStop = ROUTE_STOPS.find((stop) => stop.id === activeStopId) ?? ROUTE_STOPS[ROUTE_STOPS.length - 1];
   const [startStop, middleStop, goalStop] = ROUTE_STOPS;

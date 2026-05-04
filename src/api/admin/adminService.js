@@ -9,7 +9,7 @@ import {
   adminScenarioCategoryOptions,
   adminScenarioLevelOptions,
   adminScenarioSeeds,
-} from '../mocks/adminMockData';
+} from '../../mocks/admin/adminMockData';
 import {
   adminCommunityConfigSeeds,
   adminCommunityFriendSeeds,
@@ -17,27 +17,27 @@ import {
   adminCommunityPageList,
   adminCommunityRankingSeeds,
   adminCommunityReportSeeds,
-} from '../mocks/adminCommunityMockData';
+} from '../../mocks/admin/adminCommunityMockData';
 import {
   coachingModes,
   evaluationResult,
   pronunciationSentences,
   scenarioByMode,
   youtubeRecommendations,
-} from '../domains/coaching/data/coachingMockData';
+} from '../../mocks/user/coaching/coachingMockData';
 import {
   defaultBadgeProgress,
   resolveBadgeCatalog,
-} from '../data/badgeSystem';
+} from '../../data/user/badgeSystem';
 import {
   growthHighlights,
   learningActivities,
   learningGoalSuggestions,
   learningLevelOptions,
   learningSummary,
-} from '../mocks/learningMockData';
-import { supportFaqItems, supportInquiryTemplates } from '../mocks/supportMockData';
-import { premiumFeatureAccess, subscriptionProducts } from '../mocks/subscriptionMockData';
+} from '../../mocks/user/learningMockData';
+import { supportFaqItems, supportInquiryTemplates } from '../../mocks/user/supportMockData';
+import { premiumFeatureAccess, subscriptionProducts } from '../../mocks/user/subscriptionMockData';
 
 function fetchAdminMembers() {
   return adminMemberList;

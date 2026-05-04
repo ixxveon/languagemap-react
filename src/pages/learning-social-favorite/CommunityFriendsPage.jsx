@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
-import PingPopCharacterImage from '../../components/PingPopCharacterImage';
-import '../../styles/CommunityFriendsPage.css';
+import PingPopCharacterImage from '../../components/user/PingPopCharacterImage';
+import '../../styles/user/CommunityFriendsPage.css';
 
 const TODAY = '2026-04-21';
 

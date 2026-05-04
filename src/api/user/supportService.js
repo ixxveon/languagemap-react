@@ -1,4 +1,4 @@
-import { supportFaqItems, supportInquiryTemplates, supportNoticeItems } from '../mocks/supportMockData';
+import { supportFaqItems, supportInquiryTemplates, supportNoticeItems } from '../../mocks/user/supportMockData';
 
 function fetchSupportNotices() {
   return supportNoticeItems;

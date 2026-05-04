@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { placeService } from '../../api/placeService';
-import { useMapingoStore } from '../../store/useMapingoStore';
-import RouteMap from '../../components/RouteMap';
-import '../../styles/mapPage.css';
+import { placeService } from '../../api/user/placeService';
+import { useMapingoStore } from '../../store/user/useMapingoStore';
+import RouteMap from '../../components/user/RouteMap';
+import '../../styles/user/mapPage.css';
 
 function buildAiReply(place, userInput, turn) {
   const normalized = userInput.trim().toLowerCase();

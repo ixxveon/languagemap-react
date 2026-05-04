@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
-import PingPopCharacterImage from '../../components/PingPopCharacterImage';
-import { useMapingoStore } from '../../store/useMapingoStore';
-import { learningService } from '../../api/learningService';
+import PingPopCharacterImage from '../../components/user/PingPopCharacterImage';
+import { useMapingoStore } from '../../store/user/useMapingoStore';
+import { learningService } from '../../api/user/learningService';
 
 function getBadgeTone(status) {
   if (status === 'earned') return 'success';

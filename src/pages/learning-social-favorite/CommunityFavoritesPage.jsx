@@ -1,7 +1,7 @@
 ﻿import { useMemo, useState } from 'react';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
-import { placeService } from '../../api/placeService';
-import '../../styles/CommunityFavoritesPage.css';
+import { placeService } from '../../api/user/placeService';
+import '../../styles/user/CommunityFavoritesPage.css';
 
 const MAX_ACTIVE_GOALS = 3;
 const INITIAL_AVAILABLE_GOAL_COUNT = 2;

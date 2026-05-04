@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { adminService } from '../../api/adminService';
+import { adminService } from '../../api/admin/adminService';
 
 const adminCards = [
   {

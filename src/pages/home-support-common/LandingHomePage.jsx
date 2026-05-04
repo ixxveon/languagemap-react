@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DemoFlowCompact from '../../components/DemoFlowCompact';
-import { homeRecentLearning } from '../../data/mapingoDomainData';
-import { useMapingoStore } from '../../store/useMapingoStore';
-import { homeService } from '../../api/homeService';
-import { learningService } from '../../api/learningService';
+import DemoFlowCompact from '../../components/user/DemoFlowCompact';
+import { homeRecentLearning } from '../../data/user/mapingoDomainData';
+import { useMapingoStore } from '../../store/user/useMapingoStore';
+import { homeService } from '../../api/user/homeService';
+import { learningService } from '../../api/user/learningService';
 
 function LandingHomePage() {
   const navigate = useNavigate();

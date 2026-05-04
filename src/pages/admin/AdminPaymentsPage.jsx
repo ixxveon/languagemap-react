@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
-import { adminService } from '../../api/adminService';
+import { adminService } from '../../api/admin/adminService';
 
 const paymentStatusClassMap = {
   결제완료: 'is-published',

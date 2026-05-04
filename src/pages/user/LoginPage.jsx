@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PingPopLogo from '../../components/PingPopLogo';
-import { useMapingoStore } from '../../store/useMapingoStore';
-import { authService } from '../../api/authService';
+import PingPopLogo from '../../components/user/PingPopLogo';
+import { useMapingoStore } from '../../store/user/useMapingoStore';
+import { authService } from '../../api/user/authService';
 
 function LoginPage() {
   const navigate = useNavigate();
