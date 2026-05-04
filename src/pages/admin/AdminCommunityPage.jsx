@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
 import { adminService } from '../../api/adminService';
@@ -24,150 +24,66 @@ const periodLabels = {
   DAILY: '일간',
   WEEKLY: '주간',
   MONTHLY: '월간',
+  NONE: '없음'
 };
 
-const statusClassMap = {
-  PENDING: 'is-reserved',
-  RESOLVED: 'is-published',
-  ACCEPTED: 'is-published',
-  BLOCKED: 'is-draft',
-  REJECTED: 'is-draft',
-};
-
-const communityTabs = [
-  {
-    id: 'goals',
-    label: '목표 관리',
-    kicker: '핵심 관리',
-    description: '목표 템플릿을 등록하고 수정하며 삭제와 비활성화 상태까지 한 번에 관리합니다.',
-    api: 'POST · PATCH · DELETE · GET',
-  },
-  {
-    id: 'reports',
-    label: '신고 관리',
-    kicker: '처리 관리',
-    description: '접수된 신고를 확인하고 PENDING 상태를 RESOLVED로 처리합니다.',
-    api: 'GET list · GET detail · PATCH status',
-  },
-  {
-    id: 'friends',
-    label: '친구 관리',
-    kicker: 'Social Admin',
-    description: '신고 목록, 상세 조회, 상태 변경과 차단/거절 이력 조회를 이 화면에서 처리합니다.',
-    api: 'GET list · GET detail · PATCH status · GET history',
-  },
-  {
-    id: 'ranking',
-    label: '랭킹 관리',
-    kicker: '순위 확인',
-    description: '전체 랭킹과 주간 랭킹 리스트를 구분해 조회합니다.',
-    api: 'GET /ranking or /admin/ranking',
-  },
-];
-
-const rankingScopeOptions = [
-  { id: 'overall', label: '전체랭킹' },
-  { id: 'weekly', label: '주간랭킹' },
-];
-
-const communityEntryTabs = communityTabs.filter((tab) => tab.id !== 'reports');
-
-function includesSearch(fields, query) {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) return true;
-  return fields.join(' ').toLowerCase().includes(normalizedQuery);
-}
-
-function getNowLabel() {
-  return '2026-04-29 09:00';
+function normalizeGoal(goal) {
+  return {
+    id: goal.goalMasterId ?? goal.id,
+    title: goal.goalTitle ?? goal.title,
+    description: goal.goalDescription ?? goal.description,
+    goalType: goal.goalType,
+    targetValue: goal.targetValue,
+    periodType: goal.periodType,
+    displayOrder: goal.displayOrder ?? 1,
+    isActive: goal.active,
+    updatedAt: goal.updatedAt ?? '-',
+  };
 }
 
 function AdminCommunityPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const panelParam = searchParams.get('panel');
-  const activePanel = communityTabs.some((tab) => tab.id === panelParam) ? panelParam : null;
+  const activePanel = panelParam === 'goals' ? panelParam : null;
 
-  const [goals, setGoals] = useState(() => adminService.fetchAdminCommunityGoals());
-  const [reports, setReports] = useState(() => adminService.fetchAdminCommunityReports());
-  const [friends] = useState(() => adminService.fetchAdminCommunityFriends());
-  const [ranking] = useState(() => adminService.fetchAdminCommunityRanking());
-
+  const [goal, setGoals] = useState([]);
   const [goalForm, setGoalForm] = useState(emptyGoalForm);
-  const [editingGoalId, setEditingGoalId] = useState(null);
+  const [editingGoal, setEditingGoalId] = useState(null);
+  const [goalLoading, setGoalLoading] = useState(false);
+  const [goalError, setGoalError] = useState('');
 
-  const [reportSearch, setReportSearch] = useState('');
-  const [friendSearch, setFriendSearch] = useState('');
-  const [rankingSearch, setRankingSearch] = useState('');
-  const [rankingScope, setRankingScope] = useState('overall');
-
-  const [selectedReportId, setSelectedReportId] = useState(() => adminService.fetchAdminCommunityReports()[0]?.id ?? null);
-  const [reportDrafts, setReportDrafts] = useState({});
-  const [reportError, setReportError] = useState('');
-
-  const blockedFriends = friends.filter((friend) => friend.status === 'BLOCKED');
-  const rejectedFriends = friends.filter((friend) => friend.status === 'REJECTED');
-
-  const activeTab = communityTabs.find((tab) => tab.id === activePanel);
-
-  const sortedGoals = useMemo(
-    () => [...goals].sort((left, right) => left.displayOrder - right.displayOrder),
+  const sortedGoal = useMemo(
+    () => [...goals].sort((left, right) => left.displayOrder), 
     [goals],
   );
 
   const editingGoal = goals.find((goal) => goal.id === editingGoalId) ?? null;
 
-  const filteredReports = useMemo(
-    () =>
-      reports.filter((report) =>
-        includesSearch(
-          [
-            report.reporterName,
-            report.reporterEmail,
-            report.targetName,
-            report.targetEmail,
-            report.reason,
-            report.status,
-            report.adminMemo,
-          ],
-          activePanel === 'friends' ? friendSearch : reportSearch,
-        ),
-      ),
-    [activePanel, friendSearch, reportSearch, reports],
-  );
+  const fetchGoals = async () => {
+    try {
+      setGoalLoading(true);
+      setGoalError('');
 
-  const selectedReport = reports.find((report) => report.id === selectedReportId) ?? filteredReports[0] ?? null;
+      const data = await adminService.getGoals();
+      setGoals((data ?? []).map(normalizeGoal));
+    } catch (error) {
+      console.error(error);
+      setGoalError('목표 목록을 불러오지 못했습니다.');
+    } finally {
+      setGoalLoading(false);
+    }
+  };
 
-  const activeReportDraft = selectedReport
-    ? reportDrafts[selectedReport.id] ?? { status: selectedReport.status, adminMemo: selectedReport.adminMemo ?? '' }
-    : { status: '', adminMemo: '' };
-
-  const friendHistories = useMemo(() => [...blockedFriends, ...rejectedFriends], [blockedFriends, rejectedFriends]);
-
-  const weeklyRanking = useMemo(
-    () =>
-      ranking
-        .map((item, index) => ({
-          ...item,
-          score: Math.max(0, Math.round(item.score * 0.18) + (ranking.length - index) * 12),
-        }))
-        .sort((left, right) => right.score - left.score)
-        .map((item, index) => ({ ...item, rank: index + 1 })),
-    [ranking],
-  );
-
-  const rankingList = rankingScope === 'weekly' ? weeklyRanking : ranking;
-
-  const filteredRanking = useMemo(
-    () =>
-      rankingList
-        .filter((item) => includesSearch([item.name, String(item.score), String(item.rank)], rankingSearch))
-        .sort((left, right) => left.rank - right.rank),
-    [rankingList, rankingSearch],
-  );
+  useEffect(() => {
+    fetchGoals();
+  }, []);
 
   const resetGoalForm = () => {
     setEditingGoalId(null);
-    setGoalForm({ ...emptyGoalForm, displayOrder: String(goals.length + 1) });
+    setGoalForm({
+      ...emptyGoalForm,
+      displayOrder: String(goals.length + 1),
+    });
   };
 
   const handlePanelSelect = (panel) => {
@@ -180,35 +96,45 @@ function AdminCommunityPage() {
     resetGoalForm();
   };
 
-  const handleGoalSubmit = (event) => {
+  const handleGoalSubmit = async (event) => {
     event.preventDefault();
+
     const title = goalForm.title.trim();
     const description = goalForm.description.trim();
-    if (!title || !description) return;
 
-    const nextGoal = {
-      id: editingGoalId ?? Math.max(0, ...goals.map((goal) => goal.id)) + 1,
-      title,
-      description,
+    ig (!title || !description) {
+      alert('목표명과 설명을 입력해주세요.');
+      return;
+    }
+
+    const requestBody = {
+      badgeId: null,
       goalType: goalForm.goalType,
+      goalTitle: title,
+      goalDescription: description,
       targetValue: Number(goalForm.targetValue),
       periodType: goalForm.periodType,
-      displayOrder: Number(goalForm.displayOrder),
-      isActive: goalForm.isActive,
-      updatedAt: '2026-04-28',
     };
 
-    setGoals((currentGoals) =>
-      editingGoalId
-        ? currentGoals.map((goal) => (goal.id === editingGoalId ? nextGoal : goal))
-        : [nextGoal, ...currentGoals],
-    );
-    setGoalForm({ ...emptyGoalForm, displayOrder: String(goals.length + 2) });
-    setEditingGoalId(null);
+    try {
+      if (editingGoalId) {
+        await adminService.updateGoal(editingGoal, requestBody);
+        alert('목표가 수정되었습니다.');
+      } else {
+        await adminService.createGoal(requestBody);
+        alert('목표가 등록되었습니다.');
+      }
+
+      await fetchGoals();
+      resetGoalForm();
+    } catch (error) {
+      console.error(error);
+      alert('목표 저장 중 오류가 발생했습니다.');
+    }
   };
 
   const handleEditGoal = (goal) => {
-    setSearchParams({ panel: 'goals' });
+    setSearchParams({ panel: 'goals'});
     setEditingGoalId(goal.id);
     setGoalForm({
       title: goal.title,
@@ -221,57 +147,37 @@ function AdminCommunityPage() {
     });
   };
 
-  const handleDeactivateGoal = (goalId) => {
-    setGoals((currentGoals) =>
-      currentGoals.map((goal) =>
-        goal.id === goalId ? { ...goal, isActive: false, updatedAt: '2026-04-28' } : goal,
-      ),
-    );
-    if (editingGoalId === goalId) resetGoalForm();
-  };
+  const handleDeactivateGoal = async (goalId) => {
+    try {
+      await adminService.updateGoalActive(goalId, false);
+      alert('목표가 비활성화되었습니다.');
+      await fetchGoals();
 
-  const handleDeleteGoal = (goalId) => {
-    setGoals((currentGoals) => currentGoals.filter((goal) => goal.id !== goalId));
-    if (editingGoalId === goalId) resetGoalForm();
-  };
-
-  const handleSaveReportStatus = (reportId) => {
-    const targetReport = reports.find((report) => report.id === reportId);
-    if (!targetReport) return;
-
-    const draft = reportDrafts[reportId] ?? {
-      status: targetReport.status,
-      adminMemo: targetReport.adminMemo ?? '',
-    };
-
-    const trimmedMemo = draft.adminMemo.trim();
-    if (!trimmedMemo) {
-      setReportError('상태 변경 시 관리자 메모를 입력해야 합니다.');
-      return;
+      if (editingGoalId === goalId) {
+        resetGoalForm();
+      }
+    } catch (error) {
+      console.error(error);
+      alert('목표 비활성화 중 오류가 발생했습니다.');
     }
+  };
 
-    setReports((currentReports) =>
-      currentReports.map((report) =>
-        report.id === reportId
-          ? {
-              ...report,
-              status: draft.status,
-              adminMemo: trimmedMemo,
-              processedAt: getNowLabel(),
-            }
-          : report,
-      ),
-    );
+  const handleDeleteGoal = async (goalId) => {
+    const confirmed = window.confirm('정말 삭제하시겠습니까?');
+    if (!confirmed) return;
 
-    setReportDrafts((currentDrafts) => ({
-      ...currentDrafts,
-      [reportId]: {
-        status: draft.status,
-        adminMemo: trimmedMemo,
-      },
-    }));
+    try {
+      await adminService.deleteGoal(goalId);
+      alert('목표가 삭제되었습니다.');
+      await fetchGoals();
 
-    setReportError('');
+      if (editingGoalId === goalId) {
+        resetGoalForm();
+      }
+    } catch (error) {
+      console.error(error);
+      alert('목표 삭제 중 오류가 발생했습니다.');
+    }
   };
 
   return (
@@ -279,29 +185,26 @@ function AdminCommunityPage() {
       <MapingoPageSection
         eyebrow="Admin"
         title="커뮤니티 관리"
-        description="목표, 신고, 친구, 랭킹을 관리자 화면 안에서 조회하고 운영 처리합니다."
+        description="목표, 친구, 랭킹을 관리자 화면 안에서 조회하고 운영 처리합니다."
       />
 
       {!activePanel ? (
         <section className="mapingo-page-section">
           <div className="mapingo-domain-entry-grid admin-entry-grid admin-community-entry-grid">
-            {communityEntryTabs.map((tab, index) => (
               <button
-                key={tab.id}
                 type="button"
                 className="mapingo-domain-entry-card admin-entry-card admin-community-entry-card"
-                onClick={() => handlePanelSelect(tab.id)}
+                onClick={() => handlePanelSelect('goals')}
               >
                 <div className="community-entry-card-top">
-                  <span className="community-entry-accent">{tab.kicker}</span>
-                  <span className="community-entry-index">{String(index + 1).padStart(2, '0')}</span>
+                  <span className="community-entry-accent">핵심 관리</span>
+                  <span className="community-entry-index">01</span>
                 </div>
                 <div className="community-entry-card-body">
-                  <h3>{tab.label}</h3>
-                  <p>{tab.description}</p>
+                  <h3>목표 관리</h3>
+                  <p>목표 템플릿을 등록하고 수정하며 삭제와 비활성화 상태까지 한 번에 관리합니다.</p>
                 </div>
               </button>
-            ))}
           </div>
         </section>
       ) : null}
