@@ -4,6 +4,7 @@ import { MapingoPageSection } from '../../components/MapingoPageBlocks';
 import { adminService } from '../../api/admin/adminService';
 import AdminLearningGoalPage from './AdminLearningGoalPage';
 import AdminFriendPage from './AdminFriendPage';
+import '../../styles/admin/AdminCommunityPage.css';
 
 const communityTabs = [
   {
@@ -118,15 +119,21 @@ function AdminCommunityPage() {
 
       {activePanel ? (
         <section className="mapingo-page-section">
-          <div className="mapingo-card-header-row admin-result-head">
+          <div className="mapingo-card-header-row admin-result-head admin-community-panel-head">
             <div>
               <p className="mapingo-eyebrow">Community Admin</p>
               <h3>{activeTab?.label}</h3>
               <p className="mapingo-muted-copy">{activeTab?.description}</p>
             </div>
 
-            <button type="button" className="mapingo-ghost-button" onClick={handlePanelBack}>
-              기능 선택으로
+            <button
+              type="button"
+              className="mapingo-ghost-button admin-community-action-button"
+              aria-label={'\ucee4\ubba4\ub2c8\ud2f0 \uad00\ub9ac\ub85c \ub3cc\uc544\uac00\uae30'}
+              title={'\ucee4\ubba4\ub2c8\ud2f0 \uad00\ub9ac\ub85c \ub3cc\uc544\uac00\uae30'}
+              onClick={handlePanelBack}
+            >
+              커뮤니티 관리
             </button>
           </div>
         </section>

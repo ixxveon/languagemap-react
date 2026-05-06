@@ -1,0 +1,65 @@
+.admin-community-panel-head {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.admin-community-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 240px;
+  min-height: 52px;
+  padding: 0 8px;
+  border: 1px solid #c7e6df;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff, #f4fbfa);
+  box-shadow: 0 8px 20px rgba(15, 118, 110, 0.08);
+  font-weight: 700;
+  font-size: 16px;
+  color: transparent;
+  white-space: nowrap;
+  position: relative;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.admin-community-action-button::before {
+  content: "\2190\2003\CEE4\BBA4\B2C8\D2F0  \AD00\B9AC\B85C  \B3CC\C544\AC00\AE30";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 14px;
+  color: #0f5f62;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.admin-community-action-button:hover {
+  border-color: #9fd8ce;
+  background: linear-gradient(180deg, #ffffff, #edf9f6);
+  box-shadow: 0 12px 28px rgba(15, 118, 110, 0.12);
+  transform: translateY(-1px);
+}
+
+.admin-community-action-button:focus-visible {
+  outline: 2px solid rgba(20, 184, 166, 0.2);
+  outline-offset: 2px;
+}
+
+.admin-community-action-button:hover::before {
+  color: #0b4f53;
+}
+
+@media (max-width: 720px) {
+  .admin-community-action-button {
+    min-width: 100%;
+    width: 100%;
+    justify-content: center;
+  }
+}

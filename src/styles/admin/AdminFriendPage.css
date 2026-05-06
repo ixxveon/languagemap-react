@@ -4,11 +4,32 @@
 }
 
 .admin-friend-report-card {
+  position: relative;
   padding: 11px 13px;
 }
 
 .admin-friend-report-card .mapingo-admin-item-head {
-  gap: 10px;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.admin-friend-report-card .mapingo-admin-item-head > div:first-child {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  min-width: 0;
+}
+
+.admin-friend-report-card .admin-notice-status {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+}
+
+.admin-friend-report-card .mapingo-admin-item-head p,
+.admin-friend-report-card .mapingo-admin-item-head strong,
+.admin-friend-report-card .admin-content-description {
+  text-align: center;
 }
 
 .admin-friend-report-card .admin-content-description {
@@ -81,4 +102,72 @@
   .admin-friend-history-meta {
     grid-template-columns: 1fr;
   }
+}
+
+.admin-friend-report-list {
+  max-height: 680px;
+  overflow: hidden;
+}
+
+.admin-friend-report-list .mapingo-selectable-list {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-top: 12px;
+  padding-right: 6px;
+  padding-bottom: 20px;
+}
+
+.admin-friend-history-list {
+  max-height: 520px;
+  overflow: hidden;
+}
+
+.admin-friend-history-stack {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.admin-friend-report-list .mapingo-selectable-list::-webkit-scrollbar,
+.admin-friend-history-stack::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-friend-report-list .mapingo-selectable-list::-webkit-scrollbar-thumb,
+.admin-friend-history-stack::-webkit-scrollbar-thumb {
+  background: rgba(20, 184, 166, 0.35);
+  border-radius: 999px;
+}
+
+.admin-friend-report-card {
+  margin-bottom: 14px;
+}
+
+.admin-notice-search {
+  width: 100%;
+  max-width: 100%;
+  height: 50px;
+  padding: 0 18px 0 46px;
+  border-radius: 14px;
+  border-color: #cfe5e0;
+  background-color: #f8fcfb;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 16px center;
+  font-size: 14px;
+  line-height: 50px;
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  margin-bottom: 18px;
+}
+
+.admin-notice-search::placeholder {
+  color: #9aa9b8;
+  font-size: 14px;
+  line-height: 50px;
+}
+
+.admin-notice-search:focus {
+  background-color: #ffffff;
+  border-color: #8fd6cb;
 }
