@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@stomp/stompjs": "^7.3.0",
-    "@tanstack/react-query": "^5.90.21",
+    "@tanstack/react-query": "^5.100.9",
     "axios": "^1.13.6",
     "localforage": "^1.10.0",
     "react": "^19.2.0",
