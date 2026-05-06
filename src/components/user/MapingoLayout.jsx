@@ -13,7 +13,6 @@ function MapingoLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const isAuthenticated = useMapingoStore((state) => state.isAuthenticated);
-  const clearSession = useMapingoStore((state) => state.clearSession);
   const profileName = useMapingoStore((state) => state.profileName);
   const subscriptionPlan = useMapingoStore((state) => state.subscriptionPlan);
   const subscriptionProductId = useMapingoStore((state) => state.subscriptionProductId);
@@ -69,9 +68,7 @@ function MapingoLayout() {
         profileName={profileName}
         subscriptionPlan={subscriptionPlan}
         subscriptionProductId={subscriptionProductId}
-        onLogout={() => {
-          onLogout={logout}
-        }}
+        onLogout={logout}
       />
 
       <main className="mapingo-page-shell">
