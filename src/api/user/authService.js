@@ -1,85 +1,113 @@
-function wait(ms = 250) {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, ms);
-  });
-}
+import axiosInstance from '../axiosInstance';
 
-function createSessionPayload(overrides = {}) {
-  return {
-    loginMethod: 'email',
-    keepSignedIn: false,
-    user: {
-      id: 1,
-      email: 'learner@mapingo.ai',
-      name: 'Mapingo Learner',
-      nickname: 'Route Runner',
-      role: 'user',
-      subscriptionPlan: 'Free',
-      subscriptionProductId: 'yearly',
-      status: 'ACTIVE',
-      provider: 'local',
-    },
-    ...overrides,
-  };
-}
-
-function resolveUserRole(email = '') {
-  const normalizedEmail = String(email).trim().toLowerCase();
-  const adminEmails = ['admin@mapingo.ai', 'manager@mapingo.ai'];
-  return adminEmails.includes(normalizedEmail) ? 'admin' : 'user';
-}
-
+// ─────────────────────────────────────────
+// 일반 로그인
+// POST /api/auth/login
+// ─────────────────────────────────────────
 async function loginWithEmail({ email, password, rememberMe }) {
-  await wait();
+    if (!email || !password) {
+        const error = new Error('이메일과 비밀번호를 입력해주세요.');
+        error.status = 400;
+        throw error;
+    }
 
-  if (!email || !password) {
-    const error = new Error('이메일과 비밀번호를 입력해주세요.');
-    error.status = 400;
-    throw error;
-  }
+    const response = await axiosInstance.post('/api/auth/login', {
+        email,
+        password,
+    });
 
-  const role = resolveUserRole(email);
+    // accessToken은 localStorage에 저장
+    // refreshToken은 HttpOnly Cookie로 자동 저장됨
+    const accessToken = response.data.accessToken;
+    localStorage.setItem('accessToken', accessToken);
 
-  return createSessionPayload({
-    user: {
-      ...createSessionPayload().user,
-      email,
-      role,
-      name: role === 'admin' ? 'Mapingo Admin' : 'Mapingo Learner',
-      nickname: role === 'admin' ? 'Operations Desk' : 'Route Runner',
-      subscriptionPlan: role === 'admin' ? 'Premium' : 'Free',
-    },
-    keepSignedIn: Boolean(rememberMe),
-  });
+    return {
+        loginMethod: 'email',
+        keepSignedIn: Boolean(rememberMe),
+        user: {
+            email,
+            name: response.data.name ?? email,
+            role: response.data.role ?? 'user',
+            status: 'ACTIVE',
+            provider: 'local',
+        },
+    };
 }
 
-async function signupWithEmail({ email, password, name, nickname }) {
-  await wait();
+// ─────────────────────────────────────────
+// 일반 회원가입
+// POST /api/auth/signup
+// ─────────────────────────────────────────
+async function signupWithEmail({ email, password, name, birthDate, address, phone, agreeTerms, agreePrivacy, agreeMarketing, passwordConfirm }) {
+    if (!email || !password || !name) {
+        const error = new Error('필수 입력값을 확인해주세요.');
+        error.status = 400;
+        throw error;
+    }
 
-  if (!email || !password || !name) {
-    const error = new Error('필수 입력값을 확인해주세요.');
-    error.status = 400;
-    throw error;
-  }
+    await axiosInstance.post('/api/auth/signup', {
+        email,
+        password,
+        passwordConfirm,
+        name,
+        birthDate,
+        address,
+        phoneNumber: phone,       // ← phone → phoneNumber 로 변환
+        serviceAgree: agreeTerms,         // ← agreeTerms → serviceAgree
+        privacyAgree: agreePrivacy,       // ← agreePrivacy → privacyAgree
+        marketingAgree: agreeMarketing,   // ← agreeMarketing → marketingAgree
+    });
 
-  return createSessionPayload({
-    user: {
-      ...createSessionPayload().user,
-      email,
-      name,
-      nickname: nickname || name,
-      role: 'user',
-    },
-  });
+    return loginWithEmail({ email, password, rememberMe: false });
 }
 
+// ─────────────────────────────────────────
+// 로그아웃
+// POST /api/auth/logout
+// ─────────────────────────────────────────
 async function logout() {
-  await wait(120);
-  return { success: true };
+    try {
+        await axiosInstance.post('/api/auth/logout');
+    } finally {
+        localStorage.removeItem('accessToken');
+    }
+    return { success: true };
+}
+
+// ─────────────────────────────────────────
+// Google OAuth 로그인 시작
+// 백엔드로 리다이렉트 (axios 아님)
+// ─────────────────────────────────────────
+function loginWithGoogle() {
+    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+}
+
+// ─────────────────────────────────────────
+// OAuth code 교환
+// POST /api/auth/oauth/tokens
+// ─────────────────────────────────────────
+async function exchangeOauthCode(code) {
+    const response = await axiosInstance.post('/api/auth/oauth/tokens', { code });
+
+    const accessToken = response.data.accessToken;
+    localStorage.setItem('accessToken', accessToken);
+
+    return {
+        loginMethod: 'google',
+        keepSignedIn: false,
+        profileRequired: response.data.profileRequired,
+        user: {
+            role: 'user',
+            status: 'ACTIVE',
+            provider: 'google',
+        },
+    };
 }
 
 export const authService = {
-  loginWithEmail,
-  signupWithEmail,
-  logout,
+    loginWithEmail,
+    signupWithEmail,
+    logout,
+    loginWithGoogle,
+    exchangeOauthCode,
 };

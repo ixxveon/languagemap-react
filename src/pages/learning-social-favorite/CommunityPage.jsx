@@ -8,24 +8,28 @@ const communityEntryCards = [
     id: 'friends',
     accent: '연결 관리',
     title: '친구 관리',
-    description:
-      '친구 요청을 확인하고 새 친구를 추가하면서 함께 공부할 학습 메이트를 정리해보세요.',
+    description: '친구 요청을 확인하고 학습 메이트를 관리해보세요.',
     path: '/community/friends',
   },
   {
     id: 'ranking',
     accent: '순위 확인',
     title: '점수 비교와 랭킹',
-    description:
-      '친구들과 학습 기록을 비교하고, 전체 사용자 안에서 내 위치를 빠르게 확인할 수 있어요.',
+    description: '친구들과 점수를 비교하고 랭킹을 확인해보세요.',
     path: '/community/ranking',
   },
   {
-    id: 'favorites',
+    id: 'learning', 
+    accent: '학습 관리',
+    title: '학습 목표',
+    description: '학습 목표를 설정하고 진행도를 확인해보세요.',
+    path: '/community/learning',
+  },
+  {
+    id: 'favorites',  
     accent: '학습 보관함',
-    title: '목표와 즐겨찾기',
-    description:
-      '진행 중인 목표와 자주 보는 학습 루트를 한 번에 모아 관리해보세요.',
+    title: '즐겨찾기',
+    description: '자주 보는 학습 루트를 모아 관리해보세요.',
     path: '/community/favorites',
   },
 ];

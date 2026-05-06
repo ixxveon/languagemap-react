@@ -63,12 +63,18 @@ function SignupPage() {
     try {
       setIsSubmitting(true);
       setErrorMessage('');
-      const session = await authService.signupWithEmail({
-        email: form.email,
-        password: form.password,
-        name: form.name,
-        nickname: form.name,
-      });
+    const session = await authService.signupWithEmail({
+    email: form.email,
+    password: form.password,
+    passwordConfirm: form.passwordConfirm,
+    name: form.name,
+    birthDate: form.birthDate,
+    address: form.address,
+    phone: form.phone,
+    agreeTerms: form.agreeTerms,
+    agreePrivacy: form.agreePrivacy,
+    agreeMarketing: form.agreeMarketing,
+});
       setSession(session);
       navigate('/');
     } catch (error) {
