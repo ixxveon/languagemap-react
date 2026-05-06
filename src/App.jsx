@@ -32,6 +32,8 @@ import LoginPage from './pages/user/LoginPage';
 import ProtectedRoute from './components/user/ProtectedRoute';
 import GuestRoute from './components/user/GuestRoute';
 import CoachingPage from './pages/coaching/CoachingPage';
+import OAuthSuccessPage from './pages/user/OAuthSuccessPage';
+
 
 function App() {
   return (
@@ -61,6 +63,7 @@ function App() {
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/oauth/success" element={<OAuthSuccessPage />} />
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<ProfilePage />} />
