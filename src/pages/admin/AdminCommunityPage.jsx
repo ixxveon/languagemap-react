@@ -16,7 +16,7 @@ const communityTabs = [
   {
     id: 'friends',
     label: '친구 관리',
-    kicker: 'Social Admin',
+    kicker: '\uC18C\uC15C \uAD00\uB9AC',
     description: '친구 차단/거절 이력과 소셜 신고 관련 데이터를 확인합니다.',
   },
   {
@@ -129,8 +129,8 @@ function AdminCommunityPage() {
             <button
               type="button"
               className="mapingo-ghost-button admin-community-action-button"
-              aria-label={'\ucee4\ubba4\ub2c8\ud2f0 \uad00\ub9ac\ub85c \ub3cc\uc544\uac00\uae30'}
-              title={'\ucee4\ubba4\ub2c8\ud2f0 \uad00\ub9ac\ub85c \ub3cc\uc544\uac00\uae30'}
+              aria-label={'\ucee4\ubba4\ub2c8\ud2f0 \uba54\uc778\uc73c\ub85c'}
+              title={'\ucee4\ubba4\ub2c8\ud2f0 \uba54\uc778\uc73c\ub85c'}
               onClick={handlePanelBack}
             >
               커뮤니티 관리
