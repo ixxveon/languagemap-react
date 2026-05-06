@@ -148,6 +148,7 @@ export const pathToPage = {
   '/growth/progress': 'growth',
   '/growth/insights': 'growth',
   '/community': 'community',
+  '/community/learning': 'community',
   '/community/friends': 'community',
   '/community/ranking': 'community',
   '/community/favorites': 'community',

@@ -6,6 +6,7 @@ import GrowthPage from './pages/history-analysis/GrowthPage';
 import GrowthProgressPage from './pages/history-analysis/GrowthProgressPage';
 import GrowthInsightsPage from './pages/history-analysis/GrowthInsightsPage';
 import CommunityPage from './pages/learning-social-favorite/CommunityPage';
+import CommunityLearningPage from './pages/learning-social-favorite/CommunityLearningPage';
 import CommunityFriendsPage from './pages/learning-social-favorite/CommunityFriendsPage';
 import CommunityRankingPage from './pages/learning-social-favorite/CommunityRankingPage';
 import CommunityFavoritesPage from './pages/learning-social-favorite/CommunityFavoritesPage';
@@ -47,6 +48,7 @@ function App() {
         <Route path="/growth/goals" element={<Navigate to="/growth/insights" replace />} />
         <Route path="/growth/insights" element={<GrowthInsightsPage />} />
         <Route path="/community" element={<CommunityPage />} />
+        <Route path="/community/learning" element={<CommunityLearningPage />} />
         <Route path="/community/friends" element={<CommunityFriendsPage />} />
         <Route path="/community/ranking" element={<CommunityRankingPage />} />
         <Route path="/community/favorites" element={<CommunityFavoritesPage />} />
