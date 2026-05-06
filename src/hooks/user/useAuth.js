@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../api/user/authService';
+import { userService } from '../../api/user/userService';  
 import { useMapingoStore } from '../../store/user/useMapingoStore';
 
 export function useAuth() {
@@ -72,11 +73,39 @@ export function useAuth() {
         }
     };
 
+    const restoreSession = async () => {
+        const token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        try {
+            const user = await userService.getMe();
+            setSession({
+                loginMethod: 'restore',
+                keepSignedIn: true,
+                user: {
+                    userId: user.userId,
+                    email: user.email,
+                    name: user.name,
+                    role: user.role.toLowerCase(),
+                    status: user.status,
+                    provider: 'local',
+                },
+            });
+        } catch (error) {
+            localStorage.removeItem('accessToken');
+            clearSession();
+        }
+    };
+
+
+
+
     return {
         login,
         signup,
         logout,
         loginWithGoogle,
+        restoreSession,
         exchangeOauthCode,
         isSubmitting,
         errorMessage,
