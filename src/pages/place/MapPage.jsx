@@ -52,8 +52,11 @@ function buildEvaluationMessage(place) {
 
 function MapPage() {
   const navigate = useNavigate();
-  const places = placeService.fetchRoutes();
+  const [places, setPlaces] = useState([]);
+  const [selectedPlaceDetail, setSelectedPlaceDetail] = useState(null);
   const capitals = placeService.fetchPlaceTabs();
+  const [learningSession, setLearningSession] = useState(null);
+  const [activeMissionId, setActiveMissionId] = useState(null);
   const activeCapitalId = useMapingoStore((state) => state.mapActiveTab);
   const selectedPlaceId = useMapingoStore((state) => state.selectedRouteId);
   const setActiveCapitalId = useMapingoStore((state) => state.setMapActiveTab);
@@ -65,6 +68,22 @@ function MapPage() {
   const [chatInput, setChatInput] = useState('');
   const [chatCompleted, setChatCompleted] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState('Starter');
+
+  useEffect(() => {
+    const loadPlaceMarkers = async () => {
+      try {
+        const data = await placeService.readPlaceMarkers();
+        setPlaces(data);
+
+        console.log('장소 마커 목록 조회 성공:', data);
+      } catch (error) {
+        console.error('장소 마커 목록 조회 실패:', error);
+        alert('장소 목록을 불러오지 못했습니다.');
+      }
+    };
+
+    loadPlaceMarkers();
+  }, []);
 
   useEffect(() => {
     const pageShell = document.querySelector('.mapingo-page-shell');
@@ -87,13 +106,7 @@ function MapPage() {
     return places.filter((place) => place.capitalId === currentCapitalId);
   }, [currentCapitalId, places]);
 
-  const selectedPlace = useMemo(() => {
-    if (!selectedPlaceId) {
-      return null;
-    }
-
-    return visiblePlaces.find((place) => place.id === selectedPlaceId) ?? null;
-  }, [selectedPlaceId, visiblePlaces]);
+  const selectedPlace = selectedPlaceDetail;
 
   const selectedCapital = useMemo(() => {
     return capitals.find((capital) => capital.id === currentCapitalId) ?? capitals[0];
@@ -115,9 +128,10 @@ function MapPage() {
     resetChatState();
   };
 
-  const handleSelectPlace = (placeId) => {
+  const handleSelectPlace = async (placeId) => {
     if (!placeId) {
       setSelectedPlaceId('');
+      setSelectedPlaceDetail(null);
       setPanelVisible(false);
       setPanelMode('guide');
       setSelectedLevel('Starter');
@@ -125,38 +139,126 @@ function MapPage() {
       return;
     }
 
-    setSelectedPlaceId(placeId);
-    setPanelVisible(true);
-    setPanelMode('detail');
-    const nextPlace = places.find((place) => place.id === placeId);
-    setSelectedLevel(nextPlace?.difficulty ?? 'Starter');
-    resetChatState();
+    try {
+      setSelectedPlaceId(placeId);
+
+      const detail = await placeService.readPlaceDetail(placeId);
+
+      const missionList = detail.mission ?? detail.missions ?? [];
+
+      console.log('미션 리스트:', missionList);
+
+      setSelectedPlaceDetail({
+        ...detail,
+        id: placeId,
+        title: detail.placeName ?? `장소 ${placeId}`,
+        description: detail.placeDescription ?? '',
+        placeType: detail.scenarioCategory ?? '',
+        scenario: detail.scenarioDescription ?? '',
+        missions: missionList.map((mission) => ({
+          id: mission.missionId,
+          title: mission.missionTitle,
+          summary: mission.missionDescription,
+        })),
+        difficulty: 'Starter',
+        chatSteps: [],
+        feedback: {
+          strengths: [],
+          improvements: [],
+        },
+      });
+
+      setPanelVisible(true);
+      setPanelMode('detail');
+      setSelectedLevel('Starter');
+      resetChatState();
+    } catch (error) {
+      console.error('장소 상세 조회 실패:', error);
+      alert('장소 상세 정보를 불러오지 못했습니다.');
+    }
   };
 
-  const handleStartLearning = () => {
+  const handleStartLearning = async () => {
     if (!selectedPlace) {
       return;
     }
 
-    setPanelVisible(true);
-    setPanelMode('chat');
-    setChatInput('');
-    const initialLog = [
-      {
-        role: 'ai',
-        speaker: selectedPlace.chatSteps[0]?.speaker ?? 'AI Coach',
-        text:
-          selectedPlace.chatSteps[0]?.prompt ??
-          `Welcome to ${selectedPlace.title}. Start talking to me as if you are really there.`,
-      },
-    ];
+    try {
+      const request = {
+        userId: 1, // TODO: 로그인 연결 후 현재 로그인 userId로 교체
+        level: selectedLevel,
+      };
 
-    setChatLog(initialLog);
-    setRecentMapChatLog(initialLog);
+      const session = await placeService.startLearningSession(
+        selectedPlace.id,
+        request
+      );
+
+      console.log('학습 세션 생성 성공:', session);
+
+      setLearningSession(session);
+
+      setPanelVisible(true);
+      setPanelMode('chat');
+      setChatInput('');
+
+      const initialLog = [
+        {
+          role: 'ai',
+          speaker: 'AI Coach',
+          text: `${selectedPlace.title} 학습 세션이 시작되었습니다. 이제 미션을 선택해서 대화를 시작해보세요.`,
+        },
+      ];
+
+      setChatLog(initialLog);
+      setRecentMapChatLog(initialLog);
+    } catch (error) {
+      console.error('학습 세션 생성 실패:', error);
+      alert('학습 세션을 시작하지 못했습니다.');
+    }
   };
 
-  const handleSendMessage = () => {
-    if (!selectedPlace || chatCompleted) {
+  const findMissionSessionId = (missionId) => {
+    return learningSession?.missionSessions?.find(
+      (missionSession) => missionSession.missionId === missionId
+    )?.missionSessionId;
+  };
+
+  const handleStartMission = async (missionId) => {
+    if (!learningSession) {
+      alert('먼저 학습 세션을 시작해주세요.');
+      return;
+    }
+
+    try {
+      const response = await placeService.startMissionSession(
+        learningSession.learningSessionId,
+        missionId
+      );
+
+      console.log('미션 세션 시작 성공:', response);
+
+      const aiMessage = {
+        role: 'ai',
+        speaker: 'AI Coach',
+        text: response.aiMessage,
+      };
+
+      setPanelVisible(true);
+      setPanelMode('chat');
+      setChatInput('');
+      setActiveMissionId(missionId);
+      setChatCompleted(false);
+      setChatLog((prev) => [...prev, aiMessage]);
+      setRecentMapChatLog((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('미션 세션 시작 실패:', error);
+      alert('미션을 시작하지 못했습니다.');
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!learningSession || !activeMissionId || chatCompleted) {
       return;
     }
 
@@ -172,28 +274,29 @@ function MapPage() {
       text: trimmed,
     };
 
-    const userTurnCount = chatLog.filter((message) => message.role === 'user').length;
-    const aiMessage = {
-      role: 'ai',
-      speaker: selectedPlace.chatSteps[Math.min(userTurnCount + 1, selectedPlace.chatSteps.length - 1)]?.speaker ?? 'AI Coach',
-      text: buildAiReply(selectedPlace, trimmed, userTurnCount),
-    };
+    setChatLog((prev) => [...prev, userMessage]);
+    setRecentMapChatLog((prev) => [...prev, userMessage]);
+    setChatInput('');
 
-    const nextLog = [...chatLog, userMessage, aiMessage];
+    try {
+      const response = await placeService.sendChatMessage({
+        learningSessionId: learningSession.learningSessionId,
+        missionId: activeMissionId,
+        userMessage: trimmed,
+      });
 
-    if (userTurnCount + 1 >= selectedPlace.chatSteps.length) {
-      nextLog.push({
+      const aiMessage = {
         role: 'ai',
         speaker: 'AI Coach',
-        text: buildEvaluationMessage(selectedPlace),
-        kind: 'evaluation',
-      });
-      setChatCompleted(true);
-    }
+        text: response.aiMessage,
+      };
 
-    setChatLog(nextLog);
-    setRecentMapChatLog(nextLog);
-    setChatInput('');
+      setChatLog((prev) => [...prev, aiMessage]);
+      setRecentMapChatLog((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('채팅 응답 실패:', error);
+      alert('AI 응답을 불러오지 못했습니다.');
+    }
   };
 
   const handleBackToDetail = () => {
@@ -225,6 +328,8 @@ function MapPage() {
           onStartLearning={handleStartLearning}
           onBackToDetail={handleBackToDetail}
           onOpenCoaching={() => navigate('/coaching')}
+          learningSession={learningSession}
+          onStartMission={handleStartMission}
         />
       </section>
     </div>

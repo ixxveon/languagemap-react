@@ -47,6 +47,8 @@ function RouteMap({
   onStartLearning,
   onBackToDetail,
   onOpenCoaching,
+  onStartMission,
+  learningSession
 }) {
   const mapElementRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -54,13 +56,7 @@ function RouteMap({
   const chatLogRef = useRef(null);
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
-  const visiblePlaces = useMemo(() => {
-    if (activeCapitalId === 'all') {
-      return places;
-    }
-
-    return places.filter((place) => place.capitalId === activeCapitalId);
-  }, [activeCapitalId, places]);
+  const visiblePlaces = places;
 
   const activeCapital = useMemo(() => {
     return capitals.find((capital) => capital.id === activeCapitalId) ?? capitals[0];
@@ -108,7 +104,6 @@ function RouteMap({
           const marker = new maps.Marker({
             position: { lat: place.lat, lng: place.lng },
             map,
-            title: place.title,
             zIndex: isSelected ? 999 : 10,
             icon: {
               path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z',
@@ -118,13 +113,7 @@ function RouteMap({
               strokeWeight: 2,
               scale: isSelected ? 1.5 : 1.28,
               anchor: new maps.Point(12, 22),
-            },
-            label: {
-              text: place.placeType.slice(0, 1),
-              color: '#ffffff',
-              fontSize: '11px',
-              fontWeight: '700',
-            },
+            }
           });
 
           marker.addListener('click', () => onSelectPlace(place.id));
@@ -156,7 +145,7 @@ function RouteMap({
         map.panTo(activeCapital.center);
         map.setZoom(activeCapital.zoom);
       })
-      .catch(() => {});
+      .catch(() => { });
 
     return () => {
       cancelled = true;
@@ -361,7 +350,7 @@ function RouteMap({
                   <section className="map-domain-panel-section">
                     <h3>레벨 선택</h3>
                     <div className="map-domain-level-row">
-                      {['Starter', 'Intermediate', 'Advanced'].map((level) => (
+                      {['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].map((level) => (
                         <button
                           key={level}
                           type="button"
@@ -424,8 +413,16 @@ function RouteMap({
                       <h3>{mission.title}</h3>
                       <p>{mission.summary}</p>
                     </div>
-                    <button type="button" className="map-domain-mission-button">
-                      내용 확인
+                    <button
+                      type="button"
+                      className="map-domain-mission-button"
+                      onClick={() => {
+                        if (learningSession) {
+                          onStartMission(mission.id);
+                        }
+                      }}
+                    >
+                      {learningSession ? '미션 시작' : '내용 확인'}
                     </button>
                   </article>
                 ))
