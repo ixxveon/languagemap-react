@@ -172,6 +172,7 @@ export const pathToPage = {
   '/admin/content': 'admin',
   '/admin/payments': 'admin',
   '/admin/community': 'admin',
+  '/admin/community/learning': 'admin',
   '/admin/coaching': 'admin',
   '/admin/growth': 'admin',
   '/ai/stt': 'premium',

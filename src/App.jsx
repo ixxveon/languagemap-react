@@ -22,6 +22,7 @@ import AdminMembersPage from './pages/admin/AdminMembersPage';
 import AdminNoticesPage from './pages/admin/AdminNoticesPage';
 import AdminContentPage from './pages/admin/AdminContentPage';
 import AdminCommunityPage from './pages/admin/AdminCommunityPage';
+import AdminLearningGoalPage from './pages/admin/AdminLearningGoalPage';
 import AdminCoachingPage from './pages/admin/AdminCoachingPage';
 import AdminGrowthPage from './pages/admin/AdminGrowthPage';
 import AdminPaymentsPage from './pages/admin/AdminPaymentsPage';
@@ -71,6 +72,7 @@ function App() {
           <Route path="/admin/support" element={<AdminNoticesPage />} />
           <Route path="/admin/content" element={<AdminContentPage />} />
           <Route path="/admin/community" element={<AdminCommunityPage />} />
+          <Route path="/admin/community/learning" element={<AdminLearningGoalPage />} />
           <Route path="/admin/coaching" element={<AdminCoachingPage />} />
           <Route path="/admin/growth" element={<AdminGrowthPage />} />
           <Route path="/admin/payments" element={<AdminPaymentsPage />} />

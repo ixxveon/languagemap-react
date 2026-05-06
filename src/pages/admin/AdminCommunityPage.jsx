@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
 import { adminService } from '../../api/admin/adminService';
 
@@ -83,6 +83,7 @@ function getNowLabel() {
 }
 
 function AdminCommunityPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const panelParam = searchParams.get('panel');
   const activePanel = communityTabs.some((tab) => tab.id === panelParam) ? panelParam : null;
@@ -173,6 +174,15 @@ function AdminCommunityPage() {
   const handlePanelSelect = (panel) => {
     setSearchParams({ panel });
     resetGoalForm();
+  };
+
+  const handleEntrySelect = (tabId) => {
+    if (tabId === 'goals') {
+      navigate('/admin/community/learning');
+      return;
+    }
+
+    handlePanelSelect(tabId);
   };
 
   const handlePanelBack = () => {
@@ -290,7 +300,7 @@ function AdminCommunityPage() {
                 key={tab.id}
                 type="button"
                 className="mapingo-domain-entry-card admin-entry-card admin-community-entry-card"
-                onClick={() => handlePanelSelect(tab.id)}
+                onClick={() => handleEntrySelect(tab.id)}
               >
                 <div className="community-entry-card-top">
                   <span className="community-entry-accent">{tab.kicker}</span>
@@ -485,106 +495,6 @@ function AdminCommunityPage() {
                     </article>
                   ))}
                 </div>
-              </div>
-            </div>
-          ) : null}
-
-          {activePanel === 'reports' ? (
-            <div className="mapingo-admin-grid admin-content-layout">
-              <div className="mapingo-list-card">
-                <div className="mapingo-card-header-row admin-result-head">
-                  <div>
-                    <h3>신고 목록 조회</h3>
-                    <p className="mapingo-muted-copy">신고자를 선택하면 오른쪽에서 상세 내용을 확인합니다.</p>
-                  </div>
-                  <span className="mapingo-inline-badge">{communityTabs[1].api}</span>
-                </div>
-                <input
-                  className="mapingo-input admin-notice-search"
-                  type="search"
-                  value={reportSearch}
-                  onChange={(event) => setReportSearch(event.target.value)}
-                  placeholder="신고자, 대상자, 사유, 상태 검색"
-                />
-                <div className="mapingo-selectable-list">
-                  {filteredReports.map((report) => (
-                    <button
-                      key={report.id}
-                      type="button"
-                      className={`mapingo-post-card admin-content-card ${
-                        selectedReport?.id === report.id ? 'is-selected' : ''
-                      }`}
-                      onClick={() => setSelectedReportId(report.id)}
-                    >
-                      <div className="mapingo-admin-item-head">
-                        <div>
-                          <strong>{report.targetName}</strong>
-                          <p>신고자 {report.reporterName} · {report.createdAt}</p>
-                        </div>
-                        <span className={`admin-notice-status ${statusClassMap[report.status] ?? 'is-draft'}`}>
-                          {report.status}
-                        </span>
-                      </div>
-                      <p className="admin-content-description">{report.reason}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mapingo-form-card">
-                <div className="mapingo-card-header-row admin-builder-head">
-                  <div>
-                    <h3>신고 상세 조회</h3>
-                    <p className="mapingo-muted-copy">PENDING 신고는 처리 완료 상태로 변경할 수 있습니다.</p>
-                  </div>
-                </div>
-                {selectedReport ? (
-                  <section className="admin-entity-section">
-                    <div className="admin-entity-head">
-                      <strong>{selectedReport.targetName}</strong>
-                      <span className={`admin-notice-status ${statusClassMap[selectedReport.status] ?? 'is-draft'}`}>
-                        {selectedReport.status}
-                      </span>
-                    </div>
-                    <div className="mapingo-admin-meta-grid admin-community-meta-grid">
-                      <p><strong>신고자</strong>{selectedReport.reporterName}<br />{selectedReport.reporterEmail}</p>
-                      <p><strong>대상자</strong>{selectedReport.targetName}<br />{selectedReport.targetEmail}</p>
-                      <p><strong>접수일</strong>{selectedReport.createdAt}</p>
-                      <p><strong>처리일</strong>{selectedReport.processedAt || '-'}</p>
-                    </div>
-                    <label className="mapingo-field">
-                      <span className="mapingo-field-label">신고 사유</span>
-                      <textarea className="mapingo-input mapingo-admin-textarea" value={selectedReport.reason} readOnly />
-                    </label>
-                    <label className="mapingo-field">
-                      <span className="mapingo-field-label">관리자 메모</span>
-                      <textarea
-                        className="mapingo-input mapingo-admin-textarea"
-                        value={selectedReport.adminMemo}
-                        onChange={(event) =>
-                          setReports((currentReports) =>
-                            currentReports.map((report) =>
-                              report.id === selectedReport.id ? { ...report, adminMemo: event.target.value } : report,
-                            ),
-                          )
-                        }
-                        placeholder="처리 메모를 입력하세요"
-                      />
-                    </label>
-                    <div className="mapingo-admin-action-row">
-                      <button
-                        type="button"
-                        className="mapingo-submit-button"
-                        onClick={() => handleSaveReportStatus(selectedReport.id)}
-                        disabled={selectedReport.status === 'RESOLVED'}
-                      >
-                        RESOLVED 처리
-                      </button>
-                    </div>
-                  </section>
-                ) : (
-                  <div className="admin-content-empty-state">선택할 신고가 없습니다.</div>
-                )}
               </div>
             </div>
           ) : null}
