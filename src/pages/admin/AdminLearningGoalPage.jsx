@@ -1,16 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { MapingoPageSection } from '../../components/MapingoPageBlocks';
-import { adminLearningService } from '../../api/admin/adminLearningService';
-
-const emptyGoalForm = {
-  title: '',
-  description: '',
-  goalType: 'STUDY_COUNT',
-  targetValue: '1',
-  periodType: 'WEEKLY',
-  isActive: true,
-};
+import { useAdminLearningGoals } from '../../hooks/community/useAdminLearningGoals';
+import { includesSearch } from '../../utils/community/search';
+import '../../styles/admin/AdminLearningGoalPage.css';
 
 const goalTypeLabels = {
   STUDY_COUNT: '학습 횟수',
@@ -26,380 +17,375 @@ const periodLabels = {
   NONE: '없음',
 };
 
-function normalizeGoal(goal) {
-  return {
-    id: goal.goalMasterId,
-    title: goal.goalTitle,
-    description: goal.goalDescription,
-    goalType: goal.goalType,
-    targetValue: goal.targetValue,
-    periodType: goal.periodType,
-    isActive: goal.active,
-  };
-}
-
 function AdminLearningGoalPage() {
-  const navigate = useNavigate();
+  const [goalSearch, setGoalSearch] = useState('');
+  const [selectedGoalId, setSelectedGoalId] = useState(null);
+  const [isCreateMode, setIsCreateMode] = useState(false);
+  const [hasInitializedSelection, setHasInitializedSelection] = useState(false);
 
-  const [goals, setGoals] = useState([]);
-  const [goalForm, setGoalForm] = useState(emptyGoalForm);
-  const [editingGoalId, setEditingGoalId] = useState(null);
-  const [goalLoading, setGoalLoading] = useState(false);
-  const [goalError, setGoalError] = useState('');
+  const {
+    goalForm,
+    setGoalForm,
+    editingGoalId,
+    editingGoal,
+    sortedGoals,
+    goalLoading,
+    goalError,
+    handleGoalSubmit,
+    handleEditGoal,
+    handleToggleGoal,
+    handleDeleteGoal,
+    resetGoalForm,
+  } = useAdminLearningGoals();
 
-  const sortedGoals = useMemo(
-    () => [...goals].sort((left, right) => left.id - right.id),
-    [goals],
+  const filteredGoals = useMemo(
+    () =>
+      sortedGoals.filter((goal) =>
+        includesSearch(
+          [
+            goal.title,
+            goal.description,
+            goalTypeLabels[goal.goalType] ?? goal.goalType,
+            periodLabels[goal.periodType] ?? goal.periodType,
+            String(goal.targetValue),
+            String(goal.id),
+          ],
+          goalSearch,
+        ),
+      ),
+    [goalSearch, sortedGoals],
   );
 
-  const editingGoal = goals.find((goal) => goal.id === editingGoalId) ?? null;
-
-  const fetchGoals = async () => {
-    try {
-      setGoalLoading(true);
-      setGoalError('');
-
-      const data = await adminLearningService.getGoals();
-      setGoals((data ?? []).map(normalizeGoal));
-    } catch (error) {
-      console.error(error);
-      setGoalError('목표 목록을 불러오지 못했습니다.');
-    } finally {
-      setGoalLoading(false);
+  useEffect(() => {
+    if (selectedGoalId && !sortedGoals.some((goal) => goal.id === selectedGoalId)) {
+      setSelectedGoalId(null);
     }
-  };
+  }, [selectedGoalId, sortedGoals]);
 
   useEffect(() => {
-    fetchGoals();
-  }, []);
+    if (
+      !hasInitializedSelection &&
+      !isCreateMode &&
+      !editingGoalId &&
+      !selectedGoalId &&
+      filteredGoals.length > 0
+    ) {
+      const firstGoal = filteredGoals[0];
 
-  const resetGoalForm = () => {
-    setEditingGoalId(null);
-    setGoalForm(emptyGoalForm);
+      setSelectedGoalId(firstGoal.id);
+      setHasInitializedSelection(true);
+      handleEditGoal(firstGoal);
+    }
+  }, [
+    editingGoalId,
+    filteredGoals,
+    handleEditGoal,
+    hasInitializedSelection,
+    isCreateMode,
+    selectedGoalId,
+  ]);
+
+  const selectedGoal =
+    sortedGoals.find((goal) => goal.id === selectedGoalId) ??
+    filteredGoals.find((goal) => goal.id === editingGoalId) ??
+    null;
+
+  const handleSelectGoal = (goal) => {
+    setIsCreateMode(false);
+    setSelectedGoalId(goal.id);
+    handleEditGoal(goal);
   };
 
-  const handleGoalSubmit = async (event) => {
-    event.preventDefault();
+  const handleCreateNew = () => {
+    setIsCreateMode(true);
+    setSelectedGoalId(null);
+    resetGoalForm();
+  };
 
-    const title = goalForm.title.trim();
-    const description = goalForm.description.trim();
+  const handleSubmitGoal = async (event) => {
+    const isSuccess = await handleGoalSubmit(event);
 
-    if (!title || !description) {
-      alert('목표명과 설명을 입력해주세요.');
+    if (!isSuccess) {
       return;
     }
 
-    const requestBody = {
-      badgeId: null,
-      goalType: goalForm.goalType,
-      goalTitle: title,
-      goalDescription: description,
-      targetValue: Number(goalForm.targetValue),
-      periodType: goalForm.periodType,
-    };
-
-    try {
-      if (editingGoalId) {
-        await adminLearningService.updateGoal(editingGoalId, requestBody);
-        alert('목표가 수정되었습니다.');
-      } else {
-        await adminLearningService.createGoal(requestBody);
-        alert('목표가 등록되었습니다.');
-      }
-
-      await fetchGoals();
-      resetGoalForm();
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.message || '목표 저장 중 오류가 발생했습니다.');
-    }
+    setIsCreateMode(true);
+    setSelectedGoalId(null);
   };
 
-  const handleEditGoal = (goal) => {
-    setEditingGoalId(goal.id);
+  const handleDeleteSelectedGoal = async () => {
+    if (!selectedGoal) {
+      return;
+    }
 
-    setGoalForm({
-      title: goal.title,
-      description: goal.description,
-      goalType: goal.goalType,
-      targetValue: String(goal.targetValue),
-      periodType: goal.periodType,
-      isActive: goal.isActive,
-    });
+    const isSuccess = await handleDeleteGoal(selectedGoal.id);
+
+    if (!isSuccess) {
+      return;
+    }
+
+    setIsCreateMode(true);
+    setSelectedGoalId(null);
   };
 
-  const handleToggleGoal = async (goal) => {
-    try {
-      await adminLearningService.updateGoalActive(goal.id, !goal.isActive);
-
-      alert(goal.isActive ? '목표가 비활성화되었습니다.' : '목표가 활성화되었습니다.');
-
-      await fetchGoals();
-
-      if (editingGoalId === goal.id) {
-        resetGoalForm();
-      }
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.message || '상태 변경 중 오류가 발생했습니다.');
+  const handleToggleSelectedGoal = async () => {
+    if (!selectedGoal) {
+      return;
     }
-  };
 
-  const handleDeleteGoal = async (goalId) => {
-    const confirmed = window.confirm('정말 삭제하시겠습니까?');
-    if (!confirmed) return;
+    const isSuccess = await handleToggleGoal(selectedGoal);
 
-    try {
-      await adminLearningService.deleteGoal(goalId);
-      alert('목표가 삭제되었습니다.');
-
-      await fetchGoals();
-
-      if (editingGoalId === goalId) {
-        resetGoalForm();
-      }
-    } catch (error) {
-      console.error(error);
-      alert(
-        error.response?.data?.message ||
-          '이미 사용 중인 목표는 삭제할 수 없습니다. 비활성화를 이용해주세요.',
-      );
+    if (!isSuccess) {
+      return;
     }
+
+    setSelectedGoalId(selectedGoal.id);
   };
 
   return (
-    <div className="mapingo-dashboard">
-      <MapingoPageSection
-        eyebrow="Admin"
-        title="학습 목표 관리"
-        description="사용자가 선택할 수 있는 학습 목표를 등록하고 수정하며 상태를 관리합니다."
-      />
-
-      <section className="mapingo-page-section">
-        <div className="mapingo-card-header-row admin-result-head">
-          <div>
-            <p className="mapingo-eyebrow">Learning Admin</p>
-            <h3>목표 관리</h3>
-            <p className="mapingo-muted-copy">
-              사용자가 선택할 학습 목표를 등록하고 수정할 수 있습니다.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="mapingo-ghost-button"
-            onClick={() => navigate('/admin/community')}
-          >
-            기능 선택으로
-          </button>
-        </div>
-      </section>
-
-      <section className="mapingo-page-section">
-        <div className="mapingo-admin-grid admin-content-layout">
-          <div className="mapingo-form-card">
-            <div className="mapingo-card-header-row admin-builder-head">
-              <div>
-                <h3>{editingGoalId ? '목표 수정' : '목표 등록'}</h3>
-                <p className="mapingo-muted-copy">
-                  목표 이름, 설명, 조건을 입력해 학습 목표를 관리합니다.
-                </p>
-              </div>
-
-              <span className="mapingo-inline-badge">목표 등록 · 수정</span>
+    <section className="mapingo-page-section admin-learning-page">
+      <div className="mapingo-admin-grid admin-content-layout">
+        <div className="mapingo-list-card admin-learning-list">
+          <div className="mapingo-card-header-row admin-result-head">
+            <div>
+              <h3>학습 목표 목록</h3>
+              <p className="mapingo-muted-copy">
+                등록된 목표를 검색하고 선택하면 오른쪽에서 상세 내용과 상태를 바로 관리할 수 있습니다.
+              </p>
             </div>
 
-            <form className="mapingo-admin-form admin-builder-form" onSubmit={handleGoalSubmit}>
-              {editingGoal ? (
-                <div className="admin-content-tags">
-                  <span>ID {editingGoal.id}</span>
-                  <span>{goalTypeLabels[editingGoal.goalType]}</span>
-                  <span>{periodLabels[editingGoal.periodType]}</span>
-                  <span>{editingGoal.isActive ? '활성' : '비활성'}</span>
+            <span className="mapingo-inline-badge">{filteredGoals.length}개</span>
+          </div>
+
+          <input
+            className="mapingo-input admin-notice-search"
+            type="search"
+            value={goalSearch}
+            onChange={(event) => setGoalSearch(event.target.value)}
+            placeholder="목표명, 설명, 타입 검색"
+          />
+
+          {goalLoading ? <p className="mapingo-muted-copy">목표 목록을 불러오는 중입니다.</p> : null}
+          {goalError ? <p className="mapingo-muted-copy">{goalError}</p> : null}
+
+          <div className="mapingo-selectable-list admin-learning-scroll-list">
+            {filteredGoals.map((goal) => (
+              <button
+                key={goal.id}
+                type="button"
+                className={`mapingo-post-card admin-content-card admin-learning-goal-card ${selectedGoal?.id === goal.id ? 'is-selected' : ''
+                  }`}
+                onClick={() => handleSelectGoal(goal)}
+              >
+                <div className="mapingo-admin-item-head">
+                  <div>
+                    <strong>{goal.title}</strong>
+                    <p>
+                      {goalTypeLabels[goal.goalType]} · {periodLabels[goal.periodType]} · 목표값{' '}
+                      {goal.targetValue}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`admin-notice-status ${goal.isActive ? 'is-published' : 'is-draft'}`}
+                  >
+                    {goal.isActive ? '활성' : '비활성'}
+                  </span>
                 </div>
-              ) : null}
+
+                <p className="admin-content-description admin-learning-goal-description">
+                  {goal.description}
+                </p>
+              </button>
+            ))}
+
+            {!goalLoading && filteredGoals.length === 0 ? (
+              <div className="admin-content-empty-state">검색 결과에 맞는 학습 목표가 없습니다.</div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mapingo-form-card admin-learning-detail-card">
+          <div className="mapingo-card-header-row admin-builder-head">
+            <div>
+              <h3>{editingGoal ? '학습 목표 상세 수정' : '새 학습 목표 등록'}</h3>
+              <p className="mapingo-muted-copy">
+                선택한 목표의 정보를 한쪽에서 확인하고 바로 수정할 수 있습니다.
+              </p>
+            </div>
+
+            <button type="button" className="mapingo-ghost-button" onClick={handleCreateNew}>
+              새 목표 등록
+            </button>
+          </div>
+
+          {selectedGoal ? (
+            <section className="admin-entity-section admin-learning-detail-panel">
+              <div className="admin-entity-head">
+                <strong>{selectedGoal.title}</strong>
+
+                <span
+                  className={`admin-notice-status ${selectedGoal.isActive ? 'is-published' : 'is-draft'
+                    }`}
+                >
+                  {selectedGoal.isActive ? '활성' : '비활성'}
+                </span>
+              </div>
+
+              <div className="mapingo-admin-meta-grid admin-learning-detail-grid">
+                <p>
+                  <strong>목표 ID</strong>
+                  {selectedGoal.id}
+                </p>
+
+                <p>
+                  <strong>목표 타입</strong>
+                  {goalTypeLabels[selectedGoal.goalType]}
+                </p>
+
+                <p>
+                  <strong>목표 기간</strong>
+                  {periodLabels[selectedGoal.periodType]}
+                </p>
+
+                <p>
+                  <strong>목표 값</strong>
+                  {selectedGoal.targetValue}
+                </p>
+              </div>
+            </section>
+          ) : (
+            <div className="admin-content-tags admin-learning-create-tags">
+              <span>신규 목표</span>
+              <span>작성 후 바로 등록</span>
+            </div>
+          )}
+
+          <form className="mapingo-admin-form admin-builder-form" onSubmit={handleSubmitGoal}>
+            <label className="mapingo-field">
+              <span className="mapingo-field-label">목표 이름</span>
+              <input
+                className="mapingo-input"
+                value={goalForm.title}
+                onChange={(event) =>
+                  setGoalForm((current) => ({
+                    ...current,
+                    title: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+
+            <label className="mapingo-field">
+              <span className="mapingo-field-label">목표 설명</span>
+              <textarea
+                className="mapingo-input mapingo-admin-textarea admin-learning-description-input"
+                value={goalForm.description}
+                onChange={(event) =>
+                  setGoalForm((current) => ({
+                    ...current,
+                    description: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+
+            <div className="admin-content-form-grid admin-learning-form-grid">
+              <label className="mapingo-field">
+                <span className="mapingo-field-label">목표 타입</span>
+                <select
+                  className="mapingo-input"
+                  value={goalForm.goalType}
+                  onChange={(event) =>
+                    setGoalForm((current) => ({
+                      ...current,
+                      goalType: event.target.value,
+                    }))
+                  }
+                >
+                  {Object.entries(goalTypeLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
               <label className="mapingo-field">
-                <span className="mapingo-field-label">목표 이름</span>
+                <span className="mapingo-field-label">목표 값</span>
                 <input
                   className="mapingo-input"
-                  value={goalForm.title}
+                  type="number"
+                  min="1"
+                  value={goalForm.targetValue}
                   onChange={(event) =>
                     setGoalForm((current) => ({
                       ...current,
-                      title: event.target.value,
+                      targetValue: event.target.value,
                     }))
                   }
-                  required
                 />
               </label>
 
               <label className="mapingo-field">
-                <span className="mapingo-field-label">목표 설명</span>
-                <textarea
-                  className="mapingo-input mapingo-admin-textarea"
-                  value={goalForm.description}
+                <span className="mapingo-field-label">목표 기간</span>
+                <select
+                  className="mapingo-input"
+                  value={goalForm.periodType}
                   onChange={(event) =>
                     setGoalForm((current) => ({
                       ...current,
-                      description: event.target.value,
+                      periodType: event.target.value,
                     }))
                   }
-                  required
-                />
+                >
+                  {Object.entries(periodLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
               </label>
-
-              <div className="admin-content-form-grid">
-                <label className="mapingo-field">
-                  <span className="mapingo-field-label">목표 타입</span>
-                  <select
-                    className="mapingo-input"
-                    value={goalForm.goalType}
-                    onChange={(event) =>
-                      setGoalForm((current) => ({
-                        ...current,
-                        goalType: event.target.value,
-                      }))
-                    }
-                  >
-                    {Object.entries(goalTypeLabels).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="mapingo-field">
-                  <span className="mapingo-field-label">목표 값</span>
-                  <input
-                    className="mapingo-input"
-                    type="number"
-                    min="1"
-                    value={goalForm.targetValue}
-                    onChange={(event) =>
-                      setGoalForm((current) => ({
-                        ...current,
-                        targetValue: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-
-                <label className="mapingo-field">
-                  <span className="mapingo-field-label">목표 기간</span>
-                  <select
-                    className="mapingo-input"
-                    value={goalForm.periodType}
-                    onChange={(event) =>
-                      setGoalForm((current) => ({
-                        ...current,
-                        periodType: event.target.value,
-                      }))
-                    }
-                  >
-                    {Object.entries(periodLabels).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              <div className="mapingo-admin-action-row">
-                <button type="submit" className="mapingo-submit-button">
-                  {editingGoalId ? '목표 수정 저장' : '목표 등록'}
-                </button>
-
-                {editingGoalId ? (
-                  <button type="button" className="mapingo-ghost-button" onClick={resetGoalForm}>
-                    취소
-                  </button>
-                ) : null}
-              </div>
-            </form>
-          </div>
-
-          <div className="mapingo-list-card">
-            <div className="mapingo-card-header-row admin-result-head">
-              <div>
-                <h3>목표 목록</h3>
-                <p className="mapingo-muted-copy">
-                  등록된 학습 목표를 확인하고 수정, 비활성화, 삭제할 수 있습니다.
-                </p>
-              </div>
-
-              <span className="mapingo-inline-badge">{sortedGoals.length}개</span>
             </div>
 
-            {goalLoading ? (
-              <p className="mapingo-muted-copy">목표 목록을 불러오는 중입니다.</p>
-            ) : null}
+            <div className="mapingo-admin-action-row admin-learning-action-row">
+              <button type="submit" className="mapingo-submit-button">
+                {editingGoalId ? '목표 수정 저장' : '목표 등록'}
+              </button>
 
-            {goalError ? <p className="mapingo-muted-copy">{goalError}</p> : null}
+              {editingGoalId ? (
+                <button type="button" className="mapingo-ghost-button" onClick={handleCreateNew}>
+                  선택 해제
+                </button>
+              ) : null}
 
-            <div className="admin-entity-stack admin-growth-stack admin-goal-scroll-list">
-              {sortedGoals.map((goal) => (
-                <article key={goal.id} className="mapingo-post-card admin-content-card">
-                  <div className="mapingo-admin-item-head">
-                    <div>
-                      <strong>{goal.title}</strong>
-                      <p>{goal.description}</p>
-                    </div>
+              {selectedGoal ? (
+                <button
+                  type="button"
+                  className={`mapingo-ghost-button ${selectedGoal.isActive ? 'btn-deactivate' : 'btn-activate'
+                    }`}
+                  onClick={handleToggleSelectedGoal}
+                >
+                  {selectedGoal.isActive ? '비활성화' : '활성화'}
+                </button>
+              ) : null}
 
-                    <span
-                      className={`admin-notice-status ${
-                        goal.isActive ? 'is-published' : 'is-draft'
-                      }`}
-                    >
-                      {goal.isActive ? '활성' : '비활성'}
-                    </span>
-                  </div>
-
-                  <div className="admin-content-tags">
-                    <span>{goalTypeLabels[goal.goalType]}</span>
-                    <span>{periodLabels[goal.periodType]}</span>
-                  </div>
-
-                  <div className="mapingo-admin-action-row admin-content-card-actions">
-                    <button
-                      type="button"
-                      className="mapingo-submit-button"
-                      onClick={() => handleEditGoal(goal)}
-                    >
-                      수정
-                    </button>
-
-                    <button
-                      type="button"
-                      className={`mapingo-ghost-button ${
-                        goal.isActive ? 'btn-deactivate' : 'btn-activate'
-                      }`}
-                      onClick={() => handleToggleGoal(goal)}
-                    >
-                      {goal.isActive ? '비활성화' : '활성화'}
-                    </button>
-
-                    <button
-                      type="button"
-                      className="mapingo-ghost-button"
-                      onClick={() => handleDeleteGoal(goal.id)}
-                    >
-                      삭제
-                    </button>
-                  </div>
-                </article>
-              ))}
-
-              {!goalLoading && sortedGoals.length === 0 ? (
-                <div className="admin-content-empty-state">등록된 목표가 없습니다.</div>
+              {selectedGoal ? (
+                <button
+                  type="button"
+                  className="mapingo-ghost-button"
+                  onClick={handleDeleteSelectedGoal}
+                >
+                  삭제
+                </button>
               ) : null}
             </div>
-          </div>
+          </form>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
 
