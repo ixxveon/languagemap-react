@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { placeService } from '../../api/user/placeService';
+import { placeService } from '../../api/place/placeService';
 import { useMapingoStore } from '../../store/user/useMapingoStore';
-import RouteMap from '../../components/user/RouteMap';
+import { toPlaceDetail } from '../../utils/place/placeMapper';
+import RouteMap from '../../components/place/RouteMap';
 import '../../styles/user/mapPage.css';
 
 function buildAiReply(place, userInput, turn) {
@@ -145,29 +146,9 @@ function MapPage() {
 
       const detail = await placeService.readPlaceDetail(placeId);
 
-      const missionList = detail.mission ?? detail.missions ?? [];
+      console.log('장소 상세 조회:', detail);
 
-      console.log('미션 리스트:', missionList);
-
-      setSelectedPlaceDetail({
-        ...detail,
-        id: placeId,
-        title: detail.placeName ?? `장소 ${placeId}`,
-        description: detail.placeDescription ?? '',
-        placeType: detail.scenarioCategory ?? '',
-        scenario: detail.scenarioDescription ?? '',
-        missions: missionList.map((mission) => ({
-          id: mission.missionId,
-          title: mission.missionTitle,
-          summary: mission.missionDescription,
-        })),
-        difficulty: 'Starter',
-        chatSteps: [],
-        feedback: {
-          strengths: [],
-          improvements: [],
-        },
-      });
+      setSelectedPlaceDetail(toPlaceDetail(detail, placeId));
 
       setPanelVisible(true);
       setPanelMode('detail');

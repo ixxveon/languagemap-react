@@ -1,6 +1,6 @@
 ﻿import { useMemo, useState } from 'react';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
-import { placeService } from '../../api/user/placeService';
+import { placeService } from '../../api/place/placeService';
 import '../../styles/user/CommunityFavoritesPage.css';
 
 const routeRows = placeService.fetchRoutes();
