@@ -59,34 +59,22 @@ export function useAuth() {
     };
 
     // 소셜 로그인 
-    async function exchangeOauthCode(code) {
+const exchangeOauthCode = async (code) => {
     try {
-        const response = await axiosInstance.post('/api/auth/oauth/tokens', { code });
-        const accessToken = response.data.accessToken;
-        localStorage.setItem('accessToken', accessToken);
-
-        const meResponse = await axiosInstance.get('/api/users/me');
-        const user = meResponse.data;
-
-        return {
-            loginMethod: 'google',
-            keepSignedIn: false,
-            profileRequired: response.data.profileRequired,
-            isNewUser: response.data.isNewUser,  
-            user: {
-                userId: user.userId,
-                email: user.email,
-                name: user.name,
-                role: user.role.toLowerCase(),
-                status: user.status,
-                provider: 'google',
-            },
-        };
+        setIsSubmitting(true);
+        console.log('exchangeOauthCode 시작:', code);  // 로그 추가
+        const session = await authService.exchangeOauthCode(code);
+        console.log('session 받음:', session);  // 로그 추가
+        setSession(session);
+        return session;
     } catch (error) {
-        const message = error.response?.data?.message || 'OAuth 로그인에 실패했습니다.';
-        throw new Error(message);
+        console.log('exchangeOauthCode 에러:', error);  // 로그 추가
+        setErrorMessage(error.message || '소셜 로그인에 실패했습니다.');
+        throw error;
+    } finally {
+        setIsSubmitting(false);
     }
-}
+};
 
     // 프로필 정보 입력
     const setupProfile = async (form) => {

@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import PingPopLogo from '../../components/user/PingPopLogo';
 import { useAuth } from '../../hooks/user/useAuth';
 
 function SignupPage() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { signup, isSubmitting, errorMessage, setErrorMessage, loginWithGoogle } = useAuth();
     const [form, setForm] = useState({
         name: '',
@@ -19,6 +20,15 @@ function SignupPage() {
         agreePrivacy: false,
         agreeMarketing: false,
     });
+
+    
+    useEffect(() => {
+    const error = searchParams.get('error') || sessionStorage.getItem('signupError');
+    sessionStorage.removeItem('signupError');
+    if (error === 'already_exists') {
+        setErrorMessage('이미 가입된 소셜 계정입니다. 로그인 페이지에서 소셜 로그인을 이용해주세요.');
+    }
+}, []);
 
     const handleChange = (event) => {
         const { name, value, type, checked } = event.target;
@@ -75,7 +85,7 @@ function SignupPage() {
 
                 <div className="mapingo-field">
                     <label className="mapingo-field-label" htmlFor="mapingo-signup-birth">생년월일</label>
-                    <input id="mapingo-signup-birth" className="mapingo-input" type="date" name="birthDate" value={form.birthDate} onChange={handleChange} placeholder="1991-09-03" />
+                    <input id="mapingo-signup-birth" className="mapingo-input" type="date" name="birthDate" value={form.birthDate} onChange={handleChange} />
                 </div>
 
                 <div className="mapingo-field">
@@ -124,7 +134,6 @@ function SignupPage() {
                     </div>
                 </div>
 
-                {/* 에러 메시지 표시 */}
                 {errorMessage ? <p className="mapingo-form-error">{errorMessage}</p> : null}
 
                 <button type="button" className="mapingo-login-primary" onClick={handleSignup} disabled={isSubmitting}>
@@ -143,13 +152,12 @@ function SignupPage() {
                             setErrorMessage('필수 약관에 동의해주세요.');
                             return;
                         }
+                        sessionStorage.setItem('oauthFrom', 'signup');
                         loginWithGoogle();
                     }}
                 >
-                G 구글로 회원가입
+                    G 구글로 회원가입
                 </button>
-
-                {/* <button type="button" className="mapingo-login-social is-kakao">K 카카오로 회원가입</button> */}
 
                 <div className="mapingo-login-footer">
                     <span>이미 계정이 있나요?</span>
