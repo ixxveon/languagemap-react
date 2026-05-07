@@ -11,15 +11,18 @@ async function loginWithEmail({ email, password, rememberMe }) {
     }
 
     try {
-        const response = await axios.post('/api/auth/login', { email, password });
-        localStorage.setItem('accessToken', response.data.accessToken);
+        const response = await axiosInstance.post('/api/auth/login', { email, password });
+        const accessToken = response.data.accessToken;
+        localStorage.setItem('accessToken', accessToken);
+
         return {
             loginMethod: 'email',
             keepSignedIn: Boolean(rememberMe),
             user: {
-                email,
-                name: response.data.name ?? email,
-                role: response.data.role ?? 'user',
+                userId: response.data.userId,
+                email: response.data.email,
+                name: response.data.name,    
+                role: response.data.role?.toLowerCase() ?? 'user',
                 status: 'ACTIVE',
                 provider: 'local',
             },
@@ -41,7 +44,7 @@ async function signupWithEmail({ email, password, passwordConfirm, name, birthDa
     }
 
     try {
-        await axios.post('/api/auth/signup', {
+        await axiosInstance.post('/api/auth/signup', {
             email,
             password,
             passwordConfirm,
@@ -78,7 +81,7 @@ async function signupWithEmail({ email, password, passwordConfirm, name, birthDa
 // 로그아웃
 async function logout() {
     try {
-        await axios.post('/api/auth/logout');
+        await axiosInstance.post('/api/auth/logout');
     } finally {
         localStorage.removeItem('accessToken');
     }
@@ -94,15 +97,22 @@ function loginWithGoogle() {
 async function exchangeOauthCode(code) {
     try {
         const response = await axiosInstance.post('/api/auth/oauth/tokens', { code });
+        const accessToken = response.data.accessToken;
+        localStorage.setItem('accessToken', accessToken);
 
-        localStorage.setItem('accessToken', response.data.accessToken);
+        const meResponse = await axiosInstance.get('/api/users/me');
+        const user = meResponse.data;
+
         return {
             loginMethod: 'google',
             keepSignedIn: false,
             profileRequired: response.data.profileRequired,
             user: {
-                role: 'user',
-                status: 'ACTIVE',
+                userId: user.userId,
+                email: user.email,
+                name: user.name,
+                role: user.role.toLowerCase(),
+                status: user.status,
                 provider: 'google',
             },
         };
