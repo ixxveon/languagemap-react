@@ -6,17 +6,19 @@ import { mapingoPalette } from '../../data/user/mapingoData';
 import { pathToPage, pageToPath } from '../../data/user/mapingoPageData';
 import { useMapingoStore } from '../../store/user/useMapingoStore';
 import '../../styles/user/mapingoLanding.css';
+import { useAuth } from '../../hooks/user/useAuth';
+
 
 function MapingoLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const isAuthenticated = useMapingoStore((state) => state.isAuthenticated);
-  const clearSession = useMapingoStore((state) => state.clearSession);
   const profileName = useMapingoStore((state) => state.profileName);
   const subscriptionPlan = useMapingoStore((state) => state.subscriptionPlan);
   const subscriptionProductId = useMapingoStore((state) => state.subscriptionProductId);
   const isAdmin = useMapingoStore((state) => (state.session?.user?.role ?? 'user') === 'admin');
   const currentPage = useMemo(() => pathToPage[location.pathname] ?? 'home', [location.pathname]);
+  const { logout } = useAuth();
 
   const navigateToPage = (page) => {
     navigate(pageToPath[page] ?? '/');
@@ -66,10 +68,7 @@ function MapingoLayout() {
         profileName={profileName}
         subscriptionPlan={subscriptionPlan}
         subscriptionProductId={subscriptionProductId}
-        onLogout={() => {
-          clearSession();
-          navigateToPage('home');
-        }}
+        onLogout={logout}
       />
 
       <main className="mapingo-page-shell">

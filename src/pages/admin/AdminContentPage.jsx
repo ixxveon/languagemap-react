@@ -109,6 +109,13 @@ function includesKeyword(values, keyword) {
     .some((value) => String(value).toLowerCase().includes(normalizedKeyword));
 }
 
+function resolveRegionCountry(querySuffix) {
+  if (querySuffix === 'Seoul' || querySuffix === 'Busan') return '\uB300\uD55C\uBBFC\uAD6D';
+  if (querySuffix === 'Tokyo') return '\uC77C\uBCF8';
+  if (querySuffix === 'Sydney') return '\uD638\uC8FC';
+  return querySuffix;
+}
+
 function AdminContentPage() {
   const navigate = useNavigate();
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
@@ -118,7 +125,7 @@ function AdminContentPage() {
   const levelOptions = adminService.fetchAdminScenarioLevelOptions();
   const categoryOptions = adminService.fetchAdminScenarioCategoryOptions();
 
-  const [regions] = useState(initialRegions);
+  const [regions, setRegions] = useState(initialRegions);
   const [places, setPlaces] = useState(() => adminService.fetchAdminPlaces());
   const [scenarios, setScenarios] = useState(initialScenarios);
   const [missions, setMissions] = useState(() => adminService.fetchAdminMissions());
@@ -196,6 +203,10 @@ function AdminContentPage() {
         ),
       ),
     [missions, resultSearchQuery],
+  );
+  const filteredRegions = useMemo(
+    () => regions.filter((region) => includesKeyword([region.id, region.name, region.querySuffix], resultSearchQuery)),
+    [regions, resultSearchQuery],
   );
 
   useEffect(() => {
@@ -573,6 +584,17 @@ function AdminContentPage() {
     setActivePanel('mission');
   };
 
+  const handleEditRegion = (region) => {
+    setEditingContent({ type: 'region', id: region.id });
+    setPlaceForm((currentForm) => ({
+      ...currentForm,
+      regionId: String(region.id),
+    }));
+    setActivePanel('region');
+    setActiveResultType('region');
+    setMapStatus(`${region.name} ????? ?????????. ??? ??? ???????????????`);
+  };
+
   const handleDeletePlace = (placeId) => {
     if (!window.confirm('이 장소를 삭제할까요?')) return;
 
@@ -605,6 +627,31 @@ function AdminContentPage() {
     setMissions((currentMissions) => currentMissions.filter((mission) => mission.id !== missionId));
     if (editingContent?.type === 'mission' && editingContent.id === missionId) {
       resetMissionForm();
+    }
+  };
+
+  const handleDeleteRegion = (regionId) => {
+    const linkedPlaceCount = places.filter((place) => String(place.regionId) === String(regionId)).length;
+
+    if (linkedPlaceCount) {
+      window.alert('?????????? ??? ????? ??? ??????.');
+      return;
+    }
+
+    if (!window.confirm('??????? ??????????')) return;
+
+    setRegions((currentRegions) => currentRegions.filter((region) => String(region.id) !== String(regionId)));
+
+    if (String(placeForm.regionId) === String(regionId)) {
+      const nextRegion = regions.find((region) => String(region.id) !== String(regionId));
+      setPlaceForm((currentForm) => ({
+        ...currentForm,
+        regionId: String(nextRegion?.id ?? ''),
+      }));
+    }
+
+    if (editingContent?.type === 'region' && String(editingContent.id) === String(regionId)) {
+      setEditingContent(null);
     }
   };
 
@@ -690,6 +737,13 @@ function AdminContentPage() {
                   onClick={() => handlePanelSelect('mission')}
                 >
                   미션
+                </button>
+                <button
+                  type="button"
+                  className={`admin-content-tab ${activePanel === 'region' ? 'is-active' : ''}`}
+                  onClick={() => handlePanelSelect('region')}
+                >
+                  지역
                 </button>
               </div>
             </div>
@@ -966,6 +1020,48 @@ function AdminContentPage() {
                 </div>
               </form>
             </section>
+
+            <section className={`admin-builder-section ${activePanel === 'region' ? 'is-active' : ''}`}>
+              <div className="mapingo-admin-editing-banner">
+                <strong>{'지역 목록'}</strong>
+                <p>{'현재 사용 중인 지역 PK를 확인하고, 선택한 지역을 바로 장소 생성 폼에 반영할 수 있습니다.'}</p>
+              </div>
+
+              <div className="mapingo-selectable-list">
+                {regions.map((region) => {
+                  const isSelected = String(placeForm.regionId) === String(region.id);
+                  const countryName = resolveRegionCountry(region.querySuffix);
+
+                  return (
+                    <article key={region.id} className="mapingo-post-card admin-content-card">
+                      <div className="mapingo-admin-item-head">
+                        <div>
+                          <strong>{`지역 PK ${region.id}`}</strong>
+                          <p>{`국가명 ${countryName}`}</p>
+                          <p>{`도시명 ${region.name}`}</p>
+                        </div>
+                      </div>
+                      <div className="mapingo-admin-action-row admin-content-card-actions">
+                        <button
+                          type="button"
+                          className={isSelected ? 'mapingo-submit-button' : 'mapingo-ghost-button'}
+                          onClick={() => {
+                            setPlaceForm((currentForm) => ({
+                              ...currentForm,
+                              regionId: String(region.id),
+                            }));
+                            setActivePanel('place');
+                            setMapStatus(`${region.name} 지역을 선택했습니다. 장소 생성 폼에서 확인해 주세요.`);
+                          }}
+                        >
+                          {isSelected ? '현재 선택됨' : '장소 생성에 사용'}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
           </div>
 
           <div className="mapingo-list-card">
@@ -984,31 +1080,38 @@ function AdminContentPage() {
                   className={`admin-content-tab ${activeResultType === 'place' ? 'is-active' : ''}`}
                   onClick={() => setActiveResultType('place')}
                 >
-                  장소
+                  {'장소'}
                 </button>
                 <button
                   type="button"
                   className={`admin-content-tab ${activeResultType === 'scenario' ? 'is-active' : ''}`}
                   onClick={() => setActiveResultType('scenario')}
                 >
-                  시나리오
+                  {'시나리오'}
                 </button>
                 <button
                   type="button"
                   className={`admin-content-tab ${activeResultType === 'mission' ? 'is-active' : ''}`}
                   onClick={() => setActiveResultType('mission')}
                 >
-                  미션
+                  {'미션'}
+                </button>
+                <button
+                  type="button"
+                  className={`admin-content-tab ${activeResultType === 'region' ? 'is-active' : ''}`}
+                  onClick={() => setActiveResultType('region')}
+                >
+                  {'지역'}
                 </button>
               </div>
 
               <label className="mapingo-field admin-content-result-search">
-                <span className="mapingo-field-label">결과 검색</span>
+                <span className="mapingo-field-label">{'결과 검색'}</span>
                 <input
                   className="mapingo-input"
                   value={resultSearchQuery}
                   onChange={(event) => setResultSearchQuery(event.target.value)}
-                  placeholder="이름, 주소, 설명, 카테고리 검색"
+                  placeholder={'이름, 주소, 설명, 카테고리 검색'}
                 />
               </label>
             </div>
@@ -1016,8 +1119,8 @@ function AdminContentPage() {
             <div className="admin-entity-stack">
               <section className={`admin-entity-section ${activeResultType === 'place' ? '' : 'admin-result-section-hidden'}`}>
                 <div className="admin-entity-head">
-                  <strong>장소</strong>
-                  <span>{filteredPlaces.length}개</span>
+                  <strong>{'장소'}</strong>
+                  <span>{`${filteredPlaces.length}개`}</span>
                 </div>
                 <div className="mapingo-selectable-list">
                   {filteredPlaces.map((place) => (
@@ -1025,9 +1128,9 @@ function AdminContentPage() {
                       <div className="mapingo-admin-item-head">
                         <div>
                           <strong>{place.placeName}</strong>
-                          <p>{place.regionName} · 시나리오 PK {place.scenarioId}</p>
+                          <p>{`${place.regionName} · 시나리오 PK ${place.scenarioId}`}</p>
                         </div>
-                        <span className="mapingo-inline-badge">장소</span>
+                        <span className="mapingo-inline-badge">{'장소'}</span>
                       </div>
                       <p className="admin-content-description">{formatCardText(place.placeAddress)}</p>
                       <div className="mapingo-admin-meta-grid admin-place-meta-grid">
@@ -1036,32 +1139,32 @@ function AdminContentPage() {
                           {place.googlePlaceId}
                         </p>
                         <p>
-                          <strong>위도</strong>
+                          <strong>{'위도'}</strong>
                           {place.latitude}
                         </p>
                         <p>
-                          <strong>경도</strong>
+                          <strong>{'경도'}</strong>
                           {place.longitude}
                         </p>
                       </div>
                       <div className="mapingo-admin-action-row admin-content-card-actions">
                         <button type="button" className="mapingo-submit-button" onClick={() => handleEditPlace(place)}>
-                          수정
+                          {'수정'}
                         </button>
                         <button type="button" className="mapingo-ghost-button" onClick={() => handleDeletePlace(place.id)}>
-                          삭제
+                          {'삭제'}
                         </button>
                       </div>
                     </article>
                   ))}
-                  {!filteredPlaces.length ? <p className="admin-content-empty-state">검색 결과에 맞는 장소가 없습니다.</p> : null}
+                  {!filteredPlaces.length ? <p className="admin-content-empty-state">{'검색 결과에 맞는 장소가 없습니다.'}</p> : null}
                 </div>
               </section>
 
               <section className={`admin-entity-section ${activeResultType === 'scenario' ? '' : 'admin-result-section-hidden'}`}>
                 <div className="admin-entity-head">
-                  <strong>시나리오</strong>
-                  <span>{filteredScenarios.length}개</span>
+                  <strong>{'시나리오'}</strong>
+                  <span>{`${filteredScenarios.length}개`}</span>
                 </div>
                 <div className="mapingo-selectable-list">
                   {filteredScenarios.map((scenario) => (
@@ -1069,7 +1172,7 @@ function AdminContentPage() {
                       <div className="mapingo-admin-item-head">
                         <div>
                           <strong>{formatCardText(scenario.scenarioDescription)}</strong>
-                          <p>시나리오 PK {scenario.id}</p>
+                          <p>{`시나리오 PK ${scenario.id}`}</p>
                         </div>
                         <div className="mapingo-inline-badges">
                           <span className="mapingo-inline-badge">{scenario.level}</span>
@@ -1083,25 +1186,25 @@ function AdminContentPage() {
                       </div>
                       <div className="mapingo-admin-action-row admin-content-card-actions">
                         <button type="button" className="mapingo-submit-button" onClick={() => handleEditScenario(scenario)}>
-                          수정
+                          {'수정'}
                         </button>
                         <button type="button" className="mapingo-ghost-button" onClick={() => handleToggleScenarioStatus(scenario.id)}>
-                          상태 전환
+                          {'상태 전환'}
                         </button>
                         <button type="button" className="mapingo-ghost-button" onClick={() => handleDeleteScenario(scenario.id)}>
-                          삭제
+                          {'삭제'}
                         </button>
                       </div>
                     </article>
                   ))}
-                  {!filteredScenarios.length ? <p className="admin-content-empty-state">검색 결과에 맞는 시나리오가 없습니다.</p> : null}
+                  {!filteredScenarios.length ? <p className="admin-content-empty-state">{'검색 결과에 맞는 시나리오가 없습니다.'}</p> : null}
                 </div>
               </section>
 
               <section className={`admin-entity-section ${activeResultType === 'mission' ? '' : 'admin-result-section-hidden'}`}>
                 <div className="admin-entity-head">
-                  <strong>미션</strong>
-                  <span>{filteredMissions.length}개</span>
+                  <strong>{'미션'}</strong>
+                  <span>{`${filteredMissions.length}개`}</span>
                 </div>
                 <div className="mapingo-selectable-list">
                   {filteredMissions.map((mission) => (
@@ -1109,9 +1212,9 @@ function AdminContentPage() {
                       <div className="mapingo-admin-item-head">
                         <div>
                           <strong>{formatCardText(mission.missionTitle)}</strong>
-                          <p>시나리오 PK {mission.scenarioId}</p>
+                          <p>{`시나리오 PK ${mission.scenarioId}`}</p>
                         </div>
-                        <span className="mapingo-inline-badge">미션</span>
+                        <span className="mapingo-inline-badge">{'미션'}</span>
                       </div>
                       <p className="admin-content-description">{formatCardText(mission.missionDescription)}</p>
                       <div className="admin-content-tags">
@@ -1119,15 +1222,48 @@ function AdminContentPage() {
                       </div>
                       <div className="mapingo-admin-action-row admin-content-card-actions">
                         <button type="button" className="mapingo-submit-button" onClick={() => handleEditMission(mission)}>
-                          수정
+                          {'수정'}
                         </button>
                         <button type="button" className="mapingo-ghost-button" onClick={() => handleDeleteMission(mission.id)}>
-                          삭제
+                          {'삭제'}
                         </button>
                       </div>
                     </article>
                   ))}
-                  {!filteredMissions.length ? <p className="admin-content-empty-state">검색 결과에 맞는 미션이 없습니다.</p> : null}
+                  {!filteredMissions.length ? <p className="admin-content-empty-state">{'검색 결과에 맞는 미션이 없습니다.'}</p> : null}
+                </div>
+              </section>
+
+              <section className={`admin-entity-section ${activeResultType === 'region' ? '' : 'admin-result-section-hidden'}`}>
+                <div className="admin-entity-head">
+                  <strong>{'지역'}</strong>
+                  <span>{`${filteredRegions.length}개`}</span>
+                </div>
+                <div className="mapingo-selectable-list">
+                  {filteredRegions.map((region) => {
+                    const countryName = resolveRegionCountry(region.querySuffix);
+
+                    return (
+                      <article key={region.id} className="mapingo-post-card admin-content-card">
+                        <div className="mapingo-admin-item-head">
+                          <div>
+                            <strong>{`지역 PK ${region.id}`}</strong>
+                            <p>{`국가명 ${countryName}`}</p>
+                            <p>{`도시명 ${region.name}`}</p>
+                          </div>
+                        </div>
+                        <div className="mapingo-admin-action-row admin-content-card-actions">
+                          <button type="button" className="mapingo-submit-button" onClick={() => handleEditRegion(region)}>
+                            {'수정'}
+                          </button>
+                          <button type="button" className="mapingo-ghost-button" onClick={() => handleDeleteRegion(region.id)}>
+                            {'삭제'}
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                  {!filteredRegions.length ? <p className="admin-content-empty-state">{'검색 결과에 맞는 지역이 없습니다.'}</p> : null}
                 </div>
               </section>
             </div>
