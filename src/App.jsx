@@ -64,11 +64,12 @@ function App() {
         <Route path="/settings/learning" element={<SettingsLearningPage />} />
         <Route path="/settings/account" element={<SettingsAccountPage />} />
         <Route path="/settings/account/delete" element={<AccountDeletePage />} />
+        <Route path="/profile/setup" element={<ProfileSetupPage />} />
+        <Route path="/oauth/success" element={<OAuthSuccessPage />} />
+
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/oauth/success" element={<OAuthSuccessPage />} />
-          <Route path="/profile/setup" element={<ProfileSetupPage />} />
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<ProfilePage />} />
