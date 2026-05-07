@@ -16,7 +16,7 @@ function OAuthSuccessPage() {
         exchangeOauthCode(code)
             .then((session) => {
                 if (session.profileRequired) {
-                    navigate('/profile');
+                    navigate('/profile/setup');
                 } else {
                     navigate('/');
                 }
