@@ -92,6 +92,14 @@
   flex-wrap: wrap;
 }
 
+.admin-learning-action-row .mapingo-submit-button,
+.admin-learning-action-row .mapingo-ghost-button {
+  min-width: 0;
+  min-height: 46px;
+  margin-top: 0;
+  justify-content: center;
+}
+
 @media (max-width: 720px) {
   .admin-learning-detail-grid,
   .admin-learning-form-grid {
