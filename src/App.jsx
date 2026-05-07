@@ -5,11 +5,10 @@ import MapPage from './pages/place/MapPage';
 import GrowthPage from './pages/history-analysis/GrowthPage';
 import GrowthProgressPage from './pages/history-analysis/GrowthProgressPage';
 import GrowthInsightsPage from './pages/history-analysis/GrowthInsightsPage';
-import CommunityPage from './pages/learning-social-favorite/CommunityPage';
-import CommunityLearningPage from './pages/learning-social-favorite/CommunityLearningPage';
-import CommunityFriendsPage from './pages/learning-social-favorite/CommunityFriendsPage';
-import CommunityRankingPage from './pages/learning-social-favorite/CommunityRankingPage';
-import CommunityFavoritesPage from './pages/learning-social-favorite/CommunityFavoritesPage';
+import CommunityPage from './pages/community/CommunityPage';
+import CommunityFriendsPage from './pages/community/CommunityFriendsPage';
+import CommunityRankingPage from './pages/community/CommunityRankingPage';
+import CommunityFavoritesPage from './pages/community/CommunityFavoritesPage';
 import SupportPage from './pages/home-support-common/SupportPage';
 import PremiumPage from './pages/primium/PremiumPage';
 import PremiumPlansPage from './pages/primium/PremiumPlansPage';
@@ -23,7 +22,6 @@ import AdminMembersPage from './pages/admin/AdminMembersPage';
 import AdminNoticesPage from './pages/admin/AdminNoticesPage';
 import AdminContentPage from './pages/admin/AdminContentPage';
 import AdminCommunityPage from './pages/admin/AdminCommunityPage';
-import AdminLearningGoalPage from './pages/admin/AdminLearningGoalPage';
 import AdminCoachingPage from './pages/admin/AdminCoachingPage';
 import AdminGrowthPage from './pages/admin/AdminGrowthPage';
 import AdminPaymentsPage from './pages/admin/AdminPaymentsPage';
@@ -33,8 +31,6 @@ import LoginPage from './pages/user/LoginPage';
 import ProtectedRoute from './components/user/ProtectedRoute';
 import GuestRoute from './components/user/GuestRoute';
 import CoachingPage from './pages/coaching/CoachingPage';
-import OAuthSuccessPage from './pages/user/OAuthSuccessPage';
-
 
 function App() {
   return (
@@ -48,7 +44,6 @@ function App() {
         <Route path="/growth/goals" element={<Navigate to="/growth/insights" replace />} />
         <Route path="/growth/insights" element={<GrowthInsightsPage />} />
         <Route path="/community" element={<CommunityPage />} />
-        <Route path="/community/learning" element={<CommunityLearningPage />} />
         <Route path="/community/friends" element={<CommunityFriendsPage />} />
         <Route path="/community/ranking" element={<CommunityRankingPage />} />
         <Route path="/community/favorites" element={<CommunityFavoritesPage />} />
@@ -65,7 +60,6 @@ function App() {
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/oauth/success" element={<OAuthSuccessPage />} />
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<ProfilePage />} />
@@ -77,7 +71,6 @@ function App() {
           <Route path="/admin/support" element={<AdminNoticesPage />} />
           <Route path="/admin/content" element={<AdminContentPage />} />
           <Route path="/admin/community" element={<AdminCommunityPage />} />
-          <Route path="/admin/community/learning" element={<AdminLearningGoalPage />} />
           <Route path="/admin/coaching" element={<AdminCoachingPage />} />
           <Route path="/admin/growth" element={<AdminGrowthPage />} />
           <Route path="/admin/payments" element={<AdminPaymentsPage />} />
