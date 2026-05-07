@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { adminLearningService } from "../../api/admin/community/adminLearningService";
+import { useEffect, useMemo, useState } from 'react';
+import { adminLearningService } from '../../api/admin/community/adminLearningService';
 
 const emptyGoalForm = {
     title: '',
@@ -68,7 +68,7 @@ export function useAdminLearningGoals() {
 
         if (!title || !description) {
             alert('목표명과 설명을 입력해주세요.');
-            return;
+            return false;
         }
 
         const requestBody = {
@@ -91,9 +91,13 @@ export function useAdminLearningGoals() {
 
             await fetchGoals();
             resetGoalForm();
+
+            return true;
         } catch (error) {
             console.error(error);
             alert(error.response?.data?.message || '목표 저장 중 오류가 발생했습니다.');
+
+            return false;
         }
     };
 
@@ -121,16 +125,20 @@ export function useAdminLearningGoals() {
             if (editingGoalId === goal.id) {
                 resetGoalForm();
             }
+
+            return true;
         } catch (error) {
             console.error(error);
             alert(error.response?.data?.message || '상태 변경 중 오류가 발생했습니다.');
+
+            return false;
         }
     };
 
     const handleDeleteGoal = async (goalId) => {
         const confirmed = window.confirm('정말 삭제하시겠습니까?');
 
-        if (!confirmed) return;
+        if (!confirmed) return false;
 
         try {
             await adminLearningService.deleteGoal(goalId);
@@ -141,12 +149,17 @@ export function useAdminLearningGoals() {
             if (editingGoalId === goalId) {
                 resetGoalForm();
             }
+
+            return true;
         } catch (error) {
             console.error(error);
+
             alert(
                 error.response?.data?.message ||
                 '이미 사용 중인 목표는 삭제할 수 없습니다. 비활성화를 이용해주세요.',
             );
+
+            return false;
         }
     };
 

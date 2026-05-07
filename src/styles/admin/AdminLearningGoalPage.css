@@ -1,0 +1,100 @@
+.admin-learning-page .admin-content-layout {
+  align-items: start;
+}
+
+.admin-learning-list .mapingo-selectable-list {
+  gap: 10px;
+}
+
+.admin-learning-list {
+  max-height: 720px;
+  overflow: hidden;
+}
+
+.admin-learning-scroll-list {
+  max-height: 540px;
+  overflow-y: auto;
+  padding-top: 12px;
+  padding-right: 6px;
+  padding-bottom: 20px;
+}
+
+.admin-learning-scroll-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-learning-scroll-list::-webkit-scrollbar-thumb {
+  background: rgba(20, 184, 166, 0.35);
+  border-radius: 999px;
+}
+
+.admin-learning-goal-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.admin-learning-goal-card .mapingo-admin-item-head {
+  gap: 10px;
+}
+
+.admin-learning-goal-card .mapingo-admin-item-head > div {
+  min-width: 0;
+}
+
+.admin-learning-goal-description {
+  margin: 0;
+  color: #526274;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.admin-learning-detail-card {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-learning-detail-panel {
+  gap: 10px;
+}
+
+.admin-learning-detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-learning-detail-grid p {
+  display: grid;
+  gap: 5px;
+  min-height: 0;
+}
+
+.admin-learning-detail-grid strong {
+  margin-right: 0;
+}
+
+.admin-learning-create-tags {
+  margin-top: -4px;
+}
+
+.admin-learning-description-input {
+  min-height: 110px;
+}
+
+.admin-learning-form-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-learning-action-row {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+  .admin-learning-detail-grid,
+  .admin-learning-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
