@@ -155,10 +155,11 @@ export function useAdminLearningGoals() {
             console.error(error);
 
             alert(
-                error.response?.data?.message ||
-                '이미 사용 중인 목표는 삭제할 수 없습니다. 비활성화를 이용해주세요.',
+                error.response?.data?.message === '서버 내부 오류가 발생했습니다.'
+                    ? '사용 중인 학습 목표는 삭제할 수 없습니다. 비활성화를 이용해주세요.'
+                    : error.response?.data?.message ||
+                    '사용 중인 학습 목표는 삭제할 수 없습니다. 비활성화를 이용해주세요.',
             );
-
             return false;
         }
     };
