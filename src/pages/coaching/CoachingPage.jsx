@@ -4,85 +4,108 @@ import CoachingChatSection from '../../components/user/coaching/CoachingChatSect
 import CoachingSummaryCard from '../../components/user/coaching/CoachingSummaryCard';
 import PronunciationPracticeSection from '../../components/user/coaching/PronunciationPracticeSection';
 import YoutubeRecommendationSection from '../../components/user/coaching/YoutubeRecommendationSection';
-import {
-    coachingModes,
-    evaluationResult,
-    previousLearningSummary,
-    pronunciationSentences,
-    scenarioByMode,
-    voiceConversation,
-    youtubeRecommendations,
-} from '../../mocks/user/coaching/coachingMockData';
+import { previousLearningSummary } from '../../mocks/user/coachingMockData';
 import '../../styles/user/coaching/coachingPage.css';
 import '../../styles/user/coaching/coachingChatSection.css';
 import '../../styles/user/coaching/pronunciationPractice.css';
 import '../../styles/user/coaching/youtubeRecommendation.css';
 
+const coachingModes = [
+  { id: 'WORD', label: '더 어려운 단어' },
+  { id: 'GRAMMAR', label: '더 어려운 문법' },
+  { id: 'DIALOGUE', label: '더 많은 대화' },
+];
+
 function CoachingPage() {
-    const [phase, setPhase] = useState('intro');
-    const [selectedModeId, setSelectedModeId] = useState('');
-    const recentMapChatLog = useMapingoStore((state) => state.recentMapChatLog);
+  const [phase, setPhase] = useState('intro');
+  const [selectedModeId, setSelectedModeId] = useState('');
+  const [finalResult, setFinalResult] = useState(null);
+  const isAuthenticated = useMapingoStore((state) => state.isAuthenticated);
+  const recentMapChatLog = useMapingoStore((state) => state.recentMapChatLog);
+  const recentMapLearningSummary = useMapingoStore((state) => state.recentMapLearningSummary);
 
-    const selectedScenario = useMemo(() => {
-        if (!selectedModeId) return null;
-        return scenarioByMode[selectedModeId];
-    }, [selectedModeId]);
-
-    const learningSummary = useMemo(() => {
-        if (!recentMapChatLog?.length) {
-            return previousLearningSummary;
+  const learningSummary = useMemo(() => {
+    const baseSummary = recentMapLearningSummary
+      ? {
+          ...previousLearningSummary,
+          ...recentMapLearningSummary,
+          mapArea: {
+            ...previousLearningSummary.mapArea,
+            ...recentMapLearningSummary.mapArea,
+            conversationLog:
+              recentMapLearningSummary.mapArea?.conversationLog ??
+              previousLearningSummary.mapArea.conversationLog,
+          },
+          previousEvaluation: {
+            ...previousLearningSummary.previousEvaluation,
+            ...recentMapLearningSummary.previousEvaluation,
+          },
         }
-
-        return {
+      : !recentMapChatLog?.length
+        ? previousLearningSummary
+        : {
             ...previousLearningSummary,
             mapArea: {
-                ...previousLearningSummary.mapArea,
-                conversationLog: recentMapChatLog.map((message) => ({
-                    speaker: message.speaker,
-                    text: message.text,
-                })),
+              ...previousLearningSummary.mapArea,
+              conversationLog: recentMapChatLog.map((message) => ({
+                speaker: message.speaker,
+                text: message.text,
+                role: message.role,
+              })),
             },
-        };
-    }, [recentMapChatLog]);
+          };
 
-    const handleSelectMode = (modeId) => {
-        setSelectedModeId(modeId);
-        setPhase('scenario');
+    return {
+      ...baseSummary,
+      sessionId:
+        baseSummary.sessionId ??
+        baseSummary.learningSessionId ??
+        (!isAuthenticated ? previousLearningSummary.sessionId : null),
+      country: baseSummary.country ?? previousLearningSummary.country,
+      city: baseSummary.city ?? previousLearningSummary.city,
+      placeAddress: baseSummary.placeAddress ?? baseSummary.mapArea?.address ?? previousLearningSummary.placeAddress,
+      evaluation:
+        typeof baseSummary.evaluation === 'string'
+          ? baseSummary.evaluation
+          : baseSummary.previousEvaluation?.content ?? previousLearningSummary.previousEvaluation.content,
     };
+  }, [isAuthenticated, recentMapChatLog, recentMapLearningSummary]);
 
-    const handleRetry = () => {
-        setSelectedModeId('');
-        setPhase('intro');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+  const handleRetry = () => {
+    setSelectedModeId('');
+    setFinalResult(null);
+    setPhase('intro');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-    return (
-        <div className="coaching-page">
-            <CoachingSummaryCard summary={learningSummary} />
+  return (
+    <div className="coaching-page">
+      <CoachingSummaryCard summary={learningSummary} />
 
-            <div className="coaching-main-flow">
-                <CoachingChatSection
-                    summary={learningSummary}
-                    modes={coachingModes}
-                    selectedScenario={selectedScenario}
-                    voiceMessages={voiceConversation}
-                    evaluation={evaluationResult}
-                    phase={phase}
-                    onSelectMode={handleSelectMode}
-                    onStartPractice={() => setPhase('practice')}
-                    onCompletePractice={() => setPhase('completed')}
-                    onRetry={handleRetry}
-                />
+      <div className="coaching-main-flow">
+        <CoachingChatSection
+          summary={learningSummary}
+          modes={coachingModes}
+          phase={phase}
+          selectedModeId={selectedModeId}
+          onSelectMode={setSelectedModeId}
+          onPhaseChange={setPhase}
+          onEvaluationReady={(result) => {
+            setFinalResult(result);
+            setPhase('completed');
+          }}
+          onRetry={handleRetry}
+        />
 
-                {phase === 'completed' && (
-                    <div className="coaching-after-flow">
-                        <PronunciationPracticeSection sentences={pronunciationSentences} />
-                        <YoutubeRecommendationSection videos={youtubeRecommendations} />
-                    </div>
-                )}
-            </div>
-        </div>
-    );
+        {phase === 'completed' && finalResult && (
+          <div className="coaching-after-flow">
+            <PronunciationPracticeSection result={finalResult} />
+            <YoutubeRecommendationSection contents={finalResult.contents?.contents ?? []} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default CoachingPage;

@@ -1,11 +1,11 @@
 function CoachingModeSelector({ modes, selectedModeId, onSelect }) {
   const icons = {
-    vocabulary: '▣',
-    grammar: '✎',
-    conversation: '▤',
-    mode_vocabulary: '▣',
-    mode_grammar: '✎',
-    mode_conversation: '▤',
+    WORD: '▣',
+    GRAMMAR: '✎',
+    DIALOGUE: '▤',
+    mode_WORD: '▣',
+    mode_GRAMMAR: '✎',
+    mode_DIALOGUE: '▤',
     start_practice: '▶',
     show_evaluation: '✓',
     retry: '↻',

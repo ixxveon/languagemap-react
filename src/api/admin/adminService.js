@@ -25,7 +25,7 @@ import {
   pronunciationSentences,
   scenarioByMode,
   youtubeRecommendations,
-} from '../../mocks/user/coaching/coachingMockData';
+} from '../../mocks/user/coachingMockData';
 import {
   defaultBadgeProgress,
   resolveBadgeCatalog,

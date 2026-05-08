@@ -44,11 +44,15 @@ function buildAiReply(place, userInput, turn) {
   return `That sounds natural for ${place.category}. Try adding one more sentence to make the conversation richer.`;
 }
 
-function buildEvaluationMessage(place) {
+function buildEvaluationSummary(place) {
   const firstStrength = place.feedback?.strengths?.[0] ?? '핵심 표현을 자연스럽게 연결했어요.';
   const firstImprovement = place.feedback?.improvements?.[0] ?? '한 문장만 더 덧붙이면 대화가 더 풍부해져요.';
 
-  return `${place.title} 상황에서 주문 흐름은 좋았어요. 강점은 ${firstStrength} 개선 포인트는 ${firstImprovement} 이번에는 어떤 방향으로 더 깊게 연습하고 싶으세요?`;
+  return `${place.title} 상황에서 주문 흐름은 좋았어요. 강점은 ${firstStrength} 개선 포인트는 ${firstImprovement}`;
+}
+
+function buildEvaluationMessage(place) {
+  return `${buildEvaluationSummary(place)} 이번에는 어떤 방향으로 더 깊게 연습하고 싶으세요?`;
 }
 
 function MapPage() {
@@ -66,6 +70,7 @@ function MapPage() {
   const setActiveCapitalId = useMapingoStore((state) => state.setMapActiveTab);
   const setSelectedPlaceId = useMapingoStore((state) => state.setSelectedRouteId);
   const setRecentMapChatLog = useMapingoStore((state) => state.setRecentMapChatLog);
+  const setRecentMapLearningSummary = useMapingoStore((state) => state.setRecentMapLearningSummary);
   const [panelVisible, setPanelVisible] = useState(false);
   const [panelMode, setPanelMode] = useState('guide');
   const [chatLog, setChatLog] = useState([]);
@@ -121,6 +126,7 @@ function MapPage() {
     setChatInput('');
     setChatCompleted(false);
     setRecentMapChatLog([]);
+    setRecentMapLearningSummary(null);
   };
 
   const handleCapitalChange = (capitalId) => {

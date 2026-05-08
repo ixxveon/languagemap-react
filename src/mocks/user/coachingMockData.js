@@ -1,4 +1,10 @@
 export const previousLearningSummary = {
+  sessionId: 1,
+  country: 'Australia',
+  city: 'Sydney',
+  placeAddress: 'Near George St.',
+  name: '민지',
+  placeName: 'Cafe Stage 888',
   userName: '민지',
   place: '시드니 888 카페',
   topic: '카페에서 커피 주문하기',
@@ -6,7 +12,6 @@ export const previousLearningSummary = {
   mapArea: {
     title: 'Cafe Stage 888',
     subtitle: '현재 학습 장소',
-    radius: '학습 평가 포인트',
     address: 'Sydney CBD · Near George St.',
     lat: -33.86882,
     lng: 151.20929,
@@ -17,6 +22,11 @@ export const previousLearningSummary = {
       { speaker: 'Cafe Staff', text: 'Sure. Is that for here or to go?' },
       { speaker: 'Minji', text: 'To go, please. Could I pay by card?' },
     ],
+  },
+  previousEvaluation: {
+    title: '이전 평가 내용',
+    content:
+      'Cafe Stage 888 상황에서 주문 흐름은 좋았어요. 강점은 주문 시작 문장이 자연스럽습니다. 개선 포인트는 마무리 감사 표현을 한 번 더 붙여보세요.',
   },
   evaluation: {
     pronunciation: '보통',

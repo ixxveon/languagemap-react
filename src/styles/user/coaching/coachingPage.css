@@ -102,9 +102,25 @@
   font-weight: 650;
 }
 
+.coaching-summary-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f2fbf8, #e6f7f2);
+  border: 1px solid #d7f0e8;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  color: #0f8f86;
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
 .coaching-map-radius {
   display: inline-flex;
-  margin-top: 10px;
   padding: 6px 10px;
   border-radius: 999px;
   background: #f6fffd;
@@ -114,59 +130,64 @@
   font-weight: 900;
 }
 
-.coaching-summary-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
+.coaching-summary-section {
   margin-top: 14px;
 }
 
-.coaching-summary-tags span {
-  padding: 6px 9px;
-  border: 1px solid #e2e8f0;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #415365;
-  font-size: 0.74rem;
-  font-weight: 800;
+.coaching-summary-feedback {
+  margin-top: 10px;
+  padding: 14px 14px;
+  border: 1px solid #dcefeb;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #f8fffd, #f1fbf8);
+  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.05);
+}
+
+.coaching-summary-feedback p {
+  margin: 0;
+  color: #2f5d66;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  font-weight: 650;
 }
 
 .coaching-summary-small {
-  margin-top: 18px;
+  margin-top: 20px;
   padding-right: 8px;
 }
 
 .coaching-summary-small strong,
-.coaching-summary-small span {
+.coaching-summary-small span:not(.coaching-summary-chip) {
   display: block;
 }
 
-.coaching-summary-small strong {
-  color: #12212f;
-  font-size: 0.82rem;
-}
-
-.coaching-summary-small span {
-  margin-top: 6px;
+.coaching-summary-small span:not(.coaching-summary-chip) {
+  margin-top: 0;
   color: #6b7a8a;
   font-size: 0.84rem;
   line-height: 1.55;
   font-weight: 650;
 }
 
+.coaching-summary-small .coaching-summary-chip,
+.coaching-summary-section .coaching-summary-chip {
+  color: #0f8f86;
+}
+
 .coaching-map-dialogue {
   display: grid;
   gap: 8px;
   margin-top: 10px;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid #dcefeb;
-  border-radius: 14px;
-  background: #f5fffc;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #f8fffd, #f1fbf8);
+  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.05);
 }
 
 .coaching-map-dialogue p {
   margin: 0;
-  color: #4d6174;
+  color: #2f5d66;
   font-size: 0.78rem;
   line-height: 1.45;
   font-weight: 650;
@@ -175,7 +196,7 @@
 .coaching-map-dialogue p span {
   display: block;
   margin: 0 0 2px;
-  color: var(--mapingo-deep);
+  color: #0f8f86;
   font-size: 0.7rem;
   font-weight: 900;
 }
