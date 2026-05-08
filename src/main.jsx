@@ -20,11 +20,11 @@ function AppWithRestore() {
 }
 
 createRoot(document.getElementById('root')).render(
-    <StrictMode>
+    // <StrictMode>
         <QueryClientProvider client={queryClient}>
             <BrowserRouter>
                 <AppWithRestore />
             </BrowserRouter>
         </QueryClientProvider>
-    </StrictMode>
+    // </StrictMode>
 );

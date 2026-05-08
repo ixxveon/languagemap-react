@@ -33,6 +33,8 @@ import GuestRoute from './components/user/GuestRoute';
 import CoachingPage from './pages/coaching/CoachingPage';
 import OAuthSuccessPage from './pages/user/OAuthSuccessPage';
 import ProfileSetupPage from './pages/user/ProfileSetupPage';
+import OAuthFailurePage from './pages/user/OAuthFailurePage';
+
 
 
 
@@ -63,6 +65,7 @@ function App() {
         <Route path="/settings/account/delete" element={<AccountDeletePage />} />
         <Route path="/profile/setup" element={<ProfileSetupPage />} />
         <Route path="/oauth/success" element={<OAuthSuccessPage />} />
+        <Route path="/oauth/failure" element={<OAuthFailurePage />} />
 
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<LoginPage />} />
