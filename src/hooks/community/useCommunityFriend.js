@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { friendService } from '../../api/user/friendService';
+import { socialReportService } from '../../api/user/socialReportService';
+import { useMapingoStore } from '../../store/user/useMapingoStore';
 
 const getResponseData = (response) => {
     if (!response) return [];
@@ -35,10 +37,35 @@ const normalizeRecommendUser = (row) => ({
     reason: row.reason ?? '학습 패턴이 비슷해요.',
 });
 
+const normalizeReport = (row, fallback = {}) => ({
+    report_id: row.report_id ?? row.reportId ?? row.id ?? fallback.reportId,
+    reporter_id: row.reporter_id ?? row.reporterId ?? fallback.reporterId,
+    reported_user_id:
+        row.reported_user_id ?? row.reportedUserId ?? row.targetId ?? fallback.reportedUserId,
+    reason: row.reason ?? fallback.reason,
+    status: row.status ?? 'PENDING',
+    created_at: row.created_at ?? row.createdAt ?? fallback.createdAt,
+    processed_at: row.processed_at ?? row.processedAt ?? null,
+    admin_memo: row.admin_memo ?? row.adminMemo ?? '',
+});
+
+const getCachedUserDirectory = () => {
+    try {
+        return JSON.parse(sessionStorage.getItem('communityUserDirectory') ?? '{}');
+    } catch {
+        return {};
+    }
+};
+
+const setCachedUserDirectory = (directory) => {
+    sessionStorage.setItem('communityUserDirectory', JSON.stringify(directory));
+};
+
 export function useCommunityFriends() {
+    const sessionUserId = useMapingoStore((state) => state.session?.user?.userId);
     const [friendshipRows, setFriendshipRows] = useState([]);
     const [recommendedFriends, setRecommendedFriends] = useState([]);
-    const [userReportRows] = useState([]);
+    const [userReportRows, setUserReportRows] = useState([]);
 
     const [inviteQuery, setInviteQuery] = useState('');
     const [reportTargetId, setReportTargetId] = useState('');
@@ -46,25 +73,20 @@ export function useCommunityFriends() {
     const [feedbackMessage, setFeedbackMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const currentUserId = Number(localStorage.getItem('userId')) || 1;
+    const currentUserId = Number(sessionUserId ?? localStorage.getItem('userId')) || 1;
 
     const loadFriendData = async () => {
         try {
             setIsLoading(true);
 
-            const [friends, received, sent, history, recommends] = await Promise.all([
+            const [friends, received, sent, history, recommends, reports] = await Promise.all([
                 friendService.getFriends(currentUserId),
                 friendService.getReceivedFriendRequests(currentUserId),
                 friendService.getSentFriendRequests(currentUserId),
                 friendService.getFriendHistory(currentUserId),
                 friendService.getRecommendFriends(currentUserId),
+                socialReportService.getReportHistory(currentUserId),
             ]);
-
-            console.log('friends:', friends);
-            console.log('received:', received);
-            console.log('sent:', sent);
-            console.log('history:', history);
-            console.log('recommends:', recommends);
 
             const relationRows = [
                 ...getResponseData(friends),
@@ -81,10 +103,41 @@ export function useCommunityFriends() {
                     ),
             );
 
-            const recommendRows = getResponseData(recommends).map(normalizeRecommendUser);
+            const relatedUserIds = new Set(
+                relationRows.flatMap((relation) => [
+                    relation.requester_id,
+                    relation.addressee_id,
+                ]),
+            );
+
+            const recommendRows = getResponseData(recommends)
+                .map(normalizeRecommendUser)
+                .filter(
+                    (user) =>
+                        user.userId &&
+                        user.userId !== currentUserId &&
+                        !relatedUserIds.has(user.userId),
+                );
+            const cachedDirectory = getCachedUserDirectory();
+
+            relationRows.forEach((relation) => {
+                const requester = cachedDirectory[relation.requester_id];
+                const addressee = cachedDirectory[relation.addressee_id];
+
+                if (requester) {
+                    relation.requester_name = requester.name ?? relation.requester_name;
+                    relation.requester_email = requester.email ?? relation.requester_email;
+                }
+
+                if (addressee) {
+                    relation.addressee_name = addressee.name ?? relation.addressee_name;
+                    relation.addressee_email = addressee.email ?? relation.addressee_email;
+                }
+            });
 
             setFriendshipRows(uniqueRelationRows);
             setRecommendedFriends(recommendRows);
+            setUserReportRows(getResponseData(reports).map(normalizeReport));
 
             if (recommendRows.length > 0 && !reportTargetId) {
                 setReportTargetId(String(recommendRows[0].userId));
@@ -121,17 +174,59 @@ export function useCommunityFriends() {
 
     const availableUsers = useMemo(() => recommendedFriends, [recommendedFriends]);
 
+    const userDirectory = useMemo(() => {
+        const directory = {};
+
+        recommendedFriends.forEach((user) => {
+            if (!user.userId) return;
+            directory[user.userId] = user;
+        });
+
+        friendshipRows.forEach((relation) => {
+            if (relation.requester_id) {
+                directory[relation.requester_id] = {
+                    userId: relation.requester_id,
+                    name: relation.requester_name,
+                    email: relation.requester_email,
+                };
+            }
+
+            if (relation.addressee_id) {
+                directory[relation.addressee_id] = {
+                    userId: relation.addressee_id,
+                    name: relation.addressee_name,
+                    email: relation.addressee_email,
+                };
+            }
+        });
+
+        const mergedDirectory = {
+            ...getCachedUserDirectory(),
+            ...directory,
+        };
+
+        setCachedUserDirectory(mergedDirectory);
+        return mergedDirectory;
+    }, [friendshipRows, recommendedFriends]);
+
     const sendFriendRequest = async (targetUserId) => {
         try {
-            await friendService.sendFriendRequest({
-                addresseeId: targetUserId,
-            });
-
-            await loadFriendData();
-
             const targetUser = recommendedFriends.find(
                 (user) => user.userId === targetUserId,
             );
+
+            if (targetUser) {
+                setCachedUserDirectory({
+                    ...getCachedUserDirectory(),
+                    [targetUser.userId]: targetUser,
+                });
+            }
+
+            await friendService.sendFriendRequest({
+                addresseeId: targetUserId,
+            }, currentUserId);
+
+            await loadFriendData();
 
             setFeedbackMessage(
                 targetUser
@@ -156,7 +251,7 @@ export function useCommunityFriends() {
             if (normalizedQuery.includes('@')) {
                 await friendService.sendFriendRequestByEmail({
                     email: normalizedQuery,
-                });
+                }, currentUserId);
 
                 await loadFriendData();
                 setInviteQuery('');
@@ -183,7 +278,7 @@ export function useCommunityFriends() {
 
     const handleAccept = async (friendshipId) => {
         try {
-            await friendService.acceptFriendRequest(friendshipId);
+            await friendService.acceptFriendRequest(friendshipId, currentUserId);
             await loadFriendData();
             setFeedbackMessage('친구 요청을 수락했어요.');
         } catch (error) {
@@ -194,7 +289,7 @@ export function useCommunityFriends() {
 
     const handleReject = async (friendshipId) => {
         try {
-            await friendService.rejectFriendRequest(friendshipId);
+            await friendService.rejectFriendRequest(friendshipId, currentUserId);
             await loadFriendData();
             setFeedbackMessage('친구 요청을 거절했어요.');
         } catch (error) {
@@ -206,6 +301,7 @@ export function useCommunityFriends() {
     const handleDelete = async (friendshipId) => {
         try {
             await friendService.deleteFriend(friendshipId, currentUserId);
+            await loadFriendData();
             setFeedbackMessage('친구 관계 또는 요청을 취소했어요.');
         } catch (error) {
             console.error(error);
@@ -215,7 +311,7 @@ export function useCommunityFriends() {
 
     const handleBlock = async (friendshipId) => {
         try {
-            await friendService.blockFriend(friendshipId);
+            await friendService.blockFriend(friendshipId, currentUserId);
             await loadFriendData();
             setFeedbackMessage('친구를 차단했어요. 차단 이력에서 확인할 수 있어요.');
         } catch (error) {
@@ -224,24 +320,47 @@ export function useCommunityFriends() {
         }
     };
 
-    const handleUnblock = async () => {
-        setFeedbackMessage(
-            '차단 취소 API가 필요해요. 백엔드에 차단 해제 API가 있는지 확인해야 해요.',
-        );
-    };
+    const handleSubmitReport = async () => {
+        const reportedUserId = Number(reportTargetId);
+        const reason = reportReason.trim();
 
-    const handleSubmitReport = () => {
-        if (!reportReason.trim()) {
+        if (!reportedUserId) {
+            setFeedbackMessage('신고할 사용자를 선택해 주세요.');
+            return;
+        }
+
+        if (!reason) {
             setFeedbackMessage('신고 사유를 입력해 주세요.');
             return;
         }
 
-        setFeedbackMessage('신고 API 연동이 아직 필요해요.');
+        try {
+            const payload = {
+                reporterId: currentUserId,
+                reportedUserId,
+                reason,
+            };
+            const response = await socialReportService.createReport(payload);
+            const createdReport = normalizeReport(response?.data ?? response, {
+                reportId: Date.now(),
+                reporterId: currentUserId,
+                reportedUserId,
+                reason,
+                createdAt: new Date().toISOString(),
+            });
+
+            setUserReportRows((prevRows) => [createdReport, ...prevRows]);
+            setReportReason('');
+            setFeedbackMessage('신고가 접수됐어요.');
+        } catch (error) {
+            console.error(error);
+            setFeedbackMessage('신고 접수에 실패했어요.');
+        }
     };
 
     return {
         currentUserId,
-        userDirectory: {},
+        userDirectory,
         acceptedFriends,
         pendingRequests,
         archivedRelations,
@@ -262,7 +381,6 @@ export function useCommunityFriends() {
         handleReject,
         handleDelete,
         handleBlock,
-        handleUnblock,
         handleSubmitReport,
         clearFeedbackMessage: () => setFeedbackMessage(''),
     };

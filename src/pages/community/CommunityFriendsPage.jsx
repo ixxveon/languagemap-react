@@ -31,7 +31,6 @@ function CommunityFriendsPage() {
     handleReject,
     handleDelete,
     handleBlock,
-    handleUnblock,
     handleSubmitReport,
     clearFeedbackMessage,
   } = useCommunityFriends();
@@ -81,7 +80,6 @@ function CommunityFriendsPage() {
                       onReject={handleReject}
                       onDelete={handleDelete}
                       onBlock={handleBlock}
-                      onUnblock={handleUnblock}
                     />
                   ))}
                 </div>
@@ -113,7 +111,6 @@ function CommunityFriendsPage() {
                         onReject={handleReject}
                         onDelete={handleDelete}
                         onBlock={handleBlock}
-                        onUnblock={handleUnblock}
                         compact
                       />
                     ))}
@@ -145,7 +142,6 @@ function CommunityFriendsPage() {
                         onReject={handleReject}
                         onDelete={handleDelete}
                         onBlock={handleBlock}
-                        onUnblock={handleUnblock}
                         compact
                       />
                     ))}

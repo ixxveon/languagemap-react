@@ -1,68 +1,82 @@
 import axiosInstance from '../axiosInstance';
 
 export const friendService = {
-    async sendFriendRequest(data) {
-        const res = await axiosInstance.post('/api/friends/requests', data);
-        return res.data;
+    async sendFriendRequest(data, loginUserId) {
+        const res = await axiosInstance.post('/api/friends/requests', data, {
+            params: { loginUserId },
+        });
+        return res;
     },
 
-    async sendFriendRequestByEmail(data) {
-        const res = await axiosInstance.post('/api/friends/requests/email', data);
-        return res.data;
+    async sendFriendRequestByEmail(data, loginUserId) {
+        const res = await axiosInstance.post('/api/friends/requests/email', data, {
+            params: { loginUserId },
+        });
+        return res;
     },
 
-    async blockFriend(friendshipId) {
-        const res = await axiosInstance.patch(`/api/friends/${friendshipId}/block`);
-        return res.data;
+    async blockFriend(friendshipId, loginUserId) {
+        const res = await axiosInstance.patch(`/api/friends/${friendshipId}/block`, null, {
+            params: { loginUserId },
+        });
+        return res;
     },
 
-    async rejectFriendRequest(friendshipId) {
+    async rejectFriendRequest(friendshipId, loginUserId) {
         const res = await axiosInstance.patch(
             `/api/friends/requests/${friendshipId}/reject`,
+            null,
+            {
+                params: { loginUserId },
+            },
         );
-        return res.data;
+        return res;
     },
 
-    async acceptFriendRequest(friendshipId) {
+    async acceptFriendRequest(friendshipId, loginUserId) {
         const res = await axiosInstance.patch(
             `/api/friends/requests/${friendshipId}/accept`,
+            null,
+            {
+                params: { loginUserId },
+            },
         );
-        return res.data;
+        return res;
     },
 
     async getFriends(userId) {
         const res = await axiosInstance.get('/api/friends', {
             params: { userId },
         });
-        return res.data;
+        return res;
     },
 
     async getSentFriendRequests(userId) {
         const res = await axiosInstance.get('/api/friends/requests/sent', {
             params: { userId },
         });
-        return res.data;
+        return res;
     },
 
     async getReceivedFriendRequests(userId) {
         const res = await axiosInstance.get('/api/friends/requests/received', {
             params: { userId },
         });
-        return res.data;
+        return res;
     },
 
     async getRecommendFriends(userId) {
         const res = await axiosInstance.get('/api/friends/recommend', {
             params: { userId },
         });
-        return res.data;
+        return res;
     },
 
     async getFriendHistory(userId) {
         const res = await axiosInstance.get('/api/friends/history', {
             params: { userId },
         });
-        return res.data;
+        return res;
     },
 
     async deleteFriend(friendshipId, loginUserId) {
@@ -73,6 +87,6 @@ export const friendService = {
             },
         );
 
-        return res.data;
+        return res;
     }
 };

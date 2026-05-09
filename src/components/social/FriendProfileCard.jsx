@@ -12,7 +12,6 @@ function FriendProfileCard({
     onReject,
     onDelete,
     onBlock,
-    onUnblock,
     compact = false,
 }) {
     const otherUserId =
@@ -39,8 +38,6 @@ function FriendProfileCard({
     };
 
     const isAccepted = relation.status === 'ACCEPTED';
-    const isBlocked = relation.status === 'BLOCKED';
-
     const isReceivedRequest =
         relation.status === 'PENDING' && relation.addressee_id === currentUserId;
 
@@ -139,17 +136,6 @@ function FriendProfileCard({
                     </div>
                 ) : null}
 
-                {isBlocked ? (
-                    <div className="community-friends-compact-actions">
-                        <button
-                            type="button"
-                            className="mapingo-submit-button"
-                            onClick={() => onUnblock(relation.friendship_id)}
-                        >
-                            차단 취소
-                        </button>
-                    </div>
-                ) : null}
             </article>
         );
     }
