@@ -4,6 +4,8 @@ import { MapingoPageSection } from '../../components/MapingoPageBlocks';
 import PingPopCharacterImage from '../../components/user/PingPopCharacterImage';
 import { useMapingoStore } from '../../store/user/useMapingoStore';
 import { learningService } from '../../api/user/learningService';
+//import { useProfile } from '../../hooks/user/useProfile';
+//import { useBadge } from '../../hooks/user/useBadge';
 
 function getBadgeTone(status) {
   if (status === 'earned') return 'success';
@@ -27,6 +29,8 @@ function getBadgeProgressCopy(badge) {
 
 function ProfilePage() {
   const navigate = useNavigate();
+  //const { profile } = useProfile();
+  //const { badges } = useBadge();
   const profileName = useMapingoStore((state) => state.profileName);
   const subscriptionUpdatedAt = useMapingoStore((state) => state.subscriptionUpdatedAt);
   const currentLevelId = useMapingoStore((state) => state.currentLevelId);
@@ -35,6 +39,7 @@ function ProfilePage() {
   const weeklyLearnCount = useMapingoStore((state) => state.weeklyLearnCount);
   const weeklyGoal = useMapingoStore((state) => state.weeklyGoal);
   const learningStreak = useMapingoStore((state) => state.streakDays);
+  const pronunciationScore = useMapingoStore((state) => state.pronunciationScore);
   const storedBadgeProgress = useMapingoStore((state) => state.badgeProgress);
   const badgeProgress = useMemo(
     () =>
@@ -63,6 +68,32 @@ function ProfilePage() {
   const totalStudyCount = badgeProgress.totalStudyCount;
   const nextLevelRemaining = Math.max(0, (profileLevelNumber + 10) * 10 - cumulativeExperience);
   const profileEmail = `${profileName.toLowerCase().replace(/\s+/g, '.')}@mapingo.ai`;
+  const weeklyGoalRate = Math.min(100, Math.round((weeklyLearnCount / Math.max(weeklyGoal, 1)) * 100));
+  const profileGrowthCards = [
+    {
+      title: '최근 학습 기록',
+      value: latestLearning?.title ?? '첫 학습 대기',
+      description: latestLearning
+        ? `${latestLearning.meta} 학습을 이어서 진행할 수 있어요.`
+        : '아직 완료한 학습이 없어요. 오늘의 첫 학습을 시작해보세요.',
+      path: '/growth/insights',
+    },
+    {
+      title: '활용 점수 / 유형별 점수',
+      value: `${pronunciationScore}점`,
+      description: `이번 주 목표 달성률 ${weeklyGoalRate}% · 누적 학습 ${totalStudyCount}회`,
+      path: '/growth/progress',
+    },
+    {
+      title: 'AI 성장 피드백',
+      value: learningStreak > 0 ? `${learningStreak}일 연속 학습` : '학습 루틴 준비',
+      description:
+        learningStreak > 0
+          ? '꾸준한 학습 흐름이 좋아요. 발음 리뷰와 상황 회화를 함께 이어가면 성장 속도가 더 안정적이에요.'
+          : '짧은 회화 학습부터 시작하면 AI가 성장 패턴을 분석해 맞춤 피드백을 보여줘요.',
+      path: '/growth/insights',
+    },
+  ];
 
   return (
     <div className="mapingo-dashboard">
@@ -188,6 +219,33 @@ function ProfilePage() {
                 ))}
               </div>
             </article>
+          </div>
+        </section>
+
+        <section className="mapingo-profile-growth-section" aria-labelledby="profile-growth-title">
+          <div className="mapingo-profile-growth-head">
+            <div>
+              <p className="mapingo-profile-info-label">Growth Analysis</p>
+              <h2 id="profile-growth-title">학습 기록 & 성장 분석</h2>
+            </div>
+            <button type="button" className="mapingo-ghost-button" onClick={() => navigate('/growth')}>
+              {'성장 리포트'}
+            </button>
+          </div>
+
+          <div className="mapingo-profile-growth-grid">
+            {profileGrowthCards.map((card) => (
+              <button
+                key={card.title}
+                type="button"
+                className="mapingo-profile-growth-card"
+                onClick={() => navigate(card.path)}
+              >
+                <span>{card.title}</span>
+                <strong>{card.value}</strong>
+                <p>{card.description}</p>
+              </button>
+            ))}
           </div>
         </section>
       </MapingoPageSection>

@@ -10,22 +10,30 @@ function ProfileSetupPage() {
         phoneNumber: '',
     });
 
+    //  전화번호 하이픈 자동 포맷 처리 분리
+    const formatPhoneNumber = (value) => {
+        const digits = value.replace(/\D/g, '').slice(0, 11);
+        if (digits.length < 4) return digits;
+        if (digits.length < 8) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+        return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+    };
+
+    // 전화번호 입력 시 formatPhoneNumber 적용
     const handleChange = (event) => {
         const { name, value } = event.target;
         setForm((current) => ({
             ...current,
-            [name]: value,
+            [name]: name === 'phoneNumber' ? formatPhoneNumber(value) : value,
         }));
     };
 
     const handleSubmit = async () => {
-        if (!form.birthDate || !form.address || !form.phoneNumber) {
-            setErrorMessage('모든 항목을 입력해주세요.');
-            return;
-        }
         await setupProfile(form);
     };
 
+
+
+    // 기존 JSX 유지 (변경 없음)
     return (
         <section style={{
             height: 'calc(100vh - 64px)',
@@ -62,9 +70,7 @@ function ProfileSetupPage() {
                 </div>
 
                 <div className="mapingo-field">
-                    <label className="mapingo-field-label" htmlFor="profile-birth">
-                        생년월일
-                    </label>
+                    <label className="mapingo-field-label" htmlFor="profile-birth">생년월일</label>
                     <input
                         id="profile-birth"
                         className="mapingo-input"
@@ -76,9 +82,7 @@ function ProfileSetupPage() {
                 </div>
 
                 <div className="mapingo-field">
-                    <label className="mapingo-field-label" htmlFor="profile-address">
-                        주소
-                    </label>
+                    <label className="mapingo-field-label" htmlFor="profile-address">주소</label>
                     <input
                         id="profile-address"
                         className="mapingo-input"
@@ -91,9 +95,7 @@ function ProfileSetupPage() {
                 </div>
 
                 <div className="mapingo-field">
-                    <label className="mapingo-field-label" htmlFor="profile-phone">
-                        전화번호
-                    </label>
+                    <label className="mapingo-field-label" htmlFor="profile-phone">전화번호</label>
                     <input
                         id="profile-phone"
                         className="mapingo-input"
@@ -101,7 +103,7 @@ function ProfileSetupPage() {
                         name="phoneNumber"
                         value={form.phoneNumber}
                         onChange={handleChange}
-                        placeholder="010-1234-5678"
+                        placeholder="010-1234-5678"  
                     />
                 </div>
 
@@ -121,4 +123,4 @@ function ProfileSetupPage() {
     );
 }
 
-export default ProfileSetupPage;
+export default ProfileSetupPage; 

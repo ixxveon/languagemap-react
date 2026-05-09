@@ -30,6 +30,14 @@ function SignupPage() {
     }
 }, []);
 
+    // 하이픈 자동 포맷 (화면 표시용 UI 로직)
+    const formatPhoneNumber = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    if (digits.length < 4) return digits;
+    if (digits.length < 8) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+};
+
     const handleChange = (event) => {
         const { name, value, type, checked } = event.target;
         setForm((current) => {
@@ -44,7 +52,9 @@ function SignupPage() {
             }
             const next = {
                 ...current,
-                [name]: type === 'checkbox' ? checked : value,
+                [name]: name === 'phone'
+                    ? formatPhoneNumber(value)
+                    : type === 'checkbox' ? checked : value,
             };
             if (name.startsWith('agree')) {
                 next.agreeAll = next.agreeTerms && next.agreePrivacy && next.agreeMarketing;
@@ -54,14 +64,6 @@ function SignupPage() {
     };
 
     const handleSignup = async () => {
-        if (form.password !== form.passwordConfirm) {
-            setErrorMessage('비밀번호와 비밀번호 확인이 일치하지 않습니다.');
-            return;
-        }
-        if (!form.agreeTerms || !form.agreePrivacy) {
-            setErrorMessage('필수 약관에 동의해주세요.');
-            return;
-        }
         await signup(form);
     };
 

@@ -134,7 +134,7 @@ function MapPage() {
     setSelectedPlaceId('');
     setPanelVisible(false);
     setPanelMode('guide');
-    setSelectedLevel('Starter');
+    setSelectedLevel('BEGINNER');
     resetChatState();
   };
 
@@ -146,7 +146,7 @@ function MapPage() {
       setSelectedPlaceDetail(null);
       setPanelVisible(false);
       setPanelMode('guide');
-      setSelectedLevel('Starter');
+      setSelectedLevel('BEGINNER');
       resetChatState();
       return;
     }
@@ -162,7 +162,7 @@ function MapPage() {
 
       setPanelVisible(true);
       setPanelMode('detail');
-      setSelectedLevel('Starter');
+      setSelectedLevel('BEGINNER');
       resetChatState();
     } catch (error) {
       console.error('장소 상세 조회 실패:', error);
@@ -176,9 +176,9 @@ function MapPage() {
     }
 
     if (!currentUser) {
-        alert('로그인이 필요합니다.');
-        return;
-      }
+      alert('로그인이 필요합니다.');
+      return;
+    }
 
     try {
 

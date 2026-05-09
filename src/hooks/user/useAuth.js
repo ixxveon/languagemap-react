@@ -28,10 +28,32 @@ export function useAuth() {
 
     // 회원가입 
     const signup = async (form) => {
+        if (form.password !== form.passwordConfirm) {
+            setErrorMessage('비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+            return;
+        }
+        if (!form.agreeTerms || !form.agreePrivacy) {
+            setErrorMessage('필수 약관에 동의해주세요.');
+            return;
+        }
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (form.birthDate && new Date(form.birthDate) > today) {
+            setErrorMessage('생년월일은 미래 날짜를 선택할 수 없습니다.');
+            return;
+        }
+        const phoneClean = form.phone.replace(/-/g, '');
+        if (!/^010\d{8}$/.test(phoneClean)) {
+            setErrorMessage('올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)');
+            return;
+        }
         try {
             setIsSubmitting(true);
             setErrorMessage('');
-            const session = await authService.signupWithEmail(form);
+            const session = await authService.signupWithEmail({
+                ...form,
+                phone: phoneClean,
+            });
             setSession(session);
             navigate('/');
         } catch (error) {
@@ -62,13 +84,10 @@ export function useAuth() {
 const exchangeOauthCode = async (code) => {
     try {
         setIsSubmitting(true);
-        console.log('exchangeOauthCode 시작:', code);  // 로그 추가
         const session = await authService.exchangeOauthCode(code);
-        console.log('session 받음:', session);  // 로그 추가
         setSession(session);
         return session;
     } catch (error) {
-        console.log('exchangeOauthCode 에러:', error);  // 로그 추가
         setErrorMessage(error.message || '소셜 로그인에 실패했습니다.');
         throw error;
     } finally {
@@ -78,10 +97,28 @@ const exchangeOauthCode = async (code) => {
 
     // 프로필 정보 입력
     const setupProfile = async (form) => {
+        if (!form.birthDate || !form.address || !form.phoneNumber) {
+            setErrorMessage('모든 항목을 입력해주세요.');
+            return;
+        }
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (new Date(form.birthDate) > today) {
+            setErrorMessage('생년월일은 미래 날짜를 선택할 수 없습니다.');
+            return;
+        }
+        const phoneClean = form.phoneNumber.replace(/-/g, '');
+        if (!/^010\d{8}$/.test(phoneClean)) {
+            setErrorMessage('올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)');
+            return;
+        }
     try {
         setIsSubmitting(true);
         setErrorMessage('');
-        await userService.setupProfile(form);
+        await userService.setupProfile({
+                ...form,
+                phoneNumber: phoneClean,
+            });
         navigate('/');
     } catch (error) {
         setErrorMessage(error.message || '프로필 입력에 실패했습니다.');

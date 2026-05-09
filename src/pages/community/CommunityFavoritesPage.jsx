@@ -1,61 +1,6 @@
-﻿import { useMemo, useState } from 'react';
-import { MapingoPageSection } from '../../components/MapingoPageBlocks';
-import { placeService } from '../../api/place/placeService';
+﻿import { MapingoPageSection } from '../../components/MapingoPageBlocks';
+import { useCommunityFavorites } from '../../hooks/community/useCommunityFavorites';
 import '../../styles/user/CommunityFavoritesPage.css';
-
-const routeRows = placeService.fetchRoutes();
-
-const placeCatalogRows = routeRows.map((route, index) => ({
-  place_id: index + 101,
-  title: route.title,
-  category: route.category,
-  difficulty: route.difficulty,
-  duration: route.duration,
-  description: route.description,
-}));
-
-const scenarioCatalogRows = routeRows.map((route, index) => ({
-  scenario_id: index + 201,
-  title: `${route.title} 추천 시나리오`,
-  category: route.category,
-  difficulty: route.difficulty,
-  summary: route.scenario,
-}));
-
-const initialFavoritePlaceRows = [
-  {
-    favorite_place_id: 1,
-    user_id: 1,
-    place_id: 101,
-    created_at: '2026-04-18 12:10:00',
-  },
-  {
-    favorite_place_id: 2,
-    user_id: 1,
-    place_id: 103,
-    created_at: '2026-04-19 18:40:00',
-  },
-];
-
-const initialFavoriteScenarioRows = [
-  {
-    favorite_expression_id: 1,
-    user_id: 1,
-    scenario_id: 201,
-    created_at: '2026-04-18 12:15:00',
-  },
-  {
-    favorite_expression_id: 2,
-    user_id: 1,
-    scenario_id: 204,
-    created_at: '2026-04-20 09:30:00',
-  },
-];
-
-function formatDate(dateString) {
-  const [date] = dateString.split(' ');
-  return date.replaceAll('-', '.');
-}
 
 function FavoriteCard({ title, description, metaChips, subCopy, onRemove }) {
   return (
@@ -66,8 +11,8 @@ function FavoriteCard({ title, description, metaChips, subCopy, onRemove }) {
           <p className="community-favorites-route-description">{description}</p>
 
           <div className="community-favorites-chip-row">
-            {metaChips.map((chip) => (
-              <span key={`${title}-${chip}`} className="community-favorites-chip is-progress">
+            {metaChips.map((chip, index) => (
+              <span key={`${title}-${chip}-${index}`} className="community-favorites-chip is-progress">
                 {chip}
               </span>
             ))}
@@ -85,42 +30,15 @@ function FavoriteCard({ title, description, metaChips, subCopy, onRemove }) {
 }
 
 export default function CommunityFavoritesPage() {
-  const [favoritePlaceRows, setFavoritePlaceRows] = useState(initialFavoritePlaceRows);
-  const [favoriteScenarioRows, setFavoriteScenarioRows] = useState(initialFavoriteScenarioRows);
-
-  const favoritePlaces = useMemo(
-    () =>
-      favoritePlaceRows
-        .map((favorite) => ({
-          ...favorite,
-          ...placeCatalogRows.find((place) => place.place_id === favorite.place_id),
-        }))
-        .filter((place) => place.place_id),
-    [favoritePlaceRows],
-  );
-
-  const favoriteScenarios = useMemo(
-    () =>
-      favoriteScenarioRows
-        .map((favorite) => ({
-          ...favorite,
-          ...scenarioCatalogRows.find((scenario) => scenario.scenario_id === favorite.scenario_id),
-        }))
-        .filter((scenario) => scenario.scenario_id),
-    [favoriteScenarioRows],
-  );
-
-  const handleRemoveFavoritePlace = (favoritePlaceId) => {
-    setFavoritePlaceRows((current) =>
-      current.filter((favorite) => favorite.favorite_place_id !== favoritePlaceId),
-    );
-  };
-
-  const handleRemoveFavoriteScenario = (favoriteExpressionId) => {
-    setFavoriteScenarioRows((current) =>
-      current.filter((favorite) => favorite.favorite_expression_id !== favoriteExpressionId),
-    );
-  };
+  const {
+    favoritePlaces,
+    favoriteScenarios,
+    isLoading,
+    errorMessage,
+    formatDate,
+    handleRemoveFavoritePlace,
+    handleRemoveFavoriteScenario,
+  } = useCommunityFavorites();
 
   return (
     <div className="mapingo-dashboard">
@@ -131,6 +49,12 @@ export default function CommunityFavoritesPage() {
       />
 
       <section className="mapingo-page-section">
+        {isLoading && <div className="community-favorites-route-list-empty">불러오는 중...</div>}
+
+        {errorMessage && (
+          <div className="community-favorites-route-list-empty">{errorMessage}</div>
+        )}
+
         <div className="community-favorites-favorites-grid">
           <div className="mapingo-list-card">
             <div className="mapingo-card-header-row">
@@ -146,12 +70,12 @@ export default function CommunityFavoritesPage() {
               ) : (
                 favoritePlaces.map((place) => (
                   <FavoriteCard
-                    key={place.favorite_place_id}
+                    key={place.favoritePlaceId}
                     title={place.title}
                     description={place.description}
-                    metaChips={[place.category, place.difficulty]}
-                    subCopy={`등록일 ${formatDate(place.created_at)}`}
-                    onRemove={() => handleRemoveFavoritePlace(place.favorite_place_id)}
+                    metaChips={[place.category, place.difficulty].filter(Boolean)}
+                    subCopy={`등록일 ${formatDate(place.createdAt)}`}
+                    onRemove={() => handleRemoveFavoritePlace(place.placeId)}
                   />
                 ))
               )}
@@ -172,12 +96,12 @@ export default function CommunityFavoritesPage() {
               ) : (
                 favoriteScenarios.map((scenario) => (
                   <FavoriteCard
-                    key={scenario.favorite_expression_id}
+                    key={scenario.favoriteScenarioId}
                     title={scenario.title}
                     description={scenario.summary}
-                    metaChips={[scenario.category, scenario.difficulty]}
-                    subCopy={`등록일 ${formatDate(scenario.created_at)}`}
-                    onRemove={() => handleRemoveFavoriteScenario(scenario.favorite_expression_id)}
+                    metaChips={[scenario.category, scenario.difficulty].filter(Boolean)}
+                    subCopy={`등록일 ${formatDate(scenario.createdAt)}`}
+                    onRemove={() => handleRemoveFavoriteScenario(scenario.scenarioId)}
                   />
                 ))
               )}

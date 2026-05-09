@@ -5,6 +5,29 @@ import {
 } from "../../components/MapingoPageBlocks";
 import { useRanking } from "../../hooks/community/useRanking";
 
+const getResponseData = (response) => {
+  if (!response) return [];
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response.data)) return response.data;
+  return [];
+};
+
+const normalizeRanking = (item, index) => ({
+  id: item.id ?? item.userId ?? item.user_id ?? index + 1,
+  userId: item.userId ?? item.user_id,
+  name: item.name ?? item.userName ?? item.nickname ?? `USER ${item.userId ?? index + 1}`,
+  score: item.score ?? item.totalScore ?? item.weeklyScore ?? 0,
+  rank: item.rank ?? index + 1,
+});
+
+const normalizeFriendScore = (item, index) => ({
+  id: item.id ?? item.userId ?? item.user_id ?? index + 1,
+  name: item.name ?? item.userName ?? item.nickname ?? `USER ${item.userId ?? index + 1}`,
+  score: item.score ?? item.totalScore ?? item.weeklyScore ?? 0,
+  streak: item.streak ?? item.streakDays ?? 0,
+  focus: item.focus ?? item.goalText ?? item.learningGoal ?? '학습',
+});
+
 function CommunityRankingPage() {
   const navigate = useNavigate();
 
@@ -22,8 +45,8 @@ function CommunityRankingPage() {
     <div className="mapingo-dashboard">
       <MapingoPageSection
         eyebrow="커뮤니티"
-        title="점수 비교 · 랭킹"
-        description="주간 랭킹과 비교 점수를 별도 화면에서 더 깔끔하게 볼 수 있어요."
+        title="점수 비교와 랭킹"
+        description="주간 랭킹과 친구 비교 점수를 백엔드 데이터로 확인해보세요."
       >
         <div className="mapingo-page-actions">
           <button
