@@ -57,7 +57,6 @@ async function signupWithEmail({ email, password, passwordConfirm, name, birthDa
             marketingAgree: agreeMarketing,
         });
     } catch (error) {
-        // 400 - 필드 유효성 오류 (첫 번째 메시지 표시)
         if (error.response?.status === 400) {
             const data = error.response?.data?.data;
             if (data && typeof data === 'object') {

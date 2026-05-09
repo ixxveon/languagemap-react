@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from '../axiosInstance';
 
 import {
   buildBadgeProgressFromStore,
@@ -16,11 +16,26 @@ import {
   learningSummary,
 } from '../../mocks/user/learningMockData';
 
-const api = axios.create({
-  baseURL: 'http://localhost:8080',
-});
+let cachedUserId = null;
 
-const TEMP_USER_ID = 1;
+async function getLoginUserId() {
+  if (cachedUserId) {
+    return cachedUserId;
+  }
+
+  const res = await axiosInstance.get('/api/users/me');
+  cachedUserId = res.data?.data?.userId ?? res.data?.userId;
+
+  if (!cachedUserId) {
+    throw new Error('로그인 사용자 ID를 찾을 수 없습니다.');
+  }
+
+  return cachedUserId;
+}
+
+function extractApiData(res) {
+  return res?.data ?? [];
+}
 
 export const learningService = {
   buildBadgeProgressFromStore,
@@ -64,38 +79,49 @@ export const learningService = {
   },
 
   async getAvailableGoals() {
-    const res = await api.get('/api/learning/goals/available', {
-      params: { userId: TEMP_USER_ID },
+    const userId = await getLoginUserId();
+
+    const res = await axiosInstance.get('/api/learning/goals/available', {
+      params: { userId },
     });
-    return res.data.data;
+
+    return extractApiData(res);
   },
 
   async getActiveGoals() {
-    const res = await api.get('/api/learning/goals/active', {
-      params: { userId: TEMP_USER_ID },
+    const userId = await getLoginUserId();
+
+    const res = await axiosInstance.get('/api/learning/goals/active', {
+      params: { userId },
     });
-    return res.data.data;
+    return extractApiData(res);
   },
 
   async getCompletedGoals() {
-    const res = await api.get('/api/learning/goals/completed', {
-      params: { userId: TEMP_USER_ID },
+    const userId = await getLoginUserId();
+
+    const res = await axiosInstance.get('/api/learning/goals/completed', {
+      params: { userId },
     });
-    return res.data.data;
+    return extractApiData(res);
   },
 
   async selectGoal(goalMasterId) {
-    const res = await api.post('/api/learning/goals', {
-      userId: TEMP_USER_ID,
+    const userId = await getLoginUserId();
+
+    const res = await axiosInstance.post('/api/learning/goals', {
+      userId,
       goalMasterId,
     });
-    return res.data.data;
+    return res?.data;
   },
 
   async deleteGoal(userGoalId) {
-    const res = await api.delete(`/api/learning/goals/${userGoalId}`, {
-      params: { userId: TEMP_USER_ID },
+    const userId = await getLoginUserId();
+
+    const res = await axiosInstance.delete(`/api/learning/goals/${userGoalId}`, {
+      params: { userId },
     });
-    return res.data.data;
+    return res?.data;
   },
 };

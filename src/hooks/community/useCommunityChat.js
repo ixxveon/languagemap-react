@@ -25,15 +25,14 @@ const maskDisplayName = (name, fallback = '사용자') => {
       localCharacters.length <= 2
         ? `${localCharacters[0] ?? '*'}*`
         : `${localCharacters[0]}${'*'.repeat(localCharacters.length - 2)}${localCharacters.at(-1)}`;
+
     return domain ? `${maskedLocalPart}@${domain}` : maskedLocalPart;
   }
 
   const characters = Array.from(displayName);
-  if (characters.length <= 1) return '*';
 
-  if (characters.length === 2) {
-    return `${characters[0]}*`;
-  }
+  if (characters.length <= 1) return '*';
+  if (characters.length === 2) return `${characters[0]}*`;
 
   return `${characters[0]}${'*'.repeat(characters.length - 2)}${characters.at(-1)}`;
 };
@@ -42,7 +41,10 @@ const normalizeChatMessage = (message, currentUserId) => {
   const type = message.type ?? 'CHAT';
   const isSystem = type === 'ENTER' || type === 'LEAVE';
   const isMine = Number(message.userId) === Number(currentUserId);
-  const maskedNickname = maskDisplayName(message.nickname, `사용자 ${message.userId ?? ''}`);
+  const maskedNickname = maskDisplayName(
+    message.nickname,
+    `사용자 ${message.userId ?? ''}`,
+  );
   const systemMessage =
     type === 'LEAVE'
       ? `${maskedNickname}님이 퇴장했습니다.`

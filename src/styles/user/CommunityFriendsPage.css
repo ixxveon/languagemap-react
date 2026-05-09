@@ -36,6 +36,29 @@
   flex-direction: column;
   gap: 12px;
   margin-top: 14px;
+  max-height: min(52vh, 720px);
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-gutter: stable;
+}
+
+.community-friends-card-list::-webkit-scrollbar,
+.community-friends-report-list::-webkit-scrollbar,
+.community-friends-recommend-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.community-friends-card-list::-webkit-scrollbar-thumb,
+.community-friends-report-list::-webkit-scrollbar-thumb,
+.community-friends-recommend-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #c7e8e2;
+}
+
+.community-friends-card-list::-webkit-scrollbar-track,
+.community-friends-report-list::-webkit-scrollbar-track,
+.community-friends-recommend-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .community-friends-profile-card,
@@ -447,6 +470,7 @@
 }
 
 @media (max-width: 1180px) {
+
   .community-friends-layout,
   .community-friends-dual-grid {
     grid-template-columns: 1fr;
@@ -454,6 +478,15 @@
 }
 
 @media (max-width: 820px) {
+
+  .community-friends-card-list,
+  .community-friends-report-list,
+  .community-friends-recommend-list {
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+
   .community-friends-profile-head,
   .community-friends-identity,
   .community-friends-recommend-head,
@@ -483,5 +516,73 @@
   .community-friends-info-grid,
   .community-friends-compact-main {
     grid-template-columns: 1fr;
+  }
+
+  .community-friends-feedback-banner {
+    margin: 0 auto 20px;
+    max-width: 1180px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: #f0f7ff;
+    color: #2563eb;
+    font-weight: 700;
+    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.12);
+  }
+}
+
+.community-friends-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(4px);
+}
+
+.community-friends-popup {
+  width: min(420px, calc(100% - 40px));
+  padding: 28px;
+  border-radius: 24px;
+
+  background: #ffffff;
+  border: 1px solid rgba(20, 184, 166, 0.2);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+
+  text-align: center;
+  animation: communityFriendsPopupShow 0.22s ease;
+}
+
+.community-friends-popup h3 {
+  margin: 0 0 12px;
+  color: #0f766e;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.community-friends-popup p {
+  margin: 0 0 24px;
+  color: #334155;
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.community-friends-popup .mapingo-submit-button {
+  width: 100%;
+}
+
+@keyframes communityFriendsPopupShow {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

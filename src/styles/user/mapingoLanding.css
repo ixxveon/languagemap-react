@@ -5673,6 +5673,80 @@
   color: #6b7280;
 }
 
+.mapingo-profile-growth-section {
+  display: grid;
+  gap: 18px;
+  margin-top: 22px;
+  padding: 26px;
+  border: 1px solid #cbeee9;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 16px 32px rgba(21, 94, 99, 0.08);
+}
+
+.mapingo-profile-growth-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.mapingo-profile-growth-head h2 {
+  margin: 8px 0 0;
+  color: #0f5c60;
+  font-size: 1.8rem;
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+.mapingo-profile-growth-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mapingo-profile-growth-card {
+  min-height: 178px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid #d8eeea;
+  border-radius: 20px;
+  background: #f5fcfb;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.mapingo-profile-growth-card:hover,
+.mapingo-profile-growth-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: #8fded3;
+  box-shadow: 0 18px 28px rgba(21, 94, 99, 0.1);
+  outline: none;
+}
+
+.mapingo-profile-growth-card span {
+  color: #64748b;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.mapingo-profile-growth-card strong {
+  color: #0f5c60;
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.mapingo-profile-growth-card p {
+  margin: 0;
+  color: #5f7084;
+  font-size: 0.95rem;
+  line-height: 1.62;
+}
+
 .mapingo-friend-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(260px, 0.92fr);
@@ -6236,6 +6310,7 @@
   .growth-progress-layout,
   .growth-score-grid,
   .growth-highlight-grid,
+  .mapingo-profile-growth-grid,
   .mapingo-goals-summary-grid,
   .mapingo-goals-control-grid,
   .growth-insights-overview-grid,
@@ -6405,6 +6480,7 @@
   .mapingo-home-preview-head,
   .mapingo-preview-card-head,
   .mapingo-profile-card-head,
+  .mapingo-profile-growth-head,
   .mapingo-friend-card-head,
   .mapingo-learning-panel-head,
   .mapingo-login-benefit-head,

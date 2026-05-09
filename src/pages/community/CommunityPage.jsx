@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import DemoFlowCompact from '../../components/user/DemoFlowCompact';
 import { useCommunityChat } from '../../hooks/community/useCommunityChat';
+
 import '../../styles/user/CommunityPage.css';
 
 const communityEntryCards = [
@@ -9,36 +11,33 @@ const communityEntryCards = [
     id: 'friends',
     accent: '연결 관리',
     title: '친구 관리',
-    description: '친구 요청을 확인하고 학습 메이트를 관리해보세요.',
+    description:
+      '친구 요청을 확인하고 새 친구를 추가하면서 함께 공부할 학습 메이트를 정리해보세요.',
     path: '/community/friends',
   },
   {
     id: 'ranking',
     accent: '순위 확인',
     title: '점수 비교와 랭킹',
-    description: '친구들과 점수를 비교하고 랭킹을 확인해보세요.',
+    description:
+      '친구들과 학습 기록을 비교하고, 전체 사용자 안에서 내 위치를 빠르게 확인할 수 있어요.',
     path: '/community/ranking',
   },
   {
     id: 'learning',
     accent: '학습 관리',
     title: '학습 목표',
-    description: '학습 목표를 설정하고 진행률을 확인해보세요.',
+    description: '진행 중인 목표를 확인하고 새로운 학습 목표를 설정해보세요.',
     path: '/community/learning',
   },
   {
     id: 'favorites',
     accent: '학습 보관함',
     title: '즐겨찾기',
-    description: '자주 보는 학습 루트를 모아 관리해보세요.',
+    description:
+      '자주 보는 학습 루트와 관심 콘텐츠를 한 번에 모아 관리해보세요.',
     path: '/community/favorites',
   },
-];
-
-const starterMessages = [
-  '오늘 영어 회화 루틴 같이 할 사람?',
-  '여행 표현 연습할 사람 있나요?',
-  '방금 배운 문장 같이 복습해요.',
 ];
 
 function CommunityPage() {
@@ -56,6 +55,7 @@ function CommunityPage() {
   useEffect(() => {
     const chatLog = chatLogRef.current;
     if (!chatLog) return;
+
     chatLog.scrollTo({ top: chatLog.scrollHeight, behavior: 'smooth' });
   }, [messages.length]);
 
@@ -126,20 +126,6 @@ function CommunityPage() {
                     </div>
                   ))
                 )}
-              </div>
-
-              <div className="community-live-chat-suggestions">
-                {starterMessages.map((message) => (
-                  <button
-                    key={message}
-                    type="button"
-                    className="community-live-chat-chip"
-                    onClick={() => sendMessage(message)}
-                    disabled={!canSend}
-                  >
-                    {message}
-                  </button>
-                ))}
               </div>
 
               <div className="community-live-chat-composer">
