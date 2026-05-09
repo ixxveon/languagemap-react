@@ -1,14 +1,15 @@
-import { friendComparisonList, rankingList } from '../../mocks/user/communityMockData';
-
-function fetchFriendComparison() {
-  return friendComparisonList;
-}
-
-function fetchRankingList() {
-  return rankingList;
-}
+import axiosInstance from '../axiosInstance';
 
 export const communityService = {
-  fetchFriendComparison,
-  fetchRankingList,
+  async fetchFriendComparison(userId) {
+    const res = await axiosInstance.get('/api/rankings/friends', {
+      params: { userId },
+    });
+    return res;
+  },
+
+  async fetchRankingList() {
+    const res = await axiosInstance.get('/api/rankings');
+    return res;
+  },
 };
