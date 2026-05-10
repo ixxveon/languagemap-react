@@ -14,6 +14,7 @@ import SupportPage from './pages/home-support-common/SupportPage';
 import PremiumPage from './pages/primium/PremiumPage';
 import PremiumPlansPage from './pages/primium/PremiumPlansPage';
 import PremiumCheckoutPage from './pages/primium/PremiumCheckoutPage';
+import PremiumSuccessPage from './pages/primium/PremiumSuccessPage';
 import SettingsPage from './pages/home-support-common/SettingsPage';
 import SettingsLearningPage from './pages/home-support-common/SettingsLearningPage';
 import SettingsAccountPage from './pages/home-support-common/SettingsAccountPage';
@@ -60,6 +61,7 @@ function App() {
         <Route path="/premium/plans" element={<PremiumPlansPage />} />
         <Route path="/premium/features" element={<Navigate to="/premium/plans" replace />} />
         <Route path="/premium/status" element={<Navigate to="/premium/plans" replace />} />
+        <Route path="/premium/success" element={<PremiumSuccessPage />} />
         <Route path="/premium/checkout" element={<PremiumCheckoutPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/settings/learning" element={<SettingsLearningPage />} />
