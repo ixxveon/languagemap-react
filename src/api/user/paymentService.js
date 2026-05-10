@@ -15,25 +15,27 @@ function requestPayment({ planType, productId, paymentMethod, amount }) {
 
         IMP.init(IMP_CODE);
         IMP.request_pay(
-            {
-                pg: PG_MAP[paymentMethod],
-                pay_method: PAY_METHOD_MAP[paymentMethod],
-                merchant_uid: merchantUid,
-                name: PLAN_NAME[productId],
-                amount,
-                buyer_email: '',
-                buyer_name: '',
-            },
+    {
+        pg: 'html5_inicis.INIpayTest',  // 
+        pay_method: PAY_METHOD_MAP[paymentMethod],
+        merchant_uid: merchantUid,
+        name: PLAN_NAME[productId],
+        amount,
+        buyer_email: '',
+        buyer_name: '',
+    },
             (response) => {
-                if (response.success) {
-                    resolve({
-                        impUid: response.imp_uid,
-                        merchantUid: response.merchant_uid,
-                    });
-                } else {
-                    reject(new Error(response.error_msg || '결제에 실패했습니다.'));
-                }
-            }
+    console.log('포트원 응답:', response); // << 추가
+    if (response.success) {
+        console.log('imp_uid:', response.imp_uid); // << 추가
+        resolve({
+            impUid: response.imp_uid,
+            merchantUid: response.merchant_uid,
+        });
+    } else {
+        reject(new Error(response.error_msg || '결제에 실패했습니다.'));
+    }
+}
         );
     });
 }

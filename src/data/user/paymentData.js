@@ -8,15 +8,16 @@ export const PLAN_AMOUNT = {
     yearly: 89000,
 };
 
+// << 변경: KG이니시스 테스트
 export const PG_MAP = {
     card: 'html5_inicis',
-    kakao: 'kakaopay.TC0ONETIME',
+    kakao: 'html5_inicis',  
     bank: 'html5_inicis',
 };
 
 export const PAY_METHOD_MAP = {
     card: 'card',
-    kakao: 'kakaopay',
+    kakao: 'card',  
     bank: 'trans',
 };
 
