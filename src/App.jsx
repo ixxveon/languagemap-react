@@ -21,7 +21,7 @@ import AccountDeletePage from './pages/user/AccountDeletePage';
 import AdminPage from './pages/admin/AdminPage';
 import AdminMembersPage from './pages/admin/AdminMembersPage';
 import AdminNoticesPage from './pages/admin/AdminNoticesPage';
-import AdminContentPage from './pages/admin/AdminContentPage';
+import AdminContentPage from './pages/place/AdminContentPage';
 import AdminCommunityPage from './pages/admin/AdminCommunityPage';
 import AdminCoachingPage from './pages/admin/AdminCoachingPage';
 import AdminGrowthPage from './pages/admin/AdminGrowthPage';

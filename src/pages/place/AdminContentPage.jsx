@@ -2,6 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
 import { adminService } from '../../api/admin/adminService';
+import { adminRegionService } from '../../api/place/AdminRegionService';
+import { adminScenarioService } from '../../api/place/AdminScenarioService';
+import { adminMissionService } from '../../api/place/AdminMissionService';
+import { adminPlaceService } from '../../api/place/AdminPlaceService';
+
 
 const EMPTY_PLACE_FORM = {
   googlePlaceId: '',
@@ -17,8 +22,7 @@ const EMPTY_PLACE_FORM = {
 const EMPTY_SCENARIO_FORM = {
   prompt: '',
   scenarioDescription: '',
-  level: '입문',
-  category: '주문',
+  category: '',
   completeExp: '120',
 };
 
@@ -26,6 +30,13 @@ const EMPTY_MISSION_FORM = {
   missionTitle: '',
   missionDescription: '',
   scenarioId: '',
+};
+
+const EMPTY_REGION_FORM = {
+  country: '',
+  city: '',
+  latitude: '',
+  longitude: '',
 };
 
 function loadGoogleMaps(apiKey) {
@@ -61,33 +72,33 @@ function loadGoogleMaps(apiKey) {
 function buildContentItems(places, scenarios, missions) {
   return [
     ...places.map((place) => ({
-      id: `place-${place.id}`,
+      id: `place-${place.placeId}`,
       type: '장소',
       title: place.placeName,
       status: '운영 중',
       difficulty: '-',
       description: place.placeDescription || 'Google Places 요약이 아직 없습니다.',
-      tags: `${place.regionName}, ${place.scenarioTitle}`,
+      tags: `${place.regionCity}, ${place.scenarioTitle}`,
       updatedAt: place.updatedAt,
     })),
     ...scenarios.map((scenario) => ({
-      id: `scenario-${scenario.id}`,
+      id: `scenario-${scenario.scenarioId}`,
       type: '시나리오',
       title: scenario.scenarioDescription,
       status: scenario.status ?? '초안',
-      difficulty: scenario.level,
+      difficulty: '-',
       description: scenario.prompt,
       tags: `${scenario.category}, ${scenario.completeExp} EXP`,
       updatedAt: scenario.updatedAt,
     })),
     ...missions.map((mission) => ({
-      id: `mission-${mission.id}`,
+      id: `mission-${mission.missionId}`,
       type: '미션',
       title: mission.missionTitle,
       status: '운영 중',
       difficulty: '-',
       description: mission.missionDescription,
-      tags: mission.scenarioTitle,
+      tags: `시나리오 PK ${mission.scenarioId}`,
       updatedAt: mission.updatedAt,
     })),
   ];
@@ -116,29 +127,39 @@ function resolveRegionCountry(querySuffix) {
   return querySuffix;
 }
 
+function getRegionCountry(region) {
+  return region.country ?? resolveRegionCountry(region.querySuffix);
+}
+
+function getGoogleRegionCode(region) {
+  const country = getRegionCountry(region);
+
+  if (country === '대한민국' || country === '한국') return 'kr';
+  if (country === '일본') return 'jp';
+  if (country === '호주') return 'au';
+  return undefined;
+}
+
 function AdminContentPage() {
   const navigate = useNavigate();
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-  const initialRegions = adminService.fetchAdminRegions();
-  const initialScenarios = adminService.fetchAdminScenarios();
+  const [scenarios, setScenarios] = useState([]);
   const searchTypes = adminService.fetchAdminPlaceSearchTypes();
-  const levelOptions = adminService.fetchAdminScenarioLevelOptions();
-  const categoryOptions = adminService.fetchAdminScenarioCategoryOptions();
 
-  const [regions, setRegions] = useState(initialRegions);
-  const [places, setPlaces] = useState(() => adminService.fetchAdminPlaces());
-  const [scenarios, setScenarios] = useState(initialScenarios);
-  const [missions, setMissions] = useState(() => adminService.fetchAdminMissions());
+  const [regions, setRegions] = useState([]);
+  const [places, setPlaces] = useState([]);
+  const [missions, setMissions] = useState([]);
   const [placeForm, setPlaceForm] = useState(() => ({
     ...EMPTY_PLACE_FORM,
-    scenarioId: String(initialScenarios[0]?.id ?? ''),
-    regionId: String(initialRegions[0]?.id ?? ''),
+    scenarioId: '',
+    regionId: '',
   }));
   const [scenarioForm, setScenarioForm] = useState(EMPTY_SCENARIO_FORM);
   const [missionForm, setMissionForm] = useState(() => ({
     ...EMPTY_MISSION_FORM,
-    scenarioId: String(initialScenarios[0]?.id ?? ''),
+    scenarioId: '',
   }));
+  const [regionForm, setRegionForm] = useState(EMPTY_REGION_FORM);
   const [selectedSearchType, setSelectedSearchType] = useState(searchTypes[0]?.id ?? 'cafe');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -154,10 +175,105 @@ function AdminContentPage() {
   const infoWindowRef = useRef(null);
   const markersRef = useRef([]);
 
-  const selectedRegion = useMemo(
-    () => regions.find((region) => String(region.id) === String(placeForm.regionId)) ?? regions[0],
-    [placeForm.regionId, regions],
-  );
+  async function loadRegions(keyword = '') {
+    try {
+      const data = await adminRegionService.readRegions(keyword);
+
+      console.log('지역 목록', data);
+
+      setRegions(data);
+
+      setPlaceForm((currentForm) => ({
+        ...currentForm,
+        regionId: currentForm.regionId || String(data[0]?.regionId ?? ''),
+      }));
+    } catch (error) {
+      console.error('지역 목록 조회 실패', error);
+    }
+  }
+
+  async function loadScenarios(keyword = '') {
+    try {
+      const data = await adminScenarioService.readScenarios(keyword);
+      const scenarioList = data ?? [];
+
+      console.log('시나리오 목록', scenarioList);
+
+      setScenarios(scenarioList);
+
+      setPlaceForm((currentForm) => ({
+        ...currentForm,
+        scenarioId:
+          currentForm.scenarioId ||
+          String(scenarioList[0]?.scenarioId ?? ''),
+      }));
+
+      setMissionForm((currentForm) => ({
+        ...currentForm,
+        scenarioId:
+          currentForm.scenarioId ||
+          String(scenarioList[0]?.scenarioId ?? ''),
+      }));
+    } catch (error) {
+      console.error('시나리오 목록 조회 실패', error);
+    }
+  }
+
+  async function loadMissions(keyword = '') {
+    try {
+      const data = await adminMissionService.readMissions(keyword);
+      const missionList = data ?? [];
+
+      console.log('미션 목록', missionList);
+
+      setMissions(missionList);
+    } catch (error) {
+      console.error('미션 목록 조회 실패', error);
+    }
+  }
+
+  async function loadPlaces(keyword = '') {
+    try {
+      const data = await adminPlaceService.readPlaces(keyword);
+      const placeList = data ?? [];
+
+      console.log('장소 목록', placeList);
+
+      setPlaces(placeList);
+    } catch (error) {
+      console.error('장소 목록 조회 실패', error);
+    }
+  }
+
+  useEffect(() => {
+    loadRegions();
+    loadScenarios();
+    loadMissions();
+    loadPlaces();
+  }, []);
+
+  const selectedRegion = useMemo(() => {
+    const region =
+      regions.find(
+        (region) =>
+          String(region.regionId) ===
+          String(placeForm.regionId)
+      ) ?? regions[0];
+
+    if (!region) {
+      return null;
+    }
+
+    return {
+      ...region,
+      id: region.regionId,
+      name: region.city,
+      center: {
+        lat: Number(region.latitude),
+        lng: Number(region.longitude),
+      },
+    };
+  }, [placeForm.regionId, regions]);
 
   const contentItems = useMemo(() => buildContentItems(places, scenarios, missions), [missions, places, scenarios]);
   const filteredPlaces = useMemo(
@@ -169,7 +285,7 @@ function AdminContentPage() {
             place.placeAddress,
             place.placeDescription,
             place.googlePlaceId,
-            place.regionName,
+            place.regionCity,
             place.scenarioTitle,
           ],
           resultSearchQuery,
@@ -184,10 +300,9 @@ function AdminContentPage() {
           [
             scenario.scenarioDescription,
             scenario.prompt,
-            scenario.level,
             scenario.category,
             scenario.status,
-            scenario.id,
+            scenario.scenarioId,
           ],
           resultSearchQuery,
         ),
@@ -198,14 +313,27 @@ function AdminContentPage() {
     () =>
       missions.filter((mission) =>
         includesKeyword(
-          [mission.missionTitle, mission.missionDescription, mission.scenarioTitle, mission.scenarioId],
+          [mission.missionTitle, mission.missionDescription, mission.scenarioId],
           resultSearchQuery,
         ),
       ),
     [missions, resultSearchQuery],
   );
   const filteredRegions = useMemo(
-    () => regions.filter((region) => includesKeyword([region.id, region.name, region.querySuffix], resultSearchQuery)),
+    () =>
+      regions.filter((region) =>
+        includesKeyword(
+          [
+            region.regionId,
+            getRegionCountry(region),
+            region.country,
+            region.city,
+            region.latitude,
+            region.longitude,
+          ],
+          resultSearchQuery,
+        ),
+      ),
     [regions, resultSearchQuery],
   );
 
@@ -320,7 +448,7 @@ function AdminContentPage() {
         useStrictTypeFiltering: false,
         locationBias: selectedRegion.center,
         language: 'ko',
-        region: selectedRegion.querySuffix === 'Tokyo' ? 'jp' : selectedRegion.querySuffix === 'Sydney' ? 'au' : 'kr',
+        region: getGoogleRegionCode(selectedRegion),
         maxResultCount: 8,
       });
 
@@ -386,6 +514,13 @@ function AdminContentPage() {
     }));
   };
 
+  const handleRegionFormChange = (field) => (event) => {
+    setRegionForm((currentForm) => ({
+      ...currentForm,
+      [field]: event.target.value,
+    }));
+  };
+
   const handlePanelSelect = (panel) => {
     setActivePanel(panel);
     if (editingContent && editingContent.type !== panel) {
@@ -396,8 +531,8 @@ function AdminContentPage() {
   const resetPlaceForm = () => {
     setPlaceForm({
       ...EMPTY_PLACE_FORM,
-      scenarioId: String(scenarios[0]?.id ?? ''),
-      regionId: String(regions[0]?.id ?? ''),
+      scenarioId: String(scenarios[0]?.scenarioId ?? ''),
+      regionId: String(regions[0]?.regionId ?? ''),
     });
     setSelectedGooglePlaceId('');
     setEditingContent(null);
@@ -411,202 +546,245 @@ function AdminContentPage() {
   const resetMissionForm = () => {
     setMissionForm({
       ...EMPTY_MISSION_FORM,
-      scenarioId: String(scenarios[0]?.id ?? ''),
+      scenarioId: String(scenarios[0]?.scenarioId ?? ''),
     });
     setEditingContent(null);
   };
 
-  const handleSavePlace = (event) => {
+  const resetRegionForm = () => {
+    setRegionForm(EMPTY_REGION_FORM);
+    setEditingContent(null);
+  };
+
+  const handleSavePlace = async (event) => {
     event.preventDefault();
 
-    const region = regions.find((item) => String(item.id) === String(placeForm.regionId));
-    const scenario = scenarios.find((item) => String(item.id) === String(placeForm.scenarioId));
-
-    if (!placeForm.googlePlaceId || !region || !scenario) {
-      setMapStatus('마커를 먼저 선택하고 시나리오와 지역을 확인해 주세요.');
-      return;
-    }
-
-    const nextPlace = {
-      id: Math.max(0, ...places.map((item) => item.id)) + 1,
+    const request = {
       googlePlaceId: placeForm.googlePlaceId,
       placeName: placeForm.placeName,
       placeAddress: placeForm.placeAddress,
       latitude: Number(placeForm.latitude),
       longitude: Number(placeForm.longitude),
       placeDescription: placeForm.placeDescription,
-      scenarioId: scenario.id,
-      regionId: region.id,
-      scenarioTitle: scenario.scenarioDescription,
-      regionName: region.name,
-      updatedAt: '2026-04-24',
+      scenarioId: Number(placeForm.scenarioId),
+      regionId: Number(placeForm.regionId),
     };
 
-    if (editingContent?.type === 'place') {
-      setPlaces((currentPlaces) =>
-        currentPlaces.map((place) => (place.id === editingContent.id ? { ...nextPlace, id: editingContent.id } : place)),
-      );
-      resetPlaceForm();
-      setActiveResultType('place');
-      setMapStatus('장소 정보를 수정했습니다.');
-      return;
-    }
+    try {
+      if (editingContent?.type === 'place') {
+        await adminPlaceService.updatePlace(editingContent.id, request);
+      } else {
+        await adminPlaceService.createPlace(request);
+      }
 
-    setPlaces((currentPlaces) => [nextPlace, ...currentPlaces]);
-    resetPlaceForm();
-    setActivePanel('place');
-    setActiveResultType('place');
-    setMapStatus('장소가 생성되었습니다. 다른 장소를 등록하려면 다시 검색해 주세요.');
+      resetPlaceForm();
+      setEditingContent(null);
+      setActivePanel('place');
+      setActiveResultType('place');
+
+      await loadPlaces();
+
+      setMapStatus(
+        editingContent?.type === 'place'
+          ? '장소 정보를 수정했습니다.'
+          : '장소가 생성되었습니다.'
+      );
+    } catch (error) {
+      console.error('장소 저장 실패', error);
+      window.alert('장소 저장에 실패했습니다.');
+    }
   };
 
-  const handleSaveScenario = (event) => {
+  const handleSaveScenario = async (event) => {
     event.preventDefault();
 
-    const nextScenario = {
-      id: Math.max(0, ...scenarios.map((item) => item.id)) + 1,
+    const request = {
       prompt: scenarioForm.prompt,
       scenarioDescription: scenarioForm.scenarioDescription,
-      level: scenarioForm.level,
       category: scenarioForm.category,
       completeExp: Number(scenarioForm.completeExp),
-      status: '초안',
-      updatedAt: '2026-04-24',
     };
 
-    if (editingContent?.type === 'scenario') {
-      const updatedScenario = { ...nextScenario, id: editingContent.id };
+    try {
+      if (editingContent?.type === 'scenario') {
+        await adminScenarioService.updateScenario(editingContent.id, request);
+      } else {
+        await adminScenarioService.createScenario(request);
+      }
 
-      setScenarios((currentScenarios) =>
-        currentScenarios.map((scenario) => (scenario.id === editingContent.id ? updatedScenario : scenario)),
-      );
-      setPlaces((currentPlaces) =>
-        currentPlaces.map((place) =>
-          place.scenarioId === editingContent.id
-            ? { ...place, scenarioTitle: updatedScenario.scenarioDescription, updatedAt: '2026-04-24' }
-            : place,
-        ),
-      );
-      setMissions((currentMissions) =>
-        currentMissions.map((mission) =>
-          mission.scenarioId === editingContent.id
-            ? { ...mission, scenarioTitle: updatedScenario.scenarioDescription, updatedAt: '2026-04-24' }
-            : mission,
-        ),
-      );
       resetScenarioForm();
+      setEditingContent(null);
+      setActivePanel('scenario');
       setActiveResultType('scenario');
-      return;
+      await loadScenarios();
+    } catch (error) {
+      console.error('시나리오 저장 실패', error);
+      window.alert('시나리오 저장에 실패했습니다.');
     }
-
-    setScenarios((currentScenarios) => [nextScenario, ...currentScenarios]);
-    resetScenarioForm();
-    setMissionForm((currentForm) => ({
-      ...currentForm,
-      scenarioId: currentForm.scenarioId || String(nextScenario.id),
-    }));
-    setPlaceForm((currentForm) => ({
-      ...currentForm,
-      scenarioId: currentForm.scenarioId || String(nextScenario.id),
-    }));
-    setActivePanel('scenario');
-    setActiveResultType('scenario');
   };
 
-  const handleSaveMission = (event) => {
+  const handleSaveMission = async (event) => {
     event.preventDefault();
 
-    const scenario = scenarios.find((item) => String(item.id) === String(missionForm.scenarioId));
-    if (!scenario) {
-      return;
-    }
-
-    const nextMission = {
-      id: Math.max(0, ...missions.map((item) => item.id)) + 1,
+    const request = {
       missionTitle: missionForm.missionTitle,
       missionDescription: missionForm.missionDescription,
-      scenarioId: scenario.id,
-      scenarioTitle: scenario.scenarioDescription,
-      updatedAt: '2026-04-24',
+      scenarioId: Number(missionForm.scenarioId),
     };
 
-    if (editingContent?.type === 'mission') {
-      setMissions((currentMissions) =>
-        currentMissions.map((mission) =>
-          mission.id === editingContent.id ? { ...nextMission, id: editingContent.id } : mission,
-        ),
-      );
+    try {
+      if (editingContent?.type === 'mission') {
+        await adminMissionService.updateMission(editingContent.id, request);
+      } else {
+        await adminMissionService.createMission(request);
+      }
+
       resetMissionForm();
+      setEditingContent(null);
+      setActivePanel('mission');
       setActiveResultType('mission');
-      return;
+      await loadMissions();
+    } catch (error) {
+      console.error('미션 저장 실패', error);
+      window.alert('미션 저장에 실패했습니다.');
     }
-
-    setMissions((currentMissions) => [nextMission, ...currentMissions]);
-    resetMissionForm();
-    setActivePanel('mission');
-    setActiveResultType('mission');
   };
 
-  const handleEditPlace = (place) => {
-    setEditingContent({ type: 'place', id: place.id });
-    setPlaceForm({
-      googlePlaceId: place.googlePlaceId,
-      placeName: place.placeName,
-      placeAddress: place.placeAddress,
-      latitude: String(place.latitude),
-      longitude: String(place.longitude),
-      placeDescription: place.placeDescription,
-      scenarioId: String(place.scenarioId),
-      regionId: String(place.regionId),
-    });
-    setSelectedGooglePlaceId(place.googlePlaceId);
-    setActivePanel('place');
+  const handleSaveRegion = async (event) => {
+    event.preventDefault();
+
+    const request = {
+      country: regionForm.country,
+      city: regionForm.city,
+      latitude: Number(regionForm.latitude),
+      longitude: Number(regionForm.longitude),
+    };
+
+    try {
+      if (editingContent?.type === 'region') {
+        await adminRegionService.updateRegion(editingContent.id, request);
+        setMapStatus(`${request.city} 지역 정보를 수정했습니다.`);
+      } else {
+        await adminRegionService.createRegion(request);
+        setMapStatus(`${request.city} 지역이 생성되었습니다.`);
+      }
+
+      resetRegionForm();
+      setEditingContent(null);
+      setActivePanel('region');
+      setActiveResultType('region');
+      await loadRegions();
+    } catch (error) {
+      console.error('지역 저장 실패', error);
+      window.alert('지역 저장에 실패했습니다.');
+    }
   };
 
-  const handleEditScenario = (scenario) => {
-    setEditingContent({ type: 'scenario', id: scenario.id });
-    setScenarioForm({
-      prompt: scenario.prompt,
-      scenarioDescription: scenario.scenarioDescription,
-      level: scenario.level,
-      category: scenario.category,
-      completeExp: String(scenario.completeExp),
-    });
-    setActivePanel('scenario');
+  const handleEditPlace = async (place) => {
+    try {
+      const detail = await adminPlaceService.readPlaceDetail(place.placeId);
+
+      setEditingContent({ type: 'place', id: place.placeId });
+
+      setPlaceForm({
+        googlePlaceId: detail.googlePlaceId ?? '',
+        placeName: detail.placeName ?? '',
+        placeAddress: detail.placeAddress ?? '',
+        latitude: String(detail.latitude ?? ''),
+        longitude: String(detail.longitude ?? ''),
+        placeDescription: detail.placeDescription ?? '',
+        scenarioId: String(detail.scenarioId ?? ''),
+        regionId: String(detail.regionId ?? ''),
+      });
+
+      setSelectedGooglePlaceId(detail.googlePlaceId ?? '');
+
+      setActivePanel('place');
+    } catch (error) {
+      console.error('장소 상세 조회 실패', error);
+      window.alert('장소 상세 조회에 실패했습니다.');
+    }
   };
 
-  const handleEditMission = (mission) => {
-    setEditingContent({ type: 'mission', id: mission.id });
-    setMissionForm({
-      missionTitle: mission.missionTitle,
-      missionDescription: mission.missionDescription,
-      scenarioId: String(mission.scenarioId),
-    });
-    setActivePanel('mission');
+  const handleEditScenario = async (scenario) => {
+    try {
+      const detail = await adminScenarioService.readScenarioDetail(
+        scenario.scenarioId
+      );
+
+      setEditingContent({ type: 'scenario', id: scenario.scenarioId });
+      setScenarioForm({
+        prompt: detail.prompt ?? '',
+        scenarioDescription: detail.scenarioDescription ?? '',
+        category: detail.category ?? '',
+        completeExp: String(detail.completeExp ?? ''),
+      });
+
+      setActivePanel('scenario');
+    } catch (error) {
+      console.error('시나리오 상세 조회 실패', error);
+      window.alert('시나리오 상세 조회에 실패했습니다.');
+    }
+  };
+
+  const handleEditMission = async (mission) => {
+    try {
+      const detail = await adminMissionService.readMissionDetail(mission.missionId);
+
+      setEditingContent({ type: 'mission', id: mission.missionId });
+      setMissionForm({
+        missionTitle: detail.missionTitle ?? '',
+        missionDescription: detail.missionDescription ?? '',
+        scenarioId: String(detail.scenarioId ?? ''),
+      });
+
+      setActivePanel('mission');
+    } catch (error) {
+      console.error('미션 상세 조회 실패', error);
+      window.alert('미션 상세 조회에 실패했습니다.');
+    }
   };
 
   const handleEditRegion = (region) => {
-    setEditingContent({ type: 'region', id: region.id });
-    setPlaceForm((currentForm) => ({
-      ...currentForm,
-      regionId: String(region.id),
-    }));
+    setEditingContent({ type: 'region', id: region.regionId });
+    setRegionForm({
+      country: region.country,
+      city: region.city,
+      latitude: String(region.latitude ?? ''),
+      longitude: String(region.longitude ?? ''),
+    });
     setActivePanel('region');
     setActiveResultType('region');
-    setMapStatus(`${region.name} ????? ?????????. ??? ??? ???????????????`);
   };
 
-  const handleDeletePlace = (placeId) => {
+  const handleDeletePlace = async (placeId) => {
     if (!window.confirm('이 장소를 삭제할까요?')) return;
 
-    setPlaces((currentPlaces) => currentPlaces.filter((place) => place.id !== placeId));
-    if (editingContent?.type === 'place' && editingContent.id === placeId) {
-      resetPlaceForm();
+    try {
+      await adminPlaceService.deletePlace(placeId);
+
+      if (
+        editingContent?.type === 'place' &&
+        String(editingContent.id) === String(placeId)
+      ) {
+        resetPlaceForm();
+      }
+
+      await loadPlaces();
+    } catch (error) {
+      console.error('장소 삭제 실패', error);
+      window.alert('장소 삭제에 실패했습니다.');
     }
   };
 
-  const handleDeleteScenario = (scenarioId) => {
-    const linkedPlaceCount = places.filter((place) => place.scenarioId === scenarioId).length;
-    const linkedMissionCount = missions.filter((mission) => mission.scenarioId === scenarioId).length;
+  const handleDeleteScenario = async (scenarioId) => {
+    const linkedPlaceCount = places.filter(
+      (place) => String(place.scenarioId) === String(scenarioId)
+    ).length;
+
+    const linkedMissionCount = missions.filter(
+      (mission) => String(mission.scenarioId) === String(scenarioId)
+    ).length;
 
     if (linkedPlaceCount || linkedMissionCount) {
       window.alert('연결된 장소나 미션이 있는 시나리오는 삭제할 수 없습니다.');
@@ -615,58 +793,76 @@ function AdminContentPage() {
 
     if (!window.confirm('이 시나리오를 삭제할까요?')) return;
 
-    setScenarios((currentScenarios) => currentScenarios.filter((scenario) => scenario.id !== scenarioId));
-    if (editingContent?.type === 'scenario' && editingContent.id === scenarioId) {
-      resetScenarioForm();
+    try {
+      await adminScenarioService.deleteScenario(scenarioId);
+
+      if (
+        editingContent?.type === 'scenario' &&
+        String(editingContent.id) === String(scenarioId)
+      ) {
+        resetScenarioForm();
+      }
+
+      await loadScenarios();
+    } catch (error) {
+      console.error('시나리오 삭제 실패', error);
+      window.alert('시나리오 삭제에 실패했습니다.');
     }
   };
-
-  const handleDeleteMission = (missionId) => {
+  const handleDeleteMission = async (missionId) => {
     if (!window.confirm('이 미션을 삭제할까요?')) return;
 
-    setMissions((currentMissions) => currentMissions.filter((mission) => mission.id !== missionId));
-    if (editingContent?.type === 'mission' && editingContent.id === missionId) {
-      resetMissionForm();
+    try {
+      await adminMissionService.deleteMission(missionId);
+
+      if (
+        editingContent?.type === 'mission' &&
+        String(editingContent.id) === String(missionId)
+      ) {
+        resetMissionForm();
+      }
+
+      await loadMissions();
+    } catch (error) {
+      console.error('미션 삭제 실패', error);
+      window.alert('미션 삭제에 실패했습니다.');
     }
   };
 
-  const handleDeleteRegion = (regionId) => {
-    const linkedPlaceCount = places.filter((place) => String(place.regionId) === String(regionId)).length;
+  const handleDeleteRegion = async (regionId) => {
+    const linkedPlaceCount = places.filter(
+      (place) => String(place.regionId) === String(regionId)
+    ).length;
 
     if (linkedPlaceCount) {
-      window.alert('?????????? ??? ????? ??? ??????.');
+      window.alert('연결된 장소가 있는 지역은 삭제할 수 없습니다.');
       return;
     }
 
-    if (!window.confirm('??????? ??????????')) return;
+    if (!window.confirm('이 지역을 삭제할까요?')) return;
 
-    setRegions((currentRegions) => currentRegions.filter((region) => String(region.id) !== String(regionId)));
+    try {
+      await adminRegionService.deleteRegion(regionId);
 
-    if (String(placeForm.regionId) === String(regionId)) {
-      const nextRegion = regions.find((region) => String(region.id) !== String(regionId));
-      setPlaceForm((currentForm) => ({
-        ...currentForm,
-        regionId: String(nextRegion?.id ?? ''),
-      }));
+      if (String(placeForm.regionId) === String(regionId)) {
+        setPlaceForm((currentForm) => ({
+          ...currentForm,
+          regionId: '',
+        }));
+      }
+
+      if (
+        editingContent?.type === 'region' &&
+        String(editingContent.id) === String(regionId)
+      ) {
+        resetRegionForm();
+      }
+
+      await loadRegions();
+    } catch (error) {
+      console.error('지역 삭제 실패', error);
+      window.alert('지역 삭제에 실패했습니다.');
     }
-
-    if (editingContent?.type === 'region' && String(editingContent.id) === String(regionId)) {
-      setEditingContent(null);
-    }
-  };
-
-  const handleToggleScenarioStatus = (scenarioId) => {
-    const statusOrder = ['초안', '검수 중', '운영 중'];
-
-    setScenarios((currentScenarios) =>
-      currentScenarios.map((scenario) => {
-        if (scenario.id !== scenarioId) return scenario;
-
-        const currentIndex = statusOrder.indexOf(scenario.status ?? '초안');
-        const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
-        return { ...scenario, status: nextStatus, updatedAt: '2026-04-24' };
-      }),
-    );
   };
 
   return (
@@ -759,8 +955,8 @@ function AdminContentPage() {
                   <span className="mapingo-field-label">지역</span>
                   <select className="mapingo-input" value={placeForm.regionId} onChange={handlePlaceFormChange('regionId')}>
                     {regions.map((region) => (
-                      <option key={region.id} value={region.id}>
-                        {region.name}
+                      <option key={region.regionId} value={region.regionId}>
+                        {region.city}
                       </option>
                     ))}
                   </select>
@@ -813,7 +1009,7 @@ function AdminContentPage() {
               <div className="admin-search-result-list">
                 {searchResults.map((place) => (
                   <button
-                    key={place.id}
+                    key={place.placeId}
                     type="button"
                     className={`admin-search-result-item ${selectedGooglePlaceId === place.id ? 'is-selected' : ''}`}
                     onClick={() => handleMarkerPick(place)}
@@ -850,8 +1046,8 @@ function AdminContentPage() {
                     <span className="mapingo-field-label">시나리오 PK</span>
                     <select className="mapingo-input" value={placeForm.scenarioId} onChange={handlePlaceFormChange('scenarioId')}>
                       {scenarios.map((scenario) => (
-                        <option key={scenario.id} value={scenario.id}>
-                          {scenario.id} - {scenario.scenarioDescription}
+                        <option key={scenario.scenarioId} value={scenario.scenarioId}>
+                          {scenario.scenarioId} - {scenario.scenarioDescription}
                         </option>
                       ))}
                     </select>
@@ -860,8 +1056,8 @@ function AdminContentPage() {
                     <span className="mapingo-field-label">지역 PK</span>
                     <select className="mapingo-input" value={placeForm.regionId} onChange={handlePlaceFormChange('regionId')}>
                       {regions.map((region) => (
-                        <option key={region.id} value={region.id}>
-                          {region.id} - {region.name}
+                        <option key={region.regionId} value={region.regionId}>
+                          {region.regionId} - {region.city}
                         </option>
                       ))}
                     </select>
@@ -922,24 +1118,14 @@ function AdminContentPage() {
 
                 <div className="admin-content-form-grid">
                   <label className="mapingo-field">
-                    <span className="mapingo-field-label">시나리오 레벨</span>
-                    <select className="mapingo-input" value={scenarioForm.level} onChange={handleScenarioFormChange('level')}>
-                      {levelOptions.map((level) => (
-                        <option key={level} value={level}>
-                          {level}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="mapingo-field">
                     <span className="mapingo-field-label">카테고리</span>
-                    <select className="mapingo-input" value={scenarioForm.category} onChange={handleScenarioFormChange('category')}>
-                      {categoryOptions.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
+                    <input
+                      className="mapingo-input"
+                      value={scenarioForm.category}
+                      onChange={handleScenarioFormChange('category')}
+                      placeholder="예: CAFE"
+                      required
+                    />
                   </label>
                   <label className="mapingo-field">
                     <span className="mapingo-field-label">완료 경험치</span>
@@ -1001,8 +1187,8 @@ function AdminContentPage() {
                   <span className="mapingo-field-label">시나리오 PK</span>
                   <select className="mapingo-input" value={missionForm.scenarioId} onChange={handleMissionFormChange('scenarioId')}>
                     {scenarios.map((scenario) => (
-                      <option key={scenario.id} value={scenario.id}>
-                        {scenario.id} - {scenario.scenarioDescription}
+                      <option key={scenario.scenarioId} value={scenario.scenarioId}>
+                        {scenario.scenarioId} - {scenario.scenarioDescription}
                       </option>
                     ))}
                   </select>
@@ -1023,44 +1209,72 @@ function AdminContentPage() {
 
             <section className={`admin-builder-section ${activePanel === 'region' ? 'is-active' : ''}`}>
               <div className="mapingo-admin-editing-banner">
-                <strong>{'지역 목록'}</strong>
-                <p>{'현재 사용 중인 지역 PK를 확인하고, 선택한 지역을 바로 장소 생성 폼에 반영할 수 있습니다.'}</p>
+                <strong>{editingContent?.type === 'region' ? '지역 수정' : '지역 생성'}</strong>
+                <p>{'지역은 나라, 도시, 위도, 경도를 입력해서 생성합니다. 저장 후 오른쪽 목록에서 바로 확인할 수 있습니다.'}</p>
               </div>
 
-              <div className="mapingo-selectable-list">
-                {regions.map((region) => {
-                  const isSelected = String(placeForm.regionId) === String(region.id);
-                  const countryName = resolveRegionCountry(region.querySuffix);
+              <form className="mapingo-admin-form admin-builder-form" onSubmit={handleSaveRegion}>
+                <div className="admin-content-form-grid">
+                  <label className="mapingo-field">
+                    <span className="mapingo-field-label">나라</span>
+                    <input
+                      className="mapingo-input"
+                      value={regionForm.country}
+                      onChange={handleRegionFormChange('country')}
+                      placeholder="예: 대한민국"
+                      required
+                    />
+                  </label>
 
-                  return (
-                    <article key={region.id} className="mapingo-post-card admin-content-card">
-                      <div className="mapingo-admin-item-head">
-                        <div>
-                          <strong>{`지역 PK ${region.id}`}</strong>
-                          <p>{`국가명 ${countryName}`}</p>
-                          <p>{`도시명 ${region.name}`}</p>
-                        </div>
-                      </div>
-                      <div className="mapingo-admin-action-row admin-content-card-actions">
-                        <button
-                          type="button"
-                          className={isSelected ? 'mapingo-submit-button' : 'mapingo-ghost-button'}
-                          onClick={() => {
-                            setPlaceForm((currentForm) => ({
-                              ...currentForm,
-                              regionId: String(region.id),
-                            }));
-                            setActivePanel('place');
-                            setMapStatus(`${region.name} 지역을 선택했습니다. 장소 생성 폼에서 확인해 주세요.`);
-                          }}
-                        >
-                          {isSelected ? '현재 선택됨' : '장소 생성에 사용'}
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
+                  <label className="mapingo-field">
+                    <span className="mapingo-field-label">도시</span>
+                    <input
+                      className="mapingo-input"
+                      value={regionForm.city}
+                      onChange={handleRegionFormChange('city')}
+                      placeholder="예: 서울"
+                      required
+                    />
+                  </label>
+
+                  <label className="mapingo-field">
+                    <span className="mapingo-field-label">위도</span>
+                    <input
+                      className="mapingo-input"
+                      type="number"
+                      step="0.000001"
+                      value={regionForm.latitude}
+                      onChange={handleRegionFormChange('latitude')}
+                      placeholder="예: 37.5665"
+                      required
+                    />
+                  </label>
+
+                  <label className="mapingo-field">
+                    <span className="mapingo-field-label">경도</span>
+                    <input
+                      className="mapingo-input"
+                      type="number"
+                      step="0.000001"
+                      value={regionForm.longitude}
+                      onChange={handleRegionFormChange('longitude')}
+                      placeholder="예: 126.9780"
+                      required
+                    />
+                  </label>
+                </div>
+
+                <div className="mapingo-admin-action-row">
+                  <button type="submit" className="mapingo-submit-button">
+                    {editingContent?.type === 'region' ? '지역 수정 저장' : '지역 저장'}
+                  </button>
+                  {editingContent?.type === 'region' ? (
+                    <button type="button" className="mapingo-ghost-button" onClick={resetRegionForm}>
+                      취소
+                    </button>
+                  ) : null}
+                </div>
+              </form>
             </section>
           </div>
 
@@ -1124,11 +1338,11 @@ function AdminContentPage() {
                 </div>
                 <div className="mapingo-selectable-list">
                   {filteredPlaces.map((place) => (
-                    <article key={place.id} className="mapingo-post-card admin-content-card">
+                    <article key={place.placeId} className="mapingo-post-card admin-content-card">
                       <div className="mapingo-admin-item-head">
                         <div>
                           <strong>{place.placeName}</strong>
-                          <p>{`${place.regionName} · 시나리오 PK ${place.scenarioId}`}</p>
+                          <p>{`${place.regionCity} · 시나리오 PK ${place.scenarioId}`}</p>
                         </div>
                         <span className="mapingo-inline-badge">{'장소'}</span>
                       </div>
@@ -1151,7 +1365,7 @@ function AdminContentPage() {
                         <button type="button" className="mapingo-submit-button" onClick={() => handleEditPlace(place)}>
                           {'수정'}
                         </button>
-                        <button type="button" className="mapingo-ghost-button" onClick={() => handleDeletePlace(place.id)}>
+                        <button type="button" className="mapingo-ghost-button" onClick={() => handleDeletePlace(place.placeId)}>
                           {'삭제'}
                         </button>
                       </div>
@@ -1168,30 +1382,27 @@ function AdminContentPage() {
                 </div>
                 <div className="mapingo-selectable-list">
                   {filteredScenarios.map((scenario) => (
-                    <article key={scenario.id} className="mapingo-post-card admin-content-card">
+                    <article key={scenario.scenarioId} className="mapingo-post-card admin-content-card">
                       <div className="mapingo-admin-item-head">
                         <div>
                           <strong>{formatCardText(scenario.scenarioDescription)}</strong>
-                          <p>{`시나리오 PK ${scenario.id}`}</p>
+                          <p>{`시나리오 PK ${scenario.scenarioId}`}</p>
                         </div>
                         <div className="mapingo-inline-badges">
-                          <span className="mapingo-inline-badge">{scenario.level}</span>
                           <span className="mapingo-inline-badge">{scenario.category}</span>
                         </div>
                       </div>
-                      <p className="admin-content-description">{formatCardText(scenario.prompt)}</p>
                       <div className="admin-content-tags">
                         <span>{scenario.completeExp} EXP</span>
-                        <span>{scenario.status ?? '초안'}</span>
                       </div>
                       <div className="mapingo-admin-action-row admin-content-card-actions">
                         <button type="button" className="mapingo-submit-button" onClick={() => handleEditScenario(scenario)}>
                           {'수정'}
                         </button>
-                        <button type="button" className="mapingo-ghost-button" onClick={() => handleToggleScenarioStatus(scenario.id)}>
+                        {/* <button type="button" className="mapingo-ghost-button" onClick={() => handleToggleScenarioStatus(scenario.scenarioId)}>
                           {'상태 전환'}
-                        </button>
-                        <button type="button" className="mapingo-ghost-button" onClick={() => handleDeleteScenario(scenario.id)}>
+                        </button> */}
+                        <button type="button" className="mapingo-ghost-button" onClick={() => handleDeleteScenario(scenario.scenarioId)}>
                           {'삭제'}
                         </button>
                       </div>
@@ -1208,7 +1419,7 @@ function AdminContentPage() {
                 </div>
                 <div className="mapingo-selectable-list">
                   {filteredMissions.map((mission) => (
-                    <article key={mission.id} className="mapingo-post-card admin-content-card">
+                    <article key={mission.missionId} className="mapingo-post-card admin-content-card">
                       <div className="mapingo-admin-item-head">
                         <div>
                           <strong>{formatCardText(mission.missionTitle)}</strong>
@@ -1218,13 +1429,13 @@ function AdminContentPage() {
                       </div>
                       <p className="admin-content-description">{formatCardText(mission.missionDescription)}</p>
                       <div className="admin-content-tags">
-                        <span>{mission.scenarioTitle}</span>
+                        <span>{mission.scenarioId}</span>
                       </div>
                       <div className="mapingo-admin-action-row admin-content-card-actions">
                         <button type="button" className="mapingo-submit-button" onClick={() => handleEditMission(mission)}>
                           {'수정'}
                         </button>
-                        <button type="button" className="mapingo-ghost-button" onClick={() => handleDeleteMission(mission.id)}>
+                        <button type="button" className="mapingo-ghost-button" onClick={() => handleDeleteMission(mission.missionId)}>
                           {'삭제'}
                         </button>
                       </div>
@@ -1241,22 +1452,23 @@ function AdminContentPage() {
                 </div>
                 <div className="mapingo-selectable-list">
                   {filteredRegions.map((region) => {
-                    const countryName = resolveRegionCountry(region.querySuffix);
 
                     return (
-                      <article key={region.id} className="mapingo-post-card admin-content-card">
+                      <article key={region.regionId} className="mapingo-post-card admin-content-card">
                         <div className="mapingo-admin-item-head">
                           <div>
-                            <strong>{`지역 PK ${region.id}`}</strong>
-                            <p>{`국가명 ${countryName}`}</p>
-                            <p>{`도시명 ${region.name}`}</p>
+                            <strong>{`지역 PK ${region.regionId}`}</strong>
+                            <p>{`국가명 ${region.country}`}</p>
+                            <p>{`도시명 ${region.city}`}</p>
+                            <p>{`위도 ${region.latitude}`}</p>
+                            <p>{`경도 ${region.longitude}`}</p>
                           </div>
                         </div>
                         <div className="mapingo-admin-action-row admin-content-card-actions">
                           <button type="button" className="mapingo-submit-button" onClick={() => handleEditRegion(region)}>
                             {'수정'}
                           </button>
-                          <button type="button" className="mapingo-ghost-button" onClick={() => handleDeleteRegion(region.id)}>
+                          <button type="button" className="mapingo-ghost-button" onClick={() => handleDeleteRegion(region.regionId)}>
                             {'삭제'}
                           </button>
                         </div>
