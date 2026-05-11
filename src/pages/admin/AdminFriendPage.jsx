@@ -61,7 +61,7 @@ function AdminFrinedPage() {
                                     <div>
                                         <strong>신고 #{report.id}</strong>
                                         <p>
-                                            사용자 #{report.reporterId} · {formatDateTime(report.createdAt)}
+                                            {report.reporterName ?? `사용자 #${report.reporterId}`} · {formatDateTime(report.createdAt)}
                                         </p>
                                     </div>
 
@@ -109,12 +109,12 @@ function AdminFrinedPage() {
                             <div className="mapingo-admin-meta-grid admin-friend-detail-grid">
                                 <p>
                                     <strong>신고자</strong>
-                                    사용자 #{selectedReport.reporterId}
+                                    {selectedReport.reporterName ?? `사용자 #${selectedReport.reporterId}`}
                                 </p>
 
                                 <p>
                                     <strong>대상자</strong>
-                                    사용자 #{selectedReport.targetId}
+                                    {selectedReport.targetName ?? `사용자 #${selectedReport.targetId}`}
                                 </p>
 
                                 <p>
@@ -233,7 +233,8 @@ function AdminFrinedPage() {
                             <div className="mapingo-admin-item-head">
                                 <div>
                                     <strong>
-                                        요청자 #{friend.requesterId} → 사용자 #{friend.addresseeId}
+                                        {friend.requesterName ?? `사용자 #${friend.requesterId}`} →{' '}
+                                        {friend.addresseeName ?? `사용자 #${friend.addresseeId}`}
                                     </strong>
 
                                     <p>
@@ -251,8 +252,8 @@ function AdminFrinedPage() {
                             </div>
 
                             <div className="admin-friend-history-meta">
-                                <span>요청자 사용자 #{friend.requesterId}</span>
-                                <span>대상자 사용자 #{friend.addresseeId}</span>
+                                <span>요청자 {friend.requesterName ?? `사용자 #${friend.requesterId}`}</span>
+                                <span>대상자 {friend.addresseeName ?? `사용자 #${friend.addresseeId}`}</span>
                                 <span>요청일 {formatDateTime(friend.requestedAt)}</span>
                                 <span>응답일 {formatDateTime(friend.respondedAt)}</span>
                             </div>

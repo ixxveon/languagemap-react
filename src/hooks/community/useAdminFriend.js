@@ -17,7 +17,9 @@ function normalizeReport(report) {
     return {
         id: report.reportId,
         reporterId: report.reporterId,
+        reporterName: report.reporterName,
         targetId: report.reportedUserId,
+        targetName: report.reportedUserName,
         reason: report.reason,
         status: report.status,
         createdAt: report.createdAt,
@@ -30,7 +32,9 @@ function normalizeFriendship(history) {
     return {
         id: history.friendshipId,
         requesterId: history.requesterId,
+        requesterName: history.requesterName,
         addresseeId: history.addresseeId,
+        addresseeName: history.addresseeName,
         status: history.status,
         requestedAt: history.requestedAt,
         respondedAt: history.respondedAt,
@@ -53,7 +57,9 @@ export function useAdminFriend() {
                     [
                         String(report.id),
                         String(report.reporterId),
+                        report.reporterName,
                         String(report.targetId),
+                        report.targetName,
                         report.reason,
                         statusLabelMap[report.status] ?? report.status,
                         report.adminMemo,
