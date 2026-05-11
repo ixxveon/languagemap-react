@@ -236,3 +236,387 @@
     border-bottom: 1px solid #edf2f7;
   }
 }
+
+/* Free Plan 접근 제한 카드 전용 override */
+.coaching-page:has(.coaching-access-denied) {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+
+.coaching-access-denied {
+  width: min(100%, 980px);
+  max-width: 980px;
+  margin: 32px auto 0;
+  padding: 52px 56px;
+  border: 1px solid #bfeee7;
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at top right, rgba(31, 184, 173, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(242, 255, 252, 0.96) 0%, rgba(255, 255, 255, 0.98) 100%);
+  box-shadow: 0 26px 54px rgba(21, 94, 99, 0.12);
+  text-align: left;
+}
+
+.coaching-access-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 16px;
+  margin-bottom: 18px;
+  border-radius: 999px;
+  background: #e9fbf8;
+  color: #0f766e;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.coaching-access-denied h2 {
+  margin: 0 0 16px;
+  color: #155e63;
+  font-size: clamp(2.4rem, 4.4vw, 4rem);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.05em;
+  word-break: keep-all;
+}
+
+.coaching-access-denied p {
+  max-width: 760px;
+  margin: 0;
+  color: #5f7084;
+  font-size: 1.02rem;
+  line-height: 1.8;
+}
+
+.coaching-access-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.coaching-access-features > div {
+  display: flex;
+  align-items: center;
+  min-height: 72px;
+  padding: 18px 20px;
+  border: 1px solid #d8efea;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #35586d;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.5;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.04);
+}
+
+.coaching-access-buttons {
+  display: flex;
+  gap: 16px;
+  margin-top: 34px;
+}
+
+.coaching-access-buttons button {
+  flex: 1 1 0;
+  min-height: 60px;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.coaching-access-buttons button:hover {
+  transform: translateY(-1px);
+}
+
+.coaching-access-buttons .primary-button {
+  border: 0;
+  background: linear-gradient(180deg, #26c2b6 0%, #18b2a7 100%);
+  color: #ffffff;
+  box-shadow: 0 16px 30px rgba(31, 184, 173, 0.2);
+}
+
+.coaching-access-buttons .secondary-button {
+  border: 1px solid #cfeee7;
+  background: #ffffff;
+  color: #155e63;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.04);
+}
+
+@media (max-width: 900px) {
+  .coaching-page:has(.coaching-access-denied) {
+    gap: 0;
+  }
+
+  .coaching-access-denied {
+    width: min(100%, 760px);
+    padding: 34px 24px;
+    border-radius: 28px;
+  }
+
+  .coaching-access-features {
+    grid-template-columns: 1fr;
+  }
+
+  .coaching-access-buttons {
+    flex-direction: column;
+  }
+}
+
+/* Free Plan 접근 제한 화면 추가 override */
+.coaching-access-denied {
+  border: 0;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at top right, rgba(31, 184, 173, 0.18), transparent 30%),
+    linear-gradient(180deg, rgba(235, 253, 249, 0.92) 0%, rgba(255, 255, 255, 0.98) 72%);
+  box-shadow: none;
+}
+
+.coaching-access-features {
+  display: none;
+}
+
+.coaching-access-buttons {
+  margin-top: 42px;
+}
+
+@media (max-width: 900px) {
+  .coaching-access-denied {
+    border-radius: 0;
+  }
+}
+
+/* Free Plan 접근 제한 화면 추가 재조정 override */
+.mapingo-app:has(.coaching-access-denied) {
+  background:
+    radial-gradient(circle at top center, rgba(165, 238, 229, 0.24), transparent 34%),
+    linear-gradient(180deg, #f2fcfa 0%, #ffffff 58%, #ffffff 100%);
+}
+
+.coaching-access-denied {
+  background: transparent;
+}
+
+.coaching-access-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.coaching-access-features > div {
+  min-height: 0;
+  padding: 6px 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #35586d;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .coaching-access-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Free Plan 접근 제한 화면 정렬/타이포 재조정 override */
+.coaching-access-denied {
+  text-align: center;
+}
+
+.coaching-access-badge {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.coaching-access-denied h2 {
+  font-size: clamp(2.1rem, 3.1vw, 3.2rem);
+  line-height: 1.16;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+}
+
+.coaching-access-denied p {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.coaching-access-features {
+  justify-content: center;
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.coaching-access-features > div {
+  justify-content: center;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .coaching-access-denied h2 {
+    white-space: normal;
+    font-size: clamp(1.9rem, 7vw, 2.6rem);
+  }
+}
+
+/* Free Plan 접근 제한 화면 최종 미세조정 override */
+.coaching-access-badge {
+  min-height: auto;
+  padding: 0;
+  margin-bottom: 14px;
+  border-radius: 0;
+  background: transparent;
+  color: #22b8b0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: none;
+}
+
+.coaching-access-denied h2 {
+  font-size: clamp(1.9rem, 2.7vw, 2.8rem);
+}
+
+.coaching-access-buttons {
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+
+.coaching-access-buttons button {
+  flex: 0 0 auto;
+  min-width: 0;
+  width: auto;
+  padding: 0 34px;
+}
+
+@media (max-width: 900px) {
+  .coaching-access-badge {
+    font-size: 0.96rem;
+  }
+
+  .coaching-access-buttons button {
+    width: 100%;
+  }
+}
+
+/* Free Plan 접근 제한 기능 소개 이미지 연결 override */
+.coaching-access-features {
+  align-items: start;
+}
+
+.coaching-access-features > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.coaching-access-features > div::after {
+  content: "";
+  display: block;
+  width: min(100%, 320px);
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.coaching-access-features > div:nth-child(1)::after {
+  background-image: url("/assets/coaching/conversation.png");
+}
+
+.coaching-access-features > div:nth-child(2)::after {
+  background-image: url("/assets/coaching/pronunciation.png");
+}
+
+.coaching-access-features > div:nth-child(3)::after {
+  background-image: url("/assets/coaching/feedback.png");
+}
+
+.coaching-access-features > div:nth-child(4)::after {
+  background-image: url("/assets/coaching/content.png");
+}
+
+@media (max-width: 900px) {
+  .coaching-access-features > div::after {
+    width: min(100%, 420px);
+  }
+}
+
+/* Free Plan 접근 제한 기능 소개 레이아웃 재조정 override */
+.coaching-access-features {
+  grid-template-columns: 1fr;
+  gap: 28px;
+  max-width: 860px;
+}
+
+.coaching-access-features > div {
+  gap: 18px;
+}
+
+.coaching-access-features > div::after {
+  width: min(100%, 860px);
+  height: clamp(220px, 32vw, 340px);
+  aspect-ratio: auto;
+  background-size: contain;
+  background-color: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
+}
+
+@media (max-width: 900px) {
+  .coaching-access-features {
+    gap: 22px;
+  }
+
+  .coaching-access-features > div::after {
+    width: min(100%, 100%);
+    height: clamp(180px, 44vw, 280px);
+  }
+}
+
+/* Free Plan 접근 제한 기능 소개 순서 조정 override */
+.coaching-access-features > div:nth-child(2) {
+  order: 3;
+}
+
+.coaching-access-features > div:nth-child(3) {
+  order: 2;
+}
+
+.coaching-access-features > div:nth-child(4) {
+  order: 4;
+}
+
+/* 추천 학습 콘텐츠 제공 이미지 정렬 보정 */
+.coaching-access-features > div:nth-child(4)::after {
+  width: min(100%, 860px);
+  background-position: center;
+}
+
+/* 기능 소개 이미지 프레임 스타일 보강 */
+.coaching-access-features > div::after {
+  border: 1px solid rgba(191, 238, 231, 0.95);
+  border-radius: 24px;
+  background-color: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 18px 34px rgba(21, 94, 99, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  padding: 10px;
+}

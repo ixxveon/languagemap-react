@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMapingoStore } from '../../store/user/useMapingoStore';
 import CoachingChatSection from '../../components/user/coaching/CoachingChatSection';
 import CoachingSummaryCard from '../../components/user/coaching/CoachingSummaryCard';
+import CoachingAccessDenied from '../../components/user/coaching/CoachingAccessDenied';
 import PronunciationPracticeSection from '../../components/user/coaching/PronunciationPracticeSection';
 import YoutubeRecommendationSection from '../../components/user/coaching/YoutubeRecommendationSection';
 import { previousLearningSummary } from '../../mocks/user/coachingMockData';
@@ -16,13 +18,22 @@ const coachingModes = [
   { id: 'DIALOGUE', label: '더 많은 대화' },
 ];
 
+// 발표/시연용 임시 권한 설정
+// 백엔드 AiUsageLimitPolicy와 동일하게 맞춰야 함
+const TEST_USER_IDS = [1];
+const VIP_USER_IDS = [2];
+
 function CoachingPage() {
+  const navigate = useNavigate();
   const [phase, setPhase] = useState('intro');
   const [selectedModeId, setSelectedModeId] = useState('');
   const [finalResult, setFinalResult] = useState(null);
   const isAuthenticated = useMapingoStore((state) => state.isAuthenticated);
+  const user = useMapingoStore((state) => state.user);
+  const userId = user?.userId;
   const recentMapChatLog = useMapingoStore((state) => state.recentMapChatLog);
   const recentMapLearningSummary = useMapingoStore((state) => state.recentMapLearningSummary);
+  const hasAiCoachingAccess = TEST_USER_IDS.includes(userId) || VIP_USER_IDS.includes(userId);
 
   const learningSummary = useMemo(() => {
     const baseSummary = recentMapLearningSummary
@@ -77,6 +88,17 @@ function CoachingPage() {
     setPhase('intro');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (!hasAiCoachingAccess) {
+    return (
+      <div className="coaching-page">
+        <CoachingAccessDenied
+          onGoMap={() => navigate('/mapingo')}
+          onGoPremium={() => navigate('/premium/plans')}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="coaching-page">
