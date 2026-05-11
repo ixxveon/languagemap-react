@@ -12,7 +12,8 @@ const getResponseData = (response) => {
     return [];
 };
 
-const getUserFallbackName = (userId) => (userId ? `사용자 ${userId}` : '사용자');
+const getUserFallbackName = (userId) =>
+    userId ? `사용자 #${userId}` : '알 수 없는 사용자';
 
 const normalizeRelation = (row) => {
     const requesterId = row.requester_id ?? row.requesterId;
@@ -23,11 +24,28 @@ const normalizeRelation = (row) => {
         requester_id: requesterId,
         addressee_id: addresseeId,
         requester_name:
-            row.requester_name ?? row.requesterName ?? getUserFallbackName(requesterId),
-        requester_email: row.requester_email ?? row.requesterEmail ?? '-',
+            row.requester_name ??
+            row.requesterName ??
+            row.requester_email ??
+            row.requesterEmail ??
+            getUserFallbackName(requesterId),
+
+        requester_email:
+            row.requester_email ??
+            row.requesterEmail ??
+            '-',
+
         addressee_name:
-            row.addressee_name ?? row.addresseeName ?? getUserFallbackName(addresseeId),
-        addressee_email: row.addressee_email ?? row.addresseeEmail ?? '-',
+            row.addressee_name ??
+            row.addresseeName ??
+            row.addressee_email ??
+            row.addresseeEmail ??
+            getUserFallbackName(addresseeId),
+
+        addressee_email:
+            row.addressee_email ??
+            row.addresseeEmail ??
+            '-',
         status: row.status,
         requested_at: row.requested_at ?? row.requestedAt,
         responded_at: row.responded_at ?? row.respondedAt,
@@ -111,7 +129,10 @@ export function useCommunityFriends() {
             if (relation.requester_id) {
                 directory[relation.requester_id] = {
                     userId: relation.requester_id,
-                    name: relation.requester_name,
+                    name:
+                        relation.requester_name ||
+                        relation.requester_email ||
+                        getUserFallbackName(relation.requester_id),
                     email: relation.requester_email,
                 };
             }
@@ -119,7 +140,10 @@ export function useCommunityFriends() {
             if (relation.addressee_id) {
                 directory[relation.addressee_id] = {
                     userId: relation.addressee_id,
-                    name: relation.addressee_name,
+                    name:
+                        relation.addressee_name ||
+                        relation.addressee_email ||
+                        getUserFallbackName(relation.addressee_id),
                     email: relation.addressee_email,
                 };
             }
@@ -134,7 +158,10 @@ export function useCommunityFriends() {
     const reportCandidates = useMemo(() => {
         const candidates = Object.values(userDirectory)
             .filter((user) => user?.userId && Number(user.userId) !== currentUserId)
-            .sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? ''), 'ko'));
+            .sort((a, b) =>
+                String(a.name || a.email || '')
+                    .localeCompare(String(b.name || b.email || ''), 'ko')
+            );
 
         const uniqueCandidates = candidates.filter(
             (user, index, self) =>
