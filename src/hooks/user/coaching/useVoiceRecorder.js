@@ -6,14 +6,33 @@ export function useVoiceRecorder({ onRecorded, onError } = {}) {
 
     const mediaRecorderRef = useRef(null);
     const mediaStreamRef = useRef(null);
+    const audioChunksRef = useRef([]);
+
+    const cleanupStream = () => {
+        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+    };
 
     useEffect(() => {
         // 컴포넌트 종료 시 사용 중인 마이크 stream 정리
         return () => {
-            mediaRecorderRef.current?.stream?.getTracks().forEach((track) => track.stop());
-            mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+            if (mediaRecorderRef.current?.state === 'recording') {
+                mediaRecorderRef.current.stop();
+            }
+
+            cleanupStream();
         };
     }, []);
+
+    const getSupportedMimeType = () => {
+        const mimeTypes = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/ogg;codecs=opus',
+        ];
+
+        return mimeTypes.find((type) => MediaRecorder.isTypeSupported(type)) || '';
+    };
 
     // 마이크 권한 확인 후 녹음 시작
     const startRecording = async () => {
@@ -23,47 +42,88 @@ export function useVoiceRecorder({ onRecorded, onError } = {}) {
                 return;
             }
 
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunksRef.current = [];
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                },
+            });
+
             mediaStreamRef.current = stream;
 
-            const chunks = [];
-            const recorder = new MediaRecorder(stream);
+            const mimeType = getSupportedMimeType();
+
+            const recorder = mimeType
+                ? new MediaRecorder(stream, { mimeType })
+                : new MediaRecorder(stream);
 
             mediaRecorderRef.current = recorder;
 
             // 녹음 중 생성되는 음성 데이터를 임시 저장
             recorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    chunks.push(event.data);
+                if (event.data && event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
                 }
             };
 
             // 녹음 종료 후 음성 파일 생성 및 외부 콜백 전달
             recorder.onstop = async () => {
-                stream.getTracks().forEach((track) => track.stop());
-                mediaStreamRef.current = null;
-                setIsRecording(false);
+                try {
+                    setIsRecording(false);
 
-                const audioBlob = new Blob(chunks, {
-                    type: recorder.mimeType || 'audio/webm',
-                });
+                    const audioBlob = new Blob(audioChunksRef.current, {
+                        type: recorder.mimeType || 'audio/webm',
+                    });
 
-                if (audioBlob.size > 0) {
+                    console.log('recorded audioBlob size:', audioBlob.size);
+                    console.log('recorded audioBlob type:', audioBlob.type);
+
+                    cleanupStream();
+
+                    mediaRecorderRef.current = null;
+
+                    if (audioBlob.size === 0) {
+                        onError?.('녹음 파일이 비어 있습니다. 다시 녹음해주세요.');
+                        return;
+                    }
+
+                    if (audioBlob.size < 1000) {
+                        onError?.('녹음 시간이 너무 짧거나 음성 파일이 정상적으로 생성되지 않았습니다. 다시 녹음해주세요.');
+                        return;
+                    }
+
                     await onRecorded?.(audioBlob);
+                } catch (error) {
+                    console.error(error);
+                    onError?.('녹음 파일 처리 중 오류가 발생했습니다.');
+                } finally {
+                    audioChunksRef.current = [];
                 }
             };
 
             // 녹음 중 발생한 브라우저/장치 오류 처리
-            recorder.onerror = () => {
+            recorder.onerror = (event) => {
+                console.error('MediaRecorder error:', event.error);
+
                 setIsRecording(false);
+                cleanupStream();
+                mediaRecorderRef.current = null;
+                audioChunksRef.current = [];
+
                 onError?.('녹음 중 오류가 발생했습니다. 다시 시도해주세요.');
             };
 
-            recorder.start();
+            recorder.start(1000);
             setIsRecording(true);
         } catch (error) {
             console.error(error);
             setIsRecording(false);
+            cleanupStream();
+            mediaRecorderRef.current = null;
+            audioChunksRef.current = [];
 
             if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
                 onError?.('마이크 권한이 거부되었습니다. 브라우저 주소창 왼쪽 아이콘에서 마이크 권한을 허용해주세요.');
@@ -95,9 +155,10 @@ export function useVoiceRecorder({ onRecorded, onError } = {}) {
 
         if (!recorder || recorder.state === 'inactive') {
             setIsRecording(false);
+            cleanupStream();
             return;
         }
-
+        recorder.requestData();
         recorder.stop();
     };
 
