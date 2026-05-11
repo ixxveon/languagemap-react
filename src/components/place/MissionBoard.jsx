@@ -1,6 +1,6 @@
 function MissionBoard({
     selectedPlace,
-    selectedCapital,
+    selectedRegion,
     learningSession,
     activeMissionId,
     completedMissionIds,
@@ -12,7 +12,7 @@ function MissionBoard({
         <section className="map-domain-mission-card">
             <div className="map-domain-mission-head">
                 <p>Mission Board</p>
-                <strong>{selectedPlace ? `${selectedPlace.title} 미션` : `${selectedCapital.capital} 미션`}</strong>
+                <strong>{selectedPlace ? `${selectedPlace.title} 미션` : `${selectedRegion?.city} 미션`}</strong>
             </div>
 
             <div className="map-domain-mission-list">

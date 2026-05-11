@@ -8,9 +8,9 @@ import CapitalFilter from './CapitalFilter';
 
 function RouteMap({
   places,
-  capitals,
-  activeCapitalId,
-  selectedCapital,
+  regions = [],
+  activeRegionId,
+  onSelectRegion,
   selectedPlace,
   panelVisible,
   panelMode,
@@ -21,7 +21,6 @@ function RouteMap({
   onChatInputChange,
   onSelectLevel,
   onSendMessage,
-  onSelectCapital,
   onSelectPlace,
   onClosePanel,
   onStartLearning,
@@ -37,9 +36,11 @@ function RouteMap({
 
   const visiblePlaces = places;
 
-  const activeCapital = useMemo(() => {
-    return capitals.find((capital) => capital.id === activeCapitalId) ?? capitals[0];
-  }, [activeCapitalId, capitals]);
+  const selectedRegion = useMemo(() => {
+    return regions.find(
+      (region) => Number(region.regionId) === Number(activeRegionId)
+    ) ?? regions[0];
+  }, [regions, activeRegionId]);
 
   const selectedPlaceId = selectedPlace?.id ?? '';
 
@@ -65,24 +66,24 @@ function RouteMap({
       <div className="map-domain-map-frame">
         <PlaceMap
           places={visiblePlaces}
-          activeCapital={activeCapital}
+          activeRegion={selectedRegion}
           selectedPlaceId={selectedPlaceId}
           onSelectPlace={onSelectPlace}
         />
         <div className="map-domain-top-overlay">
           <CapitalFilter
-            capitals={capitals}
-            activeCapitalId={activeCapitalId}
-            onSelectCapital={onSelectCapital}
+            regions={regions}
+            activeRegionId={activeRegionId}
+            onSelectRegion={onSelectRegion}
           />
           <div className="map-domain-floating-summary">
             <article className="map-domain-mini-card">
               <span>나라</span>
-              <strong>{selectedCapital.country}</strong>
+              <strong>{selectedRegion?.country ?? '-'}</strong>
             </article>
             <article className="map-domain-mini-card">
               <span>도시</span>
-              <strong>{selectedCapital.capital}</strong>
+              <strong>{selectedRegion?.city ?? '-'}</strong>
             </article>
           </div>
         </div>
@@ -105,7 +106,7 @@ function RouteMap({
               ) : (
                 <PlaceDetailPanel
                   selectedPlace={selectedPlace}
-                  selectedCapital={selectedCapital}
+                  selectedRegion={selectedRegion}
                   selectedLevel={selectedLevel}
                   onSelectLevel={onSelectLevel}
                   onStartLearning={onStartLearning}
@@ -121,7 +122,7 @@ function RouteMap({
         <div className="map-domain-right-overlay">
           <MissionBoard
             selectedPlace={selectedPlace}
-            selectedCapital={selectedCapital}
+            selectedRegion={selectedRegion}
             learningSession={learningSession}
             activeMissionId={activeMissionId}
             completedMissionIds={completedMissionIds}

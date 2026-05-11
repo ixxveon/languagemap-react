@@ -59,15 +59,12 @@ function MapPage() {
   const navigate = useNavigate();
   const [places, setPlaces] = useState([]);
   const [selectedPlaceDetail, setSelectedPlaceDetail] = useState(null);
-  const capitals = placeService.fetchPlaceTabs();
   const [learningSessionMap, setLearningSessionMap] = useState({});
   const [activeMissionMap, setActiveMissionMap] = useState({});
   const [completedMissionMap, setCompletedMissionMap] = useState({});
   const currentUser = useMapingoStore((state) => state.session.user);
   const session = useMapingoStore((state) => state.session);
-  const activeCapitalId = useMapingoStore((state) => state.mapActiveTab);
   const selectedPlaceId = useMapingoStore((state) => state.selectedRouteId);
-  const setActiveCapitalId = useMapingoStore((state) => state.setMapActiveTab);
   const setSelectedPlaceId = useMapingoStore((state) => state.setSelectedRouteId);
   const setRecentMapChatLog = useMapingoStore((state) => state.setRecentMapChatLog);
   const setRecentMapLearningSummary = useMapingoStore((state) => state.setRecentMapLearningSummary);
@@ -78,6 +75,8 @@ function MapPage() {
   const [chatInput, setChatInput] = useState('');
   const [chatCompleted, setChatCompleted] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState('Starter');
+  const [regions, setRegions] = useState([]);
+  const [activeRegionId, setActiveRegionId] = useState(null);
 
   useEffect(() => {
     const loadPlaceMarkers = async () => {
@@ -105,6 +104,22 @@ function MapPage() {
       pageShell?.classList.remove('map-domain-page-shell');
     };
   }, []);
+
+  useEffect(() => {
+    loadRegions();
+  }, []);
+
+  const loadRegions = async () => {
+    try {
+      const data = await placeService.readRegionList();
+
+      console.log('지역 리스트:', data);
+
+      setRegions(data);
+    } catch (error) {
+      console.error('지역 리스트 조회 실패:', error);
+    }
+  };
 
   useEffect(() => {
     setLearningSessionMap({});
@@ -163,15 +178,15 @@ function MapPage() {
     loadMyLearningProgress();
   }, [currentUser]);
 
-  const currentCapitalId = capitals.some((capital) => capital.id === activeCapitalId) ? activeCapitalId : 'all';
-
   const visiblePlaces = useMemo(() => {
-    if (currentCapitalId === 'all') {
+    if (!activeRegionId) {
       return places;
     }
 
-    return places.filter((place) => place.capitalId === currentCapitalId);
-  }, [currentCapitalId, places]);
+    return places.filter(
+      (place) => Number(place.regionId) === Number(activeRegionId)
+    );
+  }, [activeRegionId, places]);
 
   const selectedPlace = selectedPlaceDetail;
 
@@ -186,10 +201,6 @@ function MapPage() {
   const completedMissionIds = selectedPlace?.id
     ? completedMissionMap[selectedPlace.id] ?? []
     : [];
-
-  const selectedCapital = useMemo(() => {
-    return capitals.find((capital) => capital.id === currentCapitalId) ?? capitals[0];
-  }, [capitals, currentCapitalId]);
 
   const resetChatState = () => {
     setChatLog([]);
@@ -208,15 +219,16 @@ function MapPage() {
     }));
   };
 
-  const handleCapitalChange = (capitalId) => {
-    setActiveCapitalId(capitalId);
-    setSelectedPlaceId('');
+  const handleRegionChange = (region) => {
+    setActiveRegionId(region.regionId);
 
+    setSelectedPlaceId('');
     setSelectedPlaceDetail(null);
 
     setPanelVisible(false);
     setPanelMode('guide');
     setSelectedLevel('BEGINNER');
+
     resetChatState();
   };
 
@@ -368,7 +380,7 @@ function MapPage() {
       return;
     }
 
-    const USER_CHAT_LIMIT = 5;
+    const USER_CHAT_LIMIT = 10;
 
     const currentUserMessageCount = chatLog.filter(
       (message) => message.role === 'user'
@@ -493,11 +505,10 @@ function MapPage() {
     <div className="map-domain-page">
       <section className="map-domain-shell">
         <RouteMap
-          places={places}
-          capitals={capitals}
-          activeCapitalId={currentCapitalId}
-          selectedCapital={selectedCapital}
+          places={visiblePlaces}
           selectedPlace={selectedPlace}
+          regions={regions}
+          activeRegionId={activeRegionId}
           panelVisible={panelVisible}
           panelMode={panelMode}
           chatLog={chatLog}
@@ -507,7 +518,7 @@ function MapPage() {
           onChatInputChange={setChatInput}
           onSelectLevel={setSelectedLevel}
           onSendMessage={handleSendMessage}
-          onSelectCapital={handleCapitalChange}
+          onSelectRegion={handleRegionChange}
           onSelectPlace={handleSelectPlace}
           onClosePanel={() => handleSelectPlace(null)}
           onStartLearning={handleStartLearning}
