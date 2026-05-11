@@ -27,8 +27,8 @@ function loadGoogleMaps(apiKey) {
 }
 
 function PlaceMap({
-    places,
-    activeCapital,
+    places = [],
+    activeRegion,
     selectedPlaceId,
     onSelectPlace,
 }) {
@@ -42,6 +42,13 @@ function PlaceMap({
             return undefined;
         }
 
+        const regionCenter = {
+            lat: Number(activeRegion?.latitude ?? 37.5665),
+            lng: Number(activeRegion?.longitude ?? 126.9780),
+        };
+
+        const regionZoom = 12;
+
         let cancelled = false;
 
         loadGoogleMaps(apiKey)
@@ -52,8 +59,8 @@ function PlaceMap({
 
                 if (!mapInstanceRef.current) {
                     mapInstanceRef.current = new maps.Map(mapElementRef.current, {
-                        center: activeCapital.center,
-                        zoom: activeCapital.zoom,
+                        center: regionCenter,
+                        zoom: regionZoom,
                         mapTypeControl: false,
                         fullscreenControl: false,
                         streetViewControl: false,
@@ -72,10 +79,13 @@ function PlaceMap({
                 markersRef.current = [];
 
                 places.forEach((place) => {
-                    const isSelected = place.id === selectedPlaceId;
+                    const isSelected = Number(place.id) === Number(selectedPlaceId);
 
                     const marker = new maps.Marker({
-                        position: { lat: place.lat, lng: place.lng },
+                        position: {
+                            lat: Number(place.lat),
+                            lng: Number(place.lng),
+                        },
                         map,
                         zIndex: isSelected ? 999 : 10,
                         icon: {
@@ -94,40 +104,40 @@ function PlaceMap({
                 });
 
                 if (selectedPlaceId) {
-                    const currentPlace = places.find((place) => place.id === selectedPlaceId);
+                    const currentPlace = places.find(
+                        (place) => Number(place.id) === Number(selectedPlaceId)
+                    );
 
                     if (currentPlace) {
-                        map.panTo({ lat: currentPlace.lat, lng: currentPlace.lng });
-                        map.setZoom(Math.max(activeCapital.zoom, 15));
+                        map.panTo({
+                            lat: Number(currentPlace.lat),
+                            lng: Number(currentPlace.lng),
+                        });
+                        map.setZoom(Math.max(regionZoom, 15));
                         return;
                     }
                 }
 
                 if (places.length === 1) {
-                    map.panTo({ lat: places[0].lat, lng: places[0].lng });
-                    map.setZoom(Math.max(activeCapital.zoom, 15));
+                    map.panTo({
+                        lat: Number(places[0].lat),
+                        lng: Number(places[0].lng),
+                    });
+                    map.setZoom(Math.max(regionZoom, 15));
                     return;
                 }
 
-                if (selectedPlaceId) {
-                    const currentPlace = places.find((place) => place.id === selectedPlaceId);
-
-                    if (currentPlace) {
-                        map.panTo({ lat: currentPlace.lat, lng: currentPlace.lng });
-                        map.setZoom(Math.max(activeCapital.zoom, 15));
-                        return;
-                    }
-                }
-
-                map.panTo(activeCapital.center);
-                map.setZoom(activeCapital.zoom);
+                map.panTo(regionCenter);
+                map.setZoom(regionZoom);
             })
-            .catch(() => { });
+            .catch((error) => {
+                console.error('Google Maps 로드 실패:', error);
+            });
 
         return () => {
             cancelled = true;
         };
-    }, [activeCapital, apiKey, onSelectPlace, places, selectedPlaceId]);
+    }, [activeRegion, apiKey, onSelectPlace, places, selectedPlaceId]);
 
     return (
         <div

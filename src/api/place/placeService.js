@@ -15,6 +15,7 @@ function toMarkerPlace(place) {
     id: place.placeId,
     lat: place.latitude,
     lng: place.longitude,
+    regionId: place.regionId
   };
 }
 
@@ -68,6 +69,12 @@ async function readMyLearningProgress() {
   return response.data;
 }
 
+async function readRegionList() {
+  const response = await axiosInstance.get('/api/place/regions');
+
+  return response.data;
+}
+
 export const placeService = {
   fetchPlaceTabs,
   fetchRoutes,
@@ -77,5 +84,6 @@ export const placeService = {
   startMissionSession,
   sendChatMessage,
   completeMissionSession,
-  readMyLearningProgress
+  readMyLearningProgress,
+  readRegionList
 };

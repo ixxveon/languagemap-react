@@ -1,27 +1,25 @@
 function CapitalFilter({
-    capitals,
-    activeCapitalId,
-    onSelectCapital,
+    regions = [],
+    activeRegionId,
+    onSelectRegion,
 }) {
     return (
-        <div
-            className="map-domain-capital-row"
-            role="tablist"
-            aria-label="capital filters"
-        >
-            {capitals
-                .filter((capital) => capital.id !== 'all')
-                .map((capital) => (
-                    <button
-                        key={capital.id}
-                        type="button"
-                        className={`map-domain-capital-pill ${activeCapitalId === capital.id ? 'is-active' : ''
-                            }`}
-                        onClick={() => onSelectCapital(capital.id)}
-                    >
-                        {capital.label}
-                    </button>
-                ))}
+        <div className="map-domain-capital-filter">
+            <span className="map-domain-capital-filter-label">Places</span>
+            {regions.map((region) => (
+                <button
+                    key={region.regionId}
+                    type="button"
+                    className={`map-domain-capital-filter-button ${
+                        Number(activeRegionId) === Number(region.regionId)
+                            ? 'is-active'
+                            : ''
+                    }`}
+                    onClick={() => onSelectRegion(region)}
+                >
+                    {region.city}
+                </button>
+            ))}
         </div>
     );
 }
