@@ -107,6 +107,26 @@ function MapPage() {
   }, []);
 
   useEffect(() => {
+    setLearningSessionMap({});
+    setChatLogMap({});
+    setActiveMissionMap({});
+    setCompletedMissionMap({});
+
+    setChatLog([]);
+    setChatInput('');
+    setChatCompleted(false);
+
+    setRecentMapChatLog([]);
+    setRecentMapLearningSummary(null);
+
+    setSelectedPlaceDetail(null);
+    setSelectedPlaceId('');
+
+    setPanelVisible(false);
+    setPanelMode('guide');
+  }, [currentUser?.userId]);
+
+  useEffect(() => {
     const loadMyLearningProgress = async () => {
       if (!currentUser) {
         return;
@@ -130,7 +150,7 @@ function MapPage() {
           nextActiveMissionMap[placeKey] = progress.activeMissionId ?? null;
           nextCompletedMissionMap[placeKey] = progress.completedMissionIds ?? [];
         });
-        
+
         setLearningSessionMap(nextLearningSessionMap);
         setChatLogMap(nextChatLogMap);
         setActiveMissionMap(nextActiveMissionMap);
@@ -305,7 +325,8 @@ function MapPage() {
     try {
       const response = await placeService.startMissionSession(
         learningSession.learningSessionId,
-        missionId
+        missionId,
+        currentUser.userId
       );
 
       console.log('미션 세션 시작 성공:', response);
@@ -347,6 +368,20 @@ function MapPage() {
       return;
     }
 
+    const USER_CHAT_LIMIT = 5;
+
+    const currentUserMessageCount = chatLog.filter(
+      (message) => message.role === 'user'
+    ).length;
+
+    const isChatLimitReached =
+      currentUserMessageCount >= USER_CHAT_LIMIT;
+
+    if (isChatLimitReached) {
+      alert('이 미션의 채팅 가능 횟수를 초과했습니다.');
+      return;
+    }
+
     const userMessage = {
       role: 'user',
       speaker: 'You',
@@ -362,6 +397,7 @@ function MapPage() {
 
     try {
       const response = await placeService.sendChatMessage({
+        userId: currentUser.userId,
         sessionId: learningSession.learningSessionId,
         message: trimmed,
       });
@@ -379,6 +415,12 @@ function MapPage() {
       saveCurrentPlaceChatLog(selectedPlace.id, nextAiChatLog);
     } catch (error) {
       console.error('채팅 응답 실패:', error);
+
+      if (error.response?.status === 429) {
+        alert('이 미션의 채팅 가능 횟수를 초과했습니다.');
+        return;
+      }
+
       alert('AI 응답을 불러오지 못했습니다.');
     }
   };
@@ -391,7 +433,8 @@ function MapPage() {
     try {
       const response = await placeService.completeMissionSession(
         learningSession.learningSessionId,
-        activeMissionId
+        activeMissionId,
+        currentUser.userId
       );
 
       console.log('미션 완료 성공:', response);

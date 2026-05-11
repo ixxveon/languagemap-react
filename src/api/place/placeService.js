@@ -38,9 +38,10 @@ async function startLearningSession(placeId, request) {
   return response.data;
 }
 
-async function startMissionSession(sessionId, missionId) {
+async function startMissionSession(sessionId, missionId, userId) {
   const response = await axiosInstance.patch(
-    `/api/place/learningSessions/${sessionId}/missions/${missionId}`
+    `/api/place/learningSessions/${sessionId}/missions/${missionId}`,
+    { userId }
   );
 
   return response.data;
@@ -52,9 +53,10 @@ async function sendChatMessage(request) {
   return response.data;
 }
 
-async function completeMissionSession(sessionId, missionId) {
+async function completeMissionSession(sessionId, missionId, userId) {
   const response = await axiosInstance.patch(
-    `/api/place/missionSessions/${sessionId}/missions/${missionId}`
+    `/api/place/missionSessions/${sessionId}/missions/${missionId}`,
+    { userId }
   );
 
   return response.data;
