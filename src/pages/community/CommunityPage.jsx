@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import DemoFlowCompact from '../../components/user/DemoFlowCompact';
+import { useCommunityChat } from '../../hooks/community/useCommunityChat';
 
 import '../../styles/user/CommunityPage.css';
 
@@ -26,8 +27,7 @@ const communityEntryCards = [
     id: 'learning',
     accent: '학습 관리',
     title: '학습 목표',
-    description:
-      '진행 중인 목표를 확인하고 새로운 학습 목표를 설정해보세요.',
+    description: '진행 중인 목표를 확인하고 새로운 학습 목표를 설정해보세요.',
     path: '/community/learning',
   },
   {
@@ -40,94 +40,26 @@ const communityEntryCards = [
   },
 ];
 
-const starterMessages = [
-  '오늘 영어 회화 루틴 같이 할 사람?',
-  '여행 표현 연습할 분 있나요?',
-  '방금 배운 문장 같이 복습해요.',
-];
-
-const initialMessages = [
-  {
-    id: 1,
-    role: 'mate',
-    author: 'Mina',
-    text: '오늘 출근 전에 10분 회화 연습 같이 하실 분?',
-    time: '방금',
-  },
-  {
-    id: 2,
-    role: 'mate',
-    author: 'Daniel',
-    text: '저는 여행 영어 표현 복습 중이에요. 같이 해도 좋아요.',
-    time: '1분 전',
-  },
-];
-
-function buildCommunityReply(message) {
-  if (message.includes('회화')) {
-    return {
-      author: 'Mina',
-      text: '좋아요. 오늘은 자기소개랑 아침 루틴 표현부터 같이 해봐요.',
-    };
-  }
-
-  if (message.includes('여행')) {
-    return {
-      author: 'Daniel',
-      text: '좋아요. 공항 체크인부터 카페 주문까지 차례로 연습해봐요.',
-    };
-  }
-
-  if (message.includes('복습')) {
-    return {
-      author: 'Sora',
-      text: '복습방 열어둘게요. 오늘 배운 문장 한 줄씩 남겨봐요.',
-    };
-  }
-
-  return {
-    author: 'Community Bot',
-    text: '좋아요. 같은 주제로 연습 중인 사람들에게 바로 보여줄게요.',
-  };
-}
-
 function CommunityPage() {
   const navigate = useNavigate();
-  const [chatInput, setChatInput] = useState('');
-  const [messages, setMessages] = useState(initialMessages);
+  const chatLogRef = useRef(null);
+  const {
+    chatInput,
+    setChatInput,
+    messages,
+    sendMessage,
+    liveStatus,
+    connectionStatus,
+  } = useCommunityChat();
 
-  const liveStatus = useMemo(() => {
-    const mateCount = messages.filter((message) => message.role === 'mate').length;
-    return `${mateCount + 10}명 참여 중`;
-  }, [messages]);
+  useEffect(() => {
+    const chatLog = chatLogRef.current;
+    if (!chatLog) return;
 
-  const sendMessage = (nextMessage) => {
-    const trimmed = nextMessage.trim();
+    chatLog.scrollTo({ top: chatLog.scrollHeight, behavior: 'smooth' });
+  }, [messages.length]);
 
-    if (!trimmed) return;
-
-    const reply = buildCommunityReply(trimmed);
-
-    setMessages((current) => [
-      ...current,
-      {
-        id: current.length + 1,
-        role: 'user',
-        author: '나',
-        text: trimmed,
-        time: '지금',
-      },
-      {
-        id: current.length + 2,
-        role: 'mate',
-        author: reply.author,
-        text: reply.text,
-        time: '방금',
-      },
-    ]);
-
-    setChatInput('');
-  };
+  const canSend = connectionStatus === 'connected';
 
   return (
     <div className="mapingo-dashboard">
@@ -143,34 +75,57 @@ function CommunityPage() {
                 <em>{liveStatus}</em>
               </div>
 
-              <div className="community-live-chat-log">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`community-live-chat-row is-${message.role}`}
-                  >
-                    <article className={`community-live-chat-bubble is-${message.role}`}>
-                      <div className="community-live-chat-meta">
-                        <span>{message.author}</span>
-                        <small>{message.time}</small>
-                      </div>
-                      <p>{message.text}</p>
-                    </article>
+              <div className="community-live-chat-log" ref={chatLogRef}>
+                {messages.length === 0 ? (
+                  <div className="community-live-chat-row is-system">
+                    <div className="community-live-chat-system-pill">
+                      {connectionStatus === 'connected'
+                        ? '채팅방에 입장했어요. 첫 메시지를 보내보세요.'
+                        : '실시간 채팅 서버에 연결하고 있어요.'}
+                    </div>
                   </div>
-                ))}
-              </div>
+                ) : (
+                  messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`community-live-chat-row is-${message.role}`}
+                    >
+                      {message.role === 'system' ? (
+                        <div className="community-live-chat-system-pill">
+                          {message.text}
+                        </div>
+                      ) : (
+                        <div className="community-live-chat-message-group">
+                          {message.role === 'mate' ? (
+                            <span className="community-live-chat-author">
+                              {message.author}
+                            </span>
+                          ) : null}
 
-              <div className="community-live-chat-suggestions">
-                {starterMessages.map((message) => (
-                  <button
-                    key={message}
-                    type="button"
-                    className="community-live-chat-chip"
-                    onClick={() => sendMessage(message)}
-                  >
-                    {message}
-                  </button>
-                ))}
+                          <div className="community-live-chat-message-line">
+                            {message.role === 'user' ? (
+                              <small className="community-live-chat-time">
+                                {message.time}
+                              </small>
+                            ) : null}
+
+                            <article
+                              className={`community-live-chat-bubble is-${message.role}`}
+                            >
+                              <p>{message.text}</p>
+                            </article>
+
+                            {message.role === 'mate' ? (
+                              <small className="community-live-chat-time">
+                                {message.time}
+                              </small>
+                            ) : null}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
 
               <div className="community-live-chat-composer">
@@ -183,9 +138,18 @@ function CommunityPage() {
                       sendMessage(chatInput);
                     }
                   }}
-                  placeholder="같이 연습할 주제나 한마디를 보내보세요"
+                  disabled={!canSend}
+                  placeholder={
+                    canSend
+                      ? '같이 연습할 주제나 메시지를 보내보세요.'
+                      : '채팅 서버에 연결 중이에요.'
+                  }
                 />
-                <button type="button" onClick={() => sendMessage(chatInput)}>
+                <button
+                  type="button"
+                  onClick={() => sendMessage(chatInput)}
+                  disabled={!canSend || !chatInput.trim()}
+                >
                   보내기
                 </button>
               </div>
