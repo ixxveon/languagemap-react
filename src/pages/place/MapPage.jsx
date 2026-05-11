@@ -60,9 +60,9 @@ function MapPage() {
   const [places, setPlaces] = useState([]);
   const [selectedPlaceDetail, setSelectedPlaceDetail] = useState(null);
   const capitals = placeService.fetchPlaceTabs();
-  const [learningSession, setLearningSession] = useState(null);
-  const [activeMissionId, setActiveMissionId] = useState(null);
-  const [completedMissionIds, setCompletedMissionIds] = useState([]);
+  const [learningSessionMap, setLearningSessionMap] = useState({});
+  const [activeMissionMap, setActiveMissionMap] = useState({});
+  const [completedMissionMap, setCompletedMissionMap] = useState({});
   const currentUser = useMapingoStore((state) => state.session.user);
   const session = useMapingoStore((state) => state.session);
   const activeCapitalId = useMapingoStore((state) => state.mapActiveTab);
@@ -74,6 +74,7 @@ function MapPage() {
   const [panelVisible, setPanelVisible] = useState(false);
   const [panelMode, setPanelMode] = useState('guide');
   const [chatLog, setChatLog] = useState([]);
+  const [chatLogMap, setChatLogMap] = useState({});
   const [chatInput, setChatInput] = useState('');
   const [chatCompleted, setChatCompleted] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState('Starter');
@@ -105,6 +106,43 @@ function MapPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const loadMyLearningProgress = async () => {
+      if (!currentUser) {
+        return;
+      }
+
+      try {
+        const progressList = await placeService.readMyLearningProgress();
+
+        console.log('진행상황 API 응답:', progressList);
+
+        const nextLearningSessionMap = {};
+        const nextChatLogMap = {};
+        const nextActiveMissionMap = {};
+        const nextCompletedMissionMap = {};
+
+        progressList.forEach((progress) => {
+          const placeKey = String(progress.placeId);
+
+          nextLearningSessionMap[placeKey] = progress;
+          nextChatLogMap[placeKey] = progress.messages ?? [];
+          nextActiveMissionMap[placeKey] = progress.activeMissionId ?? null;
+          nextCompletedMissionMap[placeKey] = progress.completedMissionIds ?? [];
+        });
+        
+        setLearningSessionMap(nextLearningSessionMap);
+        setChatLogMap(nextChatLogMap);
+        setActiveMissionMap(nextActiveMissionMap);
+        setCompletedMissionMap(nextCompletedMissionMap);
+      } catch (error) {
+        console.error('내 학습 진행 상황 조회 실패:', error);
+      }
+    };
+
+    loadMyLearningProgress();
+  }, [currentUser]);
+
   const currentCapitalId = capitals.some((capital) => capital.id === activeCapitalId) ? activeCapitalId : 'all';
 
   const visiblePlaces = useMemo(() => {
@@ -116,6 +154,18 @@ function MapPage() {
   }, [currentCapitalId, places]);
 
   const selectedPlace = selectedPlaceDetail;
+
+  const learningSession = selectedPlace?.id
+    ? learningSessionMap[selectedPlace.id]
+    : null;
+
+  const activeMissionId = selectedPlace?.id
+    ? activeMissionMap[selectedPlace.id] ?? null
+    : null;
+
+  const completedMissionIds = selectedPlace?.id
+    ? completedMissionMap[selectedPlace.id] ?? []
+    : [];
 
   const selectedCapital = useMemo(() => {
     return capitals.find((capital) => capital.id === currentCapitalId) ?? capitals[0];
@@ -129,9 +179,21 @@ function MapPage() {
     setRecentMapLearningSummary(null);
   };
 
+  const saveCurrentPlaceChatLog = (placeId, nextChatLog) => {
+    if (!placeId) return;
+
+    setChatLogMap((prev) => ({
+      ...prev,
+      [placeId]: nextChatLog,
+    }));
+  };
+
   const handleCapitalChange = (capitalId) => {
     setActiveCapitalId(capitalId);
     setSelectedPlaceId('');
+
+    setSelectedPlaceDetail(null);
+
     setPanelVisible(false);
     setPanelMode('guide');
     setSelectedLevel('BEGINNER');
@@ -139,8 +201,6 @@ function MapPage() {
   };
 
   const handleSelectPlace = async (placeId) => {
-    console.log(session);
-    console.log(session.user);
     if (!placeId) {
       setSelectedPlaceId('');
       setSelectedPlaceDetail(null);
@@ -155,15 +215,26 @@ function MapPage() {
       setSelectedPlaceId(placeId);
 
       const detail = await placeService.readPlaceDetail(placeId);
+      const mappedPlace = toPlaceDetail(detail, placeId);
 
-      console.log('장소 상세 조회:', detail);
+      setSelectedPlaceDetail(mappedPlace);
 
-      setSelectedPlaceDetail(toPlaceDetail(detail, placeId));
+      const placeKey = String(mappedPlace.id);
+
+      const savedSession = learningSessionMap[placeKey];
+      const savedChatLog = chatLogMap[placeKey] ?? [];
 
       setPanelVisible(true);
-      setPanelMode('detail');
       setSelectedLevel('BEGINNER');
-      resetChatState();
+
+      if (savedSession) {
+        setPanelMode('chat');
+        setChatLog(savedChatLog);
+        setRecentMapChatLog(savedChatLog);
+      } else {
+        setPanelMode('detail');
+        resetChatState();
+      }
     } catch (error) {
       console.error('장소 상세 조회 실패:', error);
       alert('장소 상세 정보를 불러오지 못했습니다.');
@@ -171,9 +242,7 @@ function MapPage() {
   };
 
   const handleStartLearning = async () => {
-    if (!selectedPlace) {
-      return;
-    }
+    if (!selectedPlace) return;
 
     if (!currentUser) {
       alert('로그인이 필요합니다.');
@@ -181,7 +250,6 @@ function MapPage() {
     }
 
     try {
-
       const request = {
         userId: currentUser.userId,
         level: selectedLevel,
@@ -192,9 +260,10 @@ function MapPage() {
         request
       );
 
-      console.log('학습 세션 생성 성공:', session);
-
-      setLearningSession(session);
+      setLearningSessionMap((prev) => ({
+        ...prev,
+        [selectedPlace.id]: session,
+      }));
 
       setPanelVisible(true);
       setPanelMode('chat');
@@ -210,6 +279,7 @@ function MapPage() {
 
       setChatLog(initialLog);
       setRecentMapChatLog(initialLog);
+      saveCurrentPlaceChatLog(selectedPlace.id, initialLog);
     } catch (error) {
       console.error('학습 세션 생성 실패:', error);
       alert('학습 세션을 시작하지 못했습니다.');
@@ -240,7 +310,10 @@ function MapPage() {
 
       console.log('미션 세션 시작 성공:', response);
 
-      setActiveMissionId(Number(missionId));
+      setActiveMissionMap((prev) => ({
+        ...prev,
+        [selectedPlace.id]: Number(missionId),
+      }));
 
       const aiMessage = {
         role: 'ai',
@@ -252,8 +325,11 @@ function MapPage() {
       setPanelMode('chat');
       setChatInput('');
       setChatCompleted(false);
-      setChatLog((prev) => [...prev, aiMessage]);
-      setRecentMapChatLog((prev) => [...prev, aiMessage]);
+      const nextChatLog = [...chatLog, aiMessage];
+
+      setChatLog(nextChatLog);
+      setRecentMapChatLog(nextChatLog);
+      saveCurrentPlaceChatLog(selectedPlace.id, nextChatLog);
     } catch (error) {
       console.error('미션 세션 시작 실패:', error);
       alert('미션을 시작하지 못했습니다.');
@@ -277,8 +353,11 @@ function MapPage() {
       text: trimmed,
     };
 
-    setChatLog((prev) => [...prev, userMessage]);
-    setRecentMapChatLog((prev) => [...prev, userMessage]);
+    const nextUserChatLog = [...chatLog, userMessage];
+
+    setChatLog(nextUserChatLog);
+    setRecentMapChatLog(nextUserChatLog);
+    saveCurrentPlaceChatLog(selectedPlace.id, nextUserChatLog);
     setChatInput('');
 
     try {
@@ -293,8 +372,11 @@ function MapPage() {
         text: response.aiMessage,
       };
 
-      setChatLog((prev) => [...prev, aiMessage]);
-      setRecentMapChatLog((prev) => [...prev, aiMessage]);
+      const nextAiChatLog = [...nextUserChatLog, aiMessage];
+
+      setChatLog(nextAiChatLog);
+      setRecentMapChatLog(nextAiChatLog);
+      saveCurrentPlaceChatLog(selectedPlace.id, nextAiChatLog);
     } catch (error) {
       console.error('채팅 응답 실패:', error);
       alert('AI 응답을 불러오지 못했습니다.');
@@ -302,7 +384,7 @@ function MapPage() {
   };
 
   const handleCompleteMission = async () => {
-    if (!learningSession || !activeMissionId) {
+    if (!learningSession || !activeMissionId || !selectedPlace) {
       return;
     }
 
@@ -314,19 +396,46 @@ function MapPage() {
 
       console.log('미션 완료 성공:', response);
 
-      const evaluationMessage = {
-        role: 'ai',
-        speaker: 'AI Coach',
-        text: response.aiFeedback ?? response.evaluation ?? response.aiMessage ?? '미션 평가를 불러오지 못했습니다.',
-        kind: 'evaluation',
-      };
+      const nextCompletedMissionIds = [
+        ...completedMissionIds,
+        Number(activeMissionId),
+      ];
 
-      setChatLog((prev) => [...prev, evaluationMessage]);
-      setRecentMapChatLog((prev) => [...prev, evaluationMessage]);
+      const missionCount = selectedPlace?.missions?.length ?? 0;
 
-      setCompletedMissionIds((prev) => [...prev, Number(activeMissionId)]);
-      setActiveMissionId(null);
-      setChatCompleted(true);
+      const isAllMissionCompleted =
+        missionCount > 0 && nextCompletedMissionIds.length === missionCount;
+
+      if (isAllMissionCompleted) {
+        const evaluationMessage = {
+          role: 'ai',
+          speaker: 'AI Coach',
+          text:
+            response.aiFeedback ??
+            response.evaluation ??
+            response.aiMessage ??
+            '최종 평가를 불러오지 못했습니다.',
+          kind: 'evaluation',
+        };
+
+        const nextChatLog = [...chatLog, evaluationMessage];
+
+        setChatLog(nextChatLog);
+        setRecentMapChatLog(nextChatLog);
+        saveCurrentPlaceChatLog(selectedPlace.id, nextChatLog);
+      }
+
+      setCompletedMissionMap((prev) => ({
+        ...prev,
+        [selectedPlace.id]: nextCompletedMissionIds,
+      }));
+
+      setActiveMissionMap((prev) => ({
+        ...prev,
+        [selectedPlace.id]: null,
+      }));
+
+      setChatCompleted(isAllMissionCompleted);
     } catch (error) {
       console.error('미션 완료 실패:', error);
       alert('미션 완료 처리에 실패했습니다.');
@@ -335,7 +444,6 @@ function MapPage() {
 
   const handleBackToDetail = () => {
     setPanelMode(selectedPlace ? 'detail' : 'guide');
-    resetChatState();
   };
 
   return (

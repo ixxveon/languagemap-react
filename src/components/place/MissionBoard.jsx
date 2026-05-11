@@ -32,31 +32,27 @@ function MissionBoard({
                                     <p>{mission.summary}</p>
                                 </div>
 
-                                <button
-                                    type="button"
-                                    className="map-domain-mission-button"
-                                    onClick={() => {
-                                        if (!hasLearningSession) {
-                                            return;
-                                        }
+                                {hasLearningSession && (
+                                    <button
+                                        type="button"
+                                        className="map-domain-mission-button"
+                                        onClick={() => {
+                                            if (isRunning) {
+                                                onCompleteMission(mission.id);
+                                                return;
+                                            }
 
-                                        if (isRunning) {
-                                            onCompleteMission(mission.id);
-                                            return;
-                                        }
-
-                                        onStartMission(mission.id);
-                                    }}
-                                    disabled={isCompleted}
-                                >
-                                    {isCompleted
-                                        ? '완료됨'
-                                        : isRunning
-                                            ? '미션 종료'
-                                            : hasLearningSession
-                                                ? '미션 시작'
-                                                : '내용 확인'}
-                                </button>
+                                            onStartMission(mission.id);
+                                        }}
+                                        disabled={isCompleted}
+                                    >
+                                        {isCompleted
+                                            ? '완료됨'
+                                            : isRunning
+                                                ? '미션 종료'
+                                                : '미션 시작'}
+                                    </button>
+                                )}
                             </article>
                         );
                     })

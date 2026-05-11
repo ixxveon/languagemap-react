@@ -60,6 +60,12 @@ async function completeMissionSession(sessionId, missionId) {
   return response.data;
 }
 
+async function readMyLearningProgress() {
+  const response = await axiosInstance.get('/api/place/me/progress');
+
+  return response.data;
+}
+
 export const placeService = {
   fetchPlaceTabs,
   fetchRoutes,
@@ -68,5 +74,6 @@ export const placeService = {
   startLearningSession,
   startMissionSession,
   sendChatMessage,
-  completeMissionSession
+  completeMissionSession,
+  readMyLearningProgress
 };

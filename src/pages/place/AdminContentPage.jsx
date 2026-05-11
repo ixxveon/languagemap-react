@@ -446,7 +446,12 @@ function AdminContentPage() {
         fields: ['id', 'displayName', 'formattedAddress', 'location'],
         includedType: selectedType.googleType,
         useStrictTypeFiltering: false,
-        locationBias: selectedRegion.center,
+        locationRestriction: {
+          circle: {
+            center: selectedRegion.center,
+            radius: 20000,
+          },
+        },
         language: 'ko',
         region: getGoogleRegionCode(selectedRegion),
         maxResultCount: 8,
