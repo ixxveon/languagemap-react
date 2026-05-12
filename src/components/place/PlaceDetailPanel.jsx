@@ -76,19 +76,17 @@ function PlaceDetailPanel({
             <section className="map-domain-panel-section">
                 <h3>레벨 선택</h3>
 
-                <div className="map-domain-level-row">
-                    {['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].map((level) => (
-                        <button
-                            key={level}
-                            type="button"
-                            className={`map-domain-level-button ${
-                                selectedLevel === level ? 'is-active' : ''
-                            }`}
-                            onClick={() => onSelectLevel(level)}
-                        >
-                            {level}
-                        </button>
-                    ))}
+                <div className="map-domain-level-select-wrap">
+                    <select
+                        className="map-domain-level-select"
+                        value={selectedLevel}
+                        onChange={(event) => onSelectLevel(event.target.value)}
+                        aria-label="학습 레벨 선택"
+                    >
+                        <option value="BEGINNER">BEGINNER</option>
+                        <option value="INTERMEDIATE">INTERMEDIATE</option>
+                        <option value="ADVANCED">ADVANCED</option>
+                    </select>
                 </div>
             </section>
 

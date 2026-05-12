@@ -67,6 +67,8 @@ function MapPage() {
   const session = useMapingoStore((state) => state.session);
   const selectedPlaceId = useMapingoStore((state) => state.selectedRouteId);
   const setSelectedPlaceId = useMapingoStore((state) => state.setSelectedRouteId);
+  const favoriteRouteIds = useMapingoStore((state) => state.favoriteRouteIds);
+  const toggleFavoriteRoute = useMapingoStore((state) => state.toggleFavoriteRoute);
   const setRecentMapChatLog = useMapingoStore((state) => state.setRecentMapChatLog);
   const setRecentMapLearningSummary = useMapingoStore((state) => state.setRecentMapLearningSummary);
   const [panelVisible, setPanelVisible] = useState(false);
@@ -218,7 +220,7 @@ function MapPage() {
   const selectedPlace = selectedPlaceDetail;
   const selectedPlaceFavoriteId = selectedPlace ? String(selectedPlace.id) : '';
   const isSelectedPlaceFavorite =
-    selectedPlaceFavoriteId !== '' && favoritePlaceIds.includes(selectedPlaceFavoriteId);
+    selectedPlaceFavoriteId !== '' && favoriteRouteIds.includes(selectedPlaceFavoriteId);
 
   const learningSession = selectedPlace?.id
     ? learningSessionMap[selectedPlace.id]
@@ -576,44 +578,12 @@ function MapPage() {
     setPanelMode(selectedPlace ? 'detail' : 'guide');
   };
 
-  const handleToggleFavoritePlace = async () => {
+  const handleToggleFavoritePlace = () => {
     if (!selectedPlaceFavoriteId) {
       return;
     }
 
-    if (!currentUser?.userId) {
-      alert('로그인이 필요합니다.');
-      navigate('/login');
-      return;
-    }
-
-    try {
-      if (isSelectedPlaceFavorite) {
-        await favoriteService.removeFavoritePlace({
-          userId: currentUser.userId,
-          placeId: selectedPlace.id,
-        });
-
-        setFavoritePlaceIds((currentIds) =>
-          currentIds.filter((placeId) => placeId !== selectedPlaceFavoriteId)
-        );
-        return;
-      }
-
-      await favoriteService.addFavoritePlace({
-        userId: currentUser.userId,
-        placeId: selectedPlace.id,
-      });
-
-      setFavoritePlaceIds((currentIds) =>
-        currentIds.includes(selectedPlaceFavoriteId)
-          ? currentIds
-          : [...currentIds, selectedPlaceFavoriteId]
-      );
-    } catch (error) {
-      console.error('장소 즐겨찾기 처리 실패:', error);
-      alert('장소 즐겨찾기 처리에 실패했습니다.');
-    }
+    toggleFavoriteRoute(selectedPlaceFavoriteId);
   };
 
   return (
