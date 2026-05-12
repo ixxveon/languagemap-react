@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { placeService } from '../../api/place/placeService';
+import { favoriteService } from '../../api/user/favoriteService';
 import { useMapingoStore } from '../../store/user/useMapingoStore';
 import { toPlaceDetail } from '../../utils/place/placeMapper';
 import RouteMap from '../../components/place/RouteMap';
@@ -78,6 +79,7 @@ function MapPage() {
   const [chatCompleted, setChatCompleted] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState('Starter');
   const [regions, setRegions] = useState([]);
+  const [favoritePlaceIds, setFavoritePlaceIds] = useState([]);
   const [activeRegionId, setActiveRegionId] = useState(null);
   const USER_CHAT_LIMIT = 10;
   const hasKorean = (text) => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text);
@@ -144,6 +146,28 @@ function MapPage() {
 
     setPanelVisible(false);
     setPanelMode('guide');
+  }, [currentUser?.userId]);
+
+  useEffect(() => {
+    const loadFavoritePlaces = async () => {
+      if (!currentUser?.userId) {
+        setFavoritePlaceIds([]);
+        return;
+      }
+
+      try {
+        const favorites = await favoriteService.fetchFavoritePlaces(currentUser.userId);
+        setFavoritePlaceIds(
+          favorites
+            .map((favorite) => String(favorite.placeId))
+            .filter(Boolean)
+        );
+      } catch (error) {
+        console.error('장소 즐겨찾기 조회 실패:', error);
+      }
+    };
+
+    loadFavoritePlaces();
   }, [currentUser?.userId]);
 
   useEffect(() => {
