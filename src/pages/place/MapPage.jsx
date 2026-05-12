@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { placeService } from '../../api/place/placeService';
+import { favoriteService } from '../../api/user/favoriteService';
 import { useMapingoStore } from '../../store/user/useMapingoStore';
 import { toPlaceDetail } from '../../utils/place/placeMapper';
 import RouteMap from '../../components/place/RouteMap';
@@ -76,6 +77,7 @@ function MapPage() {
   const [chatCompleted, setChatCompleted] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState('Starter');
   const [regions, setRegions] = useState([]);
+  const [favoritePlaceIds, setFavoritePlaceIds] = useState([]);
   const [activeRegionId, setActiveRegionId] = useState(null);
   const USER_CHAT_LIMIT = 10;
   const hasKorean = (text) => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text);
@@ -145,6 +147,28 @@ function MapPage() {
   }, [currentUser?.userId]);
 
   useEffect(() => {
+    const loadFavoritePlaces = async () => {
+      if (!currentUser?.userId) {
+        setFavoritePlaceIds([]);
+        return;
+      }
+
+      try {
+        const favorites = await favoriteService.fetchFavoritePlaces(currentUser.userId);
+        setFavoritePlaceIds(
+          favorites
+            .map((favorite) => String(favorite.placeId))
+            .filter(Boolean)
+        );
+      } catch (error) {
+        console.error('장소 즐겨찾기 조회 실패:', error);
+      }
+    };
+
+    loadFavoritePlaces();
+  }, [currentUser?.userId]);
+
+  useEffect(() => {
     const loadMyLearningProgress = async () => {
       if (!currentUser) {
         return;
@@ -192,6 +216,9 @@ function MapPage() {
   }, [activeRegionId, places]);
 
   const selectedPlace = selectedPlaceDetail;
+  const selectedPlaceFavoriteId = selectedPlace ? String(selectedPlace.id) : '';
+  const isSelectedPlaceFavorite =
+    selectedPlaceFavoriteId !== '' && favoritePlaceIds.includes(selectedPlaceFavoriteId);
 
   const learningSession = selectedPlace?.id
     ? learningSessionMap[selectedPlace.id]
@@ -549,6 +576,46 @@ function MapPage() {
     setPanelMode(selectedPlace ? 'detail' : 'guide');
   };
 
+  const handleToggleFavoritePlace = async () => {
+    if (!selectedPlaceFavoriteId) {
+      return;
+    }
+
+    if (!currentUser?.userId) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      if (isSelectedPlaceFavorite) {
+        await favoriteService.removeFavoritePlace({
+          userId: currentUser.userId,
+          placeId: selectedPlace.id,
+        });
+
+        setFavoritePlaceIds((currentIds) =>
+          currentIds.filter((placeId) => placeId !== selectedPlaceFavoriteId)
+        );
+        return;
+      }
+
+      await favoriteService.addFavoritePlace({
+        userId: currentUser.userId,
+        placeId: selectedPlace.id,
+      });
+
+      setFavoritePlaceIds((currentIds) =>
+        currentIds.includes(selectedPlaceFavoriteId)
+          ? currentIds
+          : [...currentIds, selectedPlaceFavoriteId]
+      );
+    } catch (error) {
+      console.error('장소 즐겨찾기 처리 실패:', error);
+      alert('장소 즐겨찾기 처리에 실패했습니다.');
+    }
+  };
+
   return (
     <div className="map-domain-page">
       <section className="map-domain-shell">
@@ -571,6 +638,8 @@ function MapPage() {
           onClosePanel={() => handleSelectPlace(null)}
           onStartLearning={handleStartLearning}
           onBackToDetail={handleBackToDetail}
+          onToggleFavoritePlace={handleToggleFavoritePlace}
+          isSelectedPlaceFavorite={isSelectedPlaceFavorite}
           onOpenCoaching={() => {
             const sessionId = learningSession?.learningSessionId;
 

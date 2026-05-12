@@ -101,20 +101,78 @@ body.map-domain-scroll-lock {
   gap: 16px;
 }
 
+.map-domain-panel-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.map-domain-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.map-domain-panel-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .map-domain-panel-address {
   margin-top: clamp(4px, 0.9dvh, 10px);
   font-size: clamp(0.82rem, 1.45dvh, 0.93rem);
 }
 
+.map-domain-favorite-button,
 .map-domain-close-button {
   width: clamp(38px, 4.5dvh, 42px);
   height: clamp(38px, 4.5dvh, 42px);
   border: 0;
   border-radius: 999px;
+  cursor: pointer;
+}
+
+.map-domain-favorite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  transition: transform 180ms ease;
+}
+
+.map-domain-favorite-icon {
+  display: block;
+  width: 29px;
+  height: 29px;
+}
+
+.map-domain-favorite-icon path {
+  fill: transparent;
+  stroke: #000000;
+  stroke-width: 1.3;
+  vector-effect: non-scaling-stroke;
+}
+
+.map-domain-favorite-button.is-active .map-domain-favorite-icon path {
+  fill: #ffff00;
+  stroke: #000000;
+}
+
+.map-domain-favorite-button:hover {
+  transform: translateY(-1px);
+}
+
+.map-domain-close-button {
   background: #effaf7;
   color: #124f54;
   font-size: clamp(1.1rem, 2.2dvh, 1.35rem);
-  cursor: pointer;
 }
 
 .map-domain-chip-row {
