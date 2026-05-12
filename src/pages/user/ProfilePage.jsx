@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
 import PingPopCharacterImage from '../../components/user/PingPopCharacterImage';
 import { useMapingoStore } from '../../store/user/useMapingoStore';
+import { placeService } from '../../api/place/placeService';
 import { userService } from '../../api/user/userService';
 import { paymentService } from '../../api/user/paymentService';
 import { useQuery } from '@tanstack/react-query';
@@ -55,21 +56,32 @@ function normalizePhoneNumber(value) {
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
 }
 
-function extractPlaceName(meta) {
-  if (!meta) {
-    return '기록 없음';
+function formatRecentTime(endTime) {
+  if (!endTime) return '';
+
+  const date = new Date(endTime);
+  const now = new Date();
+
+  const isToday = date.toDateString() === now.toDateString();
+
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  const period = date.getHours() < 12 ? '오전' : '오후';
+  const hour = date.getHours() % 12 || 12;
+  const minute = String(date.getMinutes()).padStart(2, '0');
+
+  if (isToday) {
+    return `오늘 ${period} ${hour}:${minute}`;
   }
 
-  return String(meta).split(' · ')[0] ?? String(meta);
-}
-
-function extractLearningTime(meta) {
-  if (!meta) {
-    return '학습 시간 정보 없음';
+  if (isYesterday) {
+    return `어제 ${period} ${hour}:${minute}`;
   }
 
-  const [, ...rest] = String(meta).split(' · ');
-  return rest.join(' · ') || String(meta);
+  return `${date.getMonth() + 1}월 ${date.getDate()}일 ${period} ${hour}:${minute}`;
 }
 
 function buildProfileForm(profileName, profileEmail, user) {
@@ -100,6 +112,7 @@ function ProfilePage() {
   const badgeCount = useMapingoStore((state) => state.badgeCount);
   const updateProfileDetails = useMapingoStore((state) => state.updateProfileDetails);
   const clearSession = useMapingoStore((state) => state.clearSession);
+  const [recentLearningPlaces, setRecentLearningPlaces] = useState([]);
 
   const user = session?.user ?? {};
   const profileLevelNumber =
@@ -159,6 +172,22 @@ function ProfilePage() {
     }
   }, [isEditing, profileEmail, profileName, user]);
 
+  useEffect(() => {
+    const loadRecentLearningPlaces = async () => {
+      try {
+        const data = await placeService.readRecentLearningPlaces();
+
+        console.log('최근 학습 장소:', data);
+
+        setRecentLearningPlaces(data);
+      } catch (error) {
+        console.error('최근 학습 장소 조회 실패:', error);
+      }
+    };
+
+    loadRecentLearningPlaces();
+  }, []);
+
   const profileInfoItems = [
     { key: 'name', label: '이름', value: profileName || '미등록', type: 'text', editable: true },
     { key: 'email', label: '이메일', value: profileEmail || '미등록', type: 'email', editable: false },
@@ -188,17 +217,6 @@ function ProfilePage() {
       editable: false,
     },
   ];
-
-  const recentPlaceList = useMemo(
-    () =>
-      (recentLearning ?? []).slice(0, 5).map((item) => ({
-        id: item.id,
-        place: extractPlaceName(item.meta),
-        title: item.title,
-        meta: extractLearningTime(item.meta),
-      })),
-    [recentLearning],
-  );
 
   const currentGoalItems = useMemo(() => {
     const safeGoal = Math.max(weeklyGoal, 1);
@@ -389,14 +407,18 @@ function ProfilePage() {
               </div>
 
               <div className="mapingo-profile-learning-list">
-                {recentPlaceList.length > 0 ? (
-                  recentPlaceList.map((item) => (
-                    <article key={item.id} className="mapingo-profile-learning-item">
+                {recentLearningPlaces.length > 0 ? (
+                  recentLearningPlaces.map((place) => (
+                    <article
+                      key={`${place.placeId}-${place.endTime}`}
+                      className="mapingo-profile-learning-item"
+                    >
                       <div className="mapingo-profile-learning-copy">
-                        <strong>{item.place}</strong>
-                        <p>{item.title}</p>
+                        <strong>{place.placeName}</strong>
+                        <p>{place.scenarioDescription}</p>
                       </div>
-                      <span>{item.meta}</span>
+
+                      <span>{formatRecentTime(place.endTime)}</span>
                     </article>
                   ))
                 ) : (

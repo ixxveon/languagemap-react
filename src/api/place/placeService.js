@@ -75,6 +75,12 @@ async function readRegionList() {
   return response.data;
 }
 
+async function readRecentLearningPlaces() {
+  const response = await axiosInstance.get('/api/users/profile/recentLearningPlaces');
+
+  return response.data;
+}
+
 export const placeService = {
   fetchPlaceTabs,
   fetchRoutes,
@@ -85,5 +91,6 @@ export const placeService = {
   sendChatMessage,
   completeMissionSession,
   readMyLearningProgress,
-  readRegionList
+  readRegionList,
+  readRecentLearningPlaces
 };
