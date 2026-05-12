@@ -203,7 +203,7 @@ function MapingoHero({ onPrimaryAction }) {
         </p>
 
         <div className="mapingo-hero-actions">
-          <button type="button" className="mapingo-home-primary" onClick={() => navigate('/login')}>
+          <button type="button" className="mapingo-home-primary" onClick={() => navigate('/map')}>
             무료로 시작하기
           </button>
         </div>

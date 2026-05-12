@@ -1,112 +1,230 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
 import PingPopCharacterImage from '../../components/user/PingPopCharacterImage';
 import { useMapingoStore } from '../../store/user/useMapingoStore';
-import { learningService } from '../../api/user/learningService';
-//import { useProfile } from '../../hooks/user/useProfile';
-//import { useBadge } from '../../hooks/user/useBadge';
 
-function getBadgeTone(status) {
-  if (status === 'earned') return 'success';
-  if (status === 'progress') return 'info';
-  return 'muted';
+function formatRoleLabel(role) {
+  return role === 'admin' ? '관리자' : '일반 사용자';
 }
 
-function getBadgeStatusLabel(status) {
-  if (status === 'earned') return '\uD68D\uB4DD \uC644\uB8CC';
-  if (status === 'progress') return '\uC9C4\uD589 \uC911';
-  return '\uBBF8\uD68D\uB4DD';
+function formatPlanLabel(plan) {
+  return plan === 'Premium' ? 'Premium' : 'Basic';
 }
 
-function getBadgeProgressCopy(badge) {
-  if (badge.status === 'earned') {
-    return `${badge.condition} \u00b7 \uC644\uB8CC`;
+function formatBirthDate(value) {
+  if (!value) {
+    return '미등록';
   }
 
-  return `${badge.condition} \u00b7 ${badge.currentValue} / ${badge.targetValue}`;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return String(value);
+  }
+
+  return parsed.toISOString().slice(0, 10);
+}
+
+function formatPhoneNumber(value) {
+  if (!value) {
+    return '미등록';
+  }
+
+  const digits = String(value).replace(/\D/g, '');
+  if (digits.length === 11) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  }
+
+  return String(value);
+}
+
+function normalizePhoneNumber(value) {
+  const digits = String(value ?? '').replace(/\D/g, '').slice(0, 11);
+
+  if (digits.length < 4) {
+    return digits;
+  }
+
+  if (digits.length < 8) {
+    return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  }
+
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+}
+
+function extractPlaceName(meta) {
+  if (!meta) {
+    return '기록 없음';
+  }
+
+  return String(meta).split(' · ')[0] ?? String(meta);
+}
+
+function extractLearningTime(meta) {
+  if (!meta) {
+    return '학습 시간 정보 없음';
+  }
+
+  const [, ...rest] = String(meta).split(' · ');
+  return rest.join(' · ') || String(meta);
+}
+
+function buildProfileForm(profileName, profileEmail, user) {
+  return {
+    name: profileName || '',
+    email: profileEmail || '',
+    birthDate: formatBirthDate(user.birthDate) === '미등록' ? '' : formatBirthDate(user.birthDate),
+    phoneNumber:
+      formatPhoneNumber(user.phoneNumber ?? user.phone) === '미등록'
+        ? ''
+        : formatPhoneNumber(user.phoneNumber ?? user.phone),
+    address: user.address ?? '',
+    role: formatRoleLabel(user.role),
+  };
 }
 
 function ProfilePage() {
   const navigate = useNavigate();
-  //const { profile } = useProfile();
-  //const { badges } = useBadge();
+  const session = useMapingoStore((state) => state.session);
   const profileName = useMapingoStore((state) => state.profileName);
-  const subscriptionUpdatedAt = useMapingoStore((state) => state.subscriptionUpdatedAt);
   const currentLevelId = useMapingoStore((state) => state.currentLevelId);
   const recentLearning = useMapingoStore((state) => state.recentLearning);
-  const weeklyGoalCompleted = useMapingoStore((state) => state.weeklyGoalCompleted);
   const weeklyLearnCount = useMapingoStore((state) => state.weeklyLearnCount);
-  const weeklyGoal = useMapingoStore((state) => state.weeklyGoal);
-  const learningStreak = useMapingoStore((state) => state.streakDays);
+  const weeklyGoal = Number(useMapingoStore((state) => state.weeklyGoal) || 0);
+  const streakDays = useMapingoStore((state) => state.streakDays);
   const pronunciationScore = useMapingoStore((state) => state.pronunciationScore);
-  const storedBadgeProgress = useMapingoStore((state) => state.badgeProgress);
-  const badgeProgress = useMemo(
-    () =>
-      learningService.buildBadgeProgressFromStore({
-        recentLearning,
-        weeklyLearnCount,
-        weeklyGoalCompleted,
-        weeklyGoal,
-        learningStreak,
-        badgeProgress: storedBadgeProgress,
-      }),
-    [recentLearning, weeklyLearnCount, weeklyGoalCompleted, weeklyGoal, learningStreak, storedBadgeProgress],
-  );
-  const badgeCatalog = useMemo(() => learningService.fetchBadgeCatalog(badgeProgress), [badgeProgress]);
+  const badgeCount = useMapingoStore((state) => state.badgeCount);
+  const subscriptionPlan = useMapingoStore((state) => state.subscriptionPlan);
+  const updateProfileDetails = useMapingoStore((state) => state.updateProfileDetails);
+  const clearSession = useMapingoStore((state) => state.clearSession);
+
+  const user = session?.user ?? {};
   const profileLevelNumber =
     currentLevelId === 'advanced' ? 60 : currentLevelId === 'intermediate' ? 40 : 10;
+  const profileEmail =
+    user.email ?? `${String(profileName).toLowerCase().replace(/\s+/g, '.')}@mapingo.ai`;
+  const levelProgressPercent = Math.min(100, Math.max(12, weeklyLearnCount * 7 + badgeCount * 3));
+  const cumulativeExperience = profileLevelNumber * 300 + weeklyLearnCount * 120 + badgeCount * 50;
 
-  const earnedBadges = badgeCatalog.filter((badge) => badge.status === 'earned');
-  const badgeCount = earnedBadges.length;
-  const topBadge = earnedBadges[0]?.name ?? '\uCCAB \uAC78\uC74C \uBC30\uC9C0';
-  const topBadgeDetail = earnedBadges[0]?.condition ?? '\uD559\uC2B5 3\uD68C \uC644\uB8CC';
-  const latestLearning = recentLearning[0];
-  const badgePreviewList = [...earnedBadges, ...badgeCatalog.filter((badge) => badge.status !== 'earned')].slice(0, 4);
-  const completionPercent = Math.min(100, Math.max(12, badgeCount * 12 + weeklyGoalCompleted * 4));
-  const cumulativeExperience = profileLevelNumber * 10 + badgeCount * 4;
-  const totalStudyCount = badgeProgress.totalStudyCount;
-  const nextLevelRemaining = Math.max(0, (profileLevelNumber + 10) * 10 - cumulativeExperience);
-  const profileEmail = `${profileName.toLowerCase().replace(/\s+/g, '.')}@mapingo.ai`;
-  const weeklyGoalRate = Math.min(100, Math.round((weeklyLearnCount / Math.max(weeklyGoal, 1)) * 100));
-  const profileGrowthCards = [
+  const [isEditing, setIsEditing] = useState(false);
+  const [form, setForm] = useState(() => buildProfileForm(profileName, profileEmail, user));
+
+  useEffect(() => {
+    if (!isEditing) {
+      setForm(buildProfileForm(profileName, profileEmail, user));
+    }
+  }, [isEditing, profileEmail, profileName, user]);
+
+  const profileInfoItems = [
+    { key: 'name', label: '이름', value: profileName || '미등록', type: 'text', editable: true },
+    { key: 'email', label: '이메일', value: profileEmail || '미등록', type: 'email', editable: true },
     {
-      title: '최근 학습 기록',
-      value: latestLearning?.title ?? '첫 학습 대기',
-      description: latestLearning
-        ? `${latestLearning.meta} 학습을 이어서 진행할 수 있어요.`
-        : '아직 완료한 학습이 없어요. 오늘의 첫 학습을 시작해보세요.',
-      path: '/growth/insights',
+      key: 'birthDate',
+      label: '생년월일',
+      value: formatBirthDate(user.birthDate),
+      type: 'date',
+      editable: true,
     },
     {
-      title: '활용 점수 / 유형별 점수',
-      value: `${pronunciationScore}점`,
-      description: `이번 주 목표 달성률 ${weeklyGoalRate}% · 누적 학습 ${totalStudyCount}회`,
-      path: '/growth/progress',
+      key: 'phoneNumber',
+      label: '전화번호',
+      value: formatPhoneNumber(user.phoneNumber ?? user.phone),
+      type: 'tel',
+      editable: true,
     },
+    { key: 'address', label: '주소', value: user.address || '미등록', type: 'text', editable: true },
+    { key: 'role', label: '권한', value: formatRoleLabel(user.role), type: 'text', editable: false },
     {
-      title: 'AI 성장 피드백',
-      value: learningStreak > 0 ? `${learningStreak}일 연속 학습` : '학습 루틴 준비',
-      description:
-        learningStreak > 0
-          ? '꾸준한 학습 흐름이 좋아요. 발음 리뷰와 상황 회화를 함께 이어가면 성장 속도가 더 안정적이에요.'
-          : '짧은 회화 학습부터 시작하면 AI가 성장 패턴을 분석해 맞춤 피드백을 보여줘요.',
-      path: '/growth/insights',
+      key: 'subscriptionPlan',
+      label: '현재 구독 플랜',
+      value: formatPlanLabel(subscriptionPlan),
+      type: 'text',
+      editable: false,
     },
   ];
+
+  const recentPlaceList = useMemo(
+    () =>
+      (recentLearning ?? []).slice(0, 5).map((item) => ({
+        id: item.id,
+        place: extractPlaceName(item.meta),
+        title: item.title,
+        meta: extractLearningTime(item.meta),
+      })),
+    [recentLearning],
+  );
+
+  const currentGoalItems = useMemo(() => {
+    const safeGoal = Math.max(weeklyGoal, 1);
+    const progressRate = Math.min(100, Math.round((weeklyLearnCount / safeGoal) * 100));
+
+    return [
+      {
+        title: `주간 학습 목표 ${safeGoal}회`,
+        value: `${weeklyLearnCount} / ${safeGoal}회 진행`,
+        description: `현재 달성률 ${progressRate}%`,
+      },
+      {
+        title: '연속 학습 유지',
+        value: `${streakDays}일 연속 학습`,
+        description: '매일 짧게라도 이어가는 루틴 만들기',
+      },
+      {
+        title: '발음 점수 안정화',
+        value: `${pronunciationScore}점`,
+        description: '90점 이상을 목표로 발음 복습 이어가기',
+      },
+    ];
+  }, [pronunciationScore, streakDays, weeklyGoal, weeklyLearnCount]);
+
+  const handleChange = (key, value) => {
+    setForm((current) => ({
+      ...current,
+      [key]: key === 'phoneNumber' ? normalizePhoneNumber(value) : value,
+    }));
+  };
+
+  const handleStartEditing = () => {
+    setForm(buildProfileForm(profileName, profileEmail, user));
+    setIsEditing(true);
+  };
+
+  const handleCancelEditing = () => {
+    setForm(buildProfileForm(profileName, profileEmail, user));
+    setIsEditing(false);
+  };
+
+  const handleSaveProfile = () => {
+    updateProfileDetails({
+      name: form.name.trim() || profileName,
+      email: form.email.trim() || profileEmail,
+      birthDate: form.birthDate || '',
+      phoneNumber: form.phoneNumber.trim(),
+      address: form.address.trim(),
+      role: form.role.includes('관리') ? 'admin' : 'user',
+    });
+    setIsEditing(false);
+  };
+
+  const handleDeleteAccount = () => {
+    localStorage.removeItem('accessToken');
+    clearSession();
+    navigate('/', { replace: true });
+  };
 
   return (
     <div className="mapingo-dashboard">
       <MapingoPageSection
         eyebrow="My Profile"
-        title={'\uD504\uB85C\uD544 \uC815\uBCF4, \uACC4\uC815 \uC0C1\uD0DC, \uD559\uC2B5 \uBAA9\uD45C\uB97C \uD55C \uD654\uBA74\uC5D0\uC11C \uD655\uC778\uD574\uBCF4\uC138\uC694'}
-        description={'\uD504\uB85C\uD544 \uC815\uBCF4, \uACC4\uC815 \uC0C1\uD0DC, \uD559\uC2B5 \uBAA9\uD45C, \uBC30\uC9C0 \uD604\uD669\uACFC \uCD5C\uADFC \uD559\uC2B5\uC744 \uD55C \uD654\uBA74\uC5D0\uC11C \uD655\uC778\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.'}
+        title="프로필 정보와 현재 학습 상태를 한 화면에서 확인해보세요"
+        description="회원 정보, 최근 학습한 장소, 그리고 지금 이어가고 있는 학습 목표를 간단하고 선명하게 정리했어요."
       >
         <section className="mapingo-profile-layout">
-          <article
-            key={subscriptionUpdatedAt ? `profile-card-${subscriptionUpdatedAt}` : 'profile-card'}
-            className={`mapingo-profile-card ${subscriptionUpdatedAt ? 'is-updated' : ''}`}
-          >
+          <article className="mapingo-profile-card">
             <div className="mapingo-profile-card-head">
               <div className="mapingo-profile-identity">
                 <div className="mapingo-profile-avatar-column">
@@ -120,133 +238,138 @@ function ProfilePage() {
                     </div>
                   </div>
                 </div>
+
                 <div className="mapingo-profile-identity-copy">
+                  <p className="mapingo-profile-kicker">Profile Overview</p>
                   <h2>{profileName}</h2>
-                  <p>{profileEmail}</p>
-                  <span className="mapingo-profile-badge-pill">
-                    {topBadge} : {topBadgeDetail}
-                  </span>
-                  <div className="mapingo-profile-progress">
-                    <div
-                      className="mapingo-profile-progress-fill"
-                      style={{ width: `${completionPercent}%` }}
-                    />
+                  <p>회원 기본 정보를 확인하고 관리할 수 있어요.</p>
+                  <div className="mapingo-profile-level-summary">
+                    <div className="mapingo-profile-level-summary-head">
+                      <span>Level Progress</span>
+                      <strong>{levelProgressPercent}%</strong>
+                    </div>
+                    <div className="mapingo-profile-level-progress">
+                      <div
+                        className="mapingo-profile-level-progress-fill"
+                        style={{ width: `${levelProgressPercent}%` }}
+                      />
+                    </div>
+                    <div className="mapingo-profile-level-summary-foot">
+                      <span>누적 경험치 (Cumulative XP)</span>
+                      <strong>{`${cumulativeExperience.toLocaleString()} XP`}</strong>
+                    </div>
                   </div>
-                  <small>
-                    {`\uB2E4\uC74C \uB808\uBCA8 \uBC30\uC9C0\uAE4C\uC9C0 ${Math.max(8, 100 - completionPercent)}% \uB0A8\uC558\uC5B4\uC694`}
-                  </small>
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="mapingo-ghost-button"
-                onClick={() => navigate('/settings/account')}
-              >
-                {'\uACC4\uC815 \uAD00\uB9AC'}
-              </button>
+              <div className={`mapingo-profile-action-group ${isEditing ? 'is-editing' : ''}`}>
+                {isEditing ? (
+                  <>
+                    <button
+                      type="button"
+                      className="mapingo-primary-button"
+                      style={{ backgroundColor: 'var(--mapingo-mint)' }}
+                      onClick={handleSaveProfile}
+                    >
+                      저장
+                    </button>
+                    <button
+                      type="button"
+                      className="mapingo-ghost-button mapingo-danger-button"
+                      onClick={handleDeleteAccount}
+                    >
+                      계정 탈퇴
+                    </button>
+                    <button
+                      type="button"
+                      className="mapingo-ghost-button mapingo-profile-cancel-button"
+                      onClick={handleCancelEditing}
+                    >
+                      취소
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="mapingo-ghost-button"
+                    onClick={handleStartEditing}
+                  >
+                    계정 수정
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="mapingo-profile-info-grid">
-              <article className="mapingo-profile-info-tile">
-                <p className="mapingo-profile-info-label">{'\uD604\uC7AC \uB808\uBCA8'}</p>
-                <strong className="mapingo-profile-info-value">{`Lv. ${profileLevelNumber}`}</strong>
-                <p className="mapingo-profile-info-hint">
-                  {`\uB2E4\uC74C \uB808\uBCA8\uAE4C\uC9C0 ${nextLevelRemaining} EXP \uB0A8\uC558\uC5B4\uC694`}
-                </p>
-              </article>
-              <article className="mapingo-profile-info-tile">
-                <p className="mapingo-profile-info-label">{'\uB204\uC801 \uACBD\uD5D8\uCE58'}</p>
-                <strong className="mapingo-profile-info-value">{`${cumulativeExperience} EXP`}</strong>
-                <p className="mapingo-profile-info-hint">
-                  {'\uD559\uC2B5 \uC644\uB8CC\uC640 \uBC1C\uC74C \uB9AC\uBDF0\uB85C \uB204\uC801\uB418\uC5B4\uC694'}
-                </p>
-              </article>
-              <article className="mapingo-profile-info-tile">
-                <p className="mapingo-profile-info-label">{'\uCD1D \uD559\uC2B5 \uD69F\uC218'}</p>
-                <strong className="mapingo-profile-info-value">{`${totalStudyCount}\uD68C`}</strong>
-                <p className="mapingo-profile-info-hint">
-                  {'\uC9C0\uAE08\uAE4C\uC9C0 \uC644\uB8CC\uD55C \uD559\uC2B5 \uD69F\uC218\uC608\uC694'}
-                </p>
-              </article>
-              <article className="mapingo-profile-info-tile">
-                <p className="mapingo-profile-info-label">{'\uD68D\uB4DD \uBC30\uC9C0'}</p>
-                <strong className="mapingo-profile-info-value">{`${badgeCount}\uAC1C`}</strong>
-                <p className="mapingo-profile-info-hint">
-                  {'\uC9C0\uAE08\uAE4C\uC9C0 \uBAA8\uC740 \uBC30\uC9C0 \uAC1C\uC218\uC608\uC694'}
-                </p>
-              </article>
+            <div className="mapingo-profile-info-list">
+              {profileInfoItems.map((item) => (
+                <article key={item.key} className="mapingo-profile-info-row">
+                  <p className="mapingo-profile-info-label">{item.label}</p>
+                  {isEditing && item.editable ? (
+                    <input
+                      className="mapingo-input mapingo-profile-inline-input"
+                      type={item.type}
+                      value={form[item.key]}
+                      onChange={(event) => handleChange(item.key, event.target.value)}
+                      placeholder={`${item.label} 입력`}
+                    />
+                  ) : (
+                    <strong className="mapingo-profile-info-text">{item.value}</strong>
+                  )}
+                </article>
+              ))}
             </div>
           </article>
 
-          <div className="mapingo-profile-side-column">
-            <article className="mapingo-profile-side-card">
-              <h3>{'\uCD5C\uADFC \uD559\uC2B5'}</h3>
-              <p>
-                {latestLearning
-                  ? `${latestLearning.title} · ${'\uB9C8\uC9C0\uB9C9 \uD559\uC2B5'} ${latestLearning.meta} · ${'\uC774\uC5B4\uC11C \uD559\uC2B5 \uAC00\uB2A5'}`
-                  : '\uC544\uC9C1 \uCD5C\uADFC \uD559\uC2B5 \uAE30\uB85D\uC774 \uC5C6\uC5B4\uC694. \uCCAB \uD559\uC2B5\uC744 \uC2DC\uC791\uD574\uBCF4\uC138\uC694.'}
-              </p>
-            </article>
-
-            <article className="mapingo-profile-side-card mapingo-profile-badge-status-card">
+          <article className="mapingo-profile-side-card mapingo-profile-side-card-unified">
+            <div className="mapingo-profile-side-section">
               <div className="mapingo-profile-side-head">
-                <h3>{'\uBC30\uC9C0 \uD604\uD669'}</h3>
+                <div>
+                  <p className="mapingo-profile-kicker">Recent Places</p>
+                  <h3>최근 학습한 장소 리스트</h3>
+                </div>
               </div>
 
-              <div className="mapingo-profile-badge-status-list">
-                {badgePreviewList.map((badge) => (
-                  <div key={badge.id} className="mapingo-profile-badge-status-item">
-                    <div className="mapingo-profile-badge-status-media">
-                      <img
-                        src={badge.imageUrl}
-                        alt={badge.name}
-                        className="mapingo-profile-badge-status-image"
-                      />
-                    </div>
-                    <div className="mapingo-profile-badge-status-copy">
-                      <strong>{badge.name}</strong>
-                      <p>{getBadgeProgressCopy(badge)}</p>
-                    </div>
-                    <span
-                      className={`mapingo-profile-badge-status-pill is-${getBadgeTone(
-                        badge.status,
-                      )}`}
-                    >
-                      {getBadgeStatusLabel(badge.status)}
-                    </span>
+              <div className="mapingo-profile-learning-list">
+                {recentPlaceList.length > 0 ? (
+                  recentPlaceList.map((item) => (
+                    <article key={item.id} className="mapingo-profile-learning-item">
+                      <div className="mapingo-profile-learning-copy">
+                        <strong>{item.place}</strong>
+                        <p>{item.title}</p>
+                      </div>
+                      <span>{item.meta}</span>
+                    </article>
+                  ))
+                ) : (
+                  <div className="mapingo-profile-empty-state">
+                    <strong>아직 최근 학습 기록이 없어요.</strong>
+                    <p>첫 장소 학습을 시작하면 여기에 최근 학습한 장소가 표시됩니다.</p>
                   </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mapingo-profile-side-divider" />
+
+            <div className="mapingo-profile-side-section">
+              <div className="mapingo-profile-side-head">
+                <div>
+                  <p className="mapingo-profile-kicker">Current Goals</p>
+                  <h3>현재 진행중인 학습 목표</h3>
+                </div>
+              </div>
+
+              <div className="mapingo-profile-goal-list">
+                {currentGoalItems.map((goal) => (
+                  <article key={goal.title} className="mapingo-profile-goal-item">
+                    <strong>{goal.title}</strong>
+                    <p>{goal.value}</p>
+                    <span>{goal.description}</span>
+                  </article>
                 ))}
               </div>
-            </article>
-          </div>
-        </section>
-
-        <section className="mapingo-profile-growth-section" aria-labelledby="profile-growth-title">
-          <div className="mapingo-profile-growth-head">
-            <div>
-              <p className="mapingo-profile-info-label">Growth Analysis</p>
-              <h2 id="profile-growth-title">학습 기록 & 성장 분석</h2>
             </div>
-            <button type="button" className="mapingo-ghost-button" onClick={() => navigate('/growth')}>
-              {'성장 리포트'}
-            </button>
-          </div>
-
-          <div className="mapingo-profile-growth-grid">
-            {profileGrowthCards.map((card) => (
-              <button
-                key={card.title}
-                type="button"
-                className="mapingo-profile-growth-card"
-                onClick={() => navigate(card.path)}
-              >
-                <span>{card.title}</span>
-                <strong>{card.value}</strong>
-                <p>{card.description}</p>
-              </button>
-            ))}
-          </div>
+          </article>
         </section>
       </MapingoPageSection>
     </div>

@@ -44,19 +44,19 @@ function MapingoHeader({
           <NavButton active={currentPage === 'coaching'} onClick={() => onNavigate('coaching')}>
             AI 코칭
           </NavButton>
-          <NavButton active={currentPage === 'growth'} onClick={() => onNavigate('growth')}>
+          <NavButton active={currentPage === 'growth'} onClick={() => alert('성장 리포트 페이지는 현재 준비 중입니다.')}>
             성장 리포트
           </NavButton>
           <NavButton active={currentPage === 'community'} onClick={() => onNavigate('community')}>
             커뮤니티
           </NavButton>
-          <NavButton active={currentPage === 'support'} onClick={() => onNavigate('support')}>
+          <NavButton active={currentPage === 'support'} onClick={() => alert('고객지원 페이지는 현재 준비 중입니다.')}>
             고객지원
           </NavButton>
           <NavButton active={currentPage === 'premium'} onClick={() => onNavigate('premium')}>
             프리미엄
           </NavButton>
-          <NavButton active={currentPage === 'settings'} onClick={() => onNavigate('settings')}>
+          <NavButton active={currentPage === 'settings'} onClick={() => alert('환경설정 페이지는 현재 준비 중입니다.')}>
             환경설정
           </NavButton>
         </nav>

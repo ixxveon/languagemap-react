@@ -1,32 +1,10 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   MapingoMetricGrid,
   MapingoPageSection,
 } from "../../components/MapingoPageBlocks";
 import { useRanking } from "../../hooks/community/useRanking";
-
-const getResponseData = (response) => {
-  if (!response) return [];
-  if (Array.isArray(response)) return response;
-  if (Array.isArray(response.data)) return response.data;
-  return [];
-};
-
-const normalizeRanking = (item, index) => ({
-  id: item.id ?? item.userId ?? item.user_id ?? index + 1,
-  userId: item.userId ?? item.user_id,
-  name: item.name ?? item.userName ?? item.nickname ?? `USER ${item.userId ?? index + 1}`,
-  score: item.score ?? item.totalScore ?? item.weeklyScore ?? 0,
-  rank: item.rank ?? index + 1,
-});
-
-const normalizeFriendScore = (item, index) => ({
-  id: item.id ?? item.userId ?? item.user_id ?? index + 1,
-  name: item.name ?? item.userName ?? item.nickname ?? `USER ${item.userId ?? index + 1}`,
-  score: item.score ?? item.totalScore ?? item.weeklyScore ?? 0,
-  streak: item.streak ?? item.streakDays ?? 0,
-  focus: item.focus ?? item.goalText ?? item.learningGoal ?? '학습',
-});
 
 function CommunityRankingPage() {
   const navigate = useNavigate();
@@ -40,6 +18,22 @@ function CommunityRankingPage() {
     isLoading,
     errorMessage,
   } = useRanking();
+
+  const displayRankingList = useMemo(() => {
+    if (!myRanking) {
+      return rankingList;
+    }
+
+    const myItem = rankingList.find(
+      (item) => Number(item.userId) === Number(myRanking.userId),
+    );
+
+    if (!myItem) {
+      return rankingList;
+    }
+
+    return [myItem, ...rankingList.filter((item) => Number(item.userId) !== Number(myRanking.userId))];
+  }, [myRanking, rankingList]);
 
   return (
     <div className="mapingo-dashboard">
@@ -100,7 +94,7 @@ function CommunityRankingPage() {
                   >
                     <div>
                       <strong>{friend.name}</strong>
-                      <p>{`${friend.focus} 집중 중 · ${friend.streak}일 연속 학습`}</p>
+                      <p>이번 주 학습 점수</p>
                     </div>
                     <span className="mapingo-list-meta">{friend.score}점</span>
                   </article>
@@ -131,18 +125,17 @@ function CommunityRankingPage() {
               </div>
 
               <div className="mapingo-selectable-list">
-                {rankingList.map((item) => (
+                {displayRankingList.map((item) => (
                   <article
                     key={item.id}
-                    className={`mapingo-select-item mapingo-static-card ${myRanking && item.userId === myRanking.userId
-                        ? "is-active"
-                        : ""
-                      }`}
+                    className={`mapingo-select-item mapingo-static-card ${
+                      myRanking && Number(item.userId) === Number(myRanking.userId) ? "is-active" : ""
+                    }`}
                   >
                     <div>
                       <strong>{`${item.rank}위 · ${item.name}`}</strong>
                       <p>
-                        {myRanking && item.userId === myRanking.userId
+                        {myRanking && Number(item.userId) === Number(myRanking.userId)
                           ? "현재 내 위치"
                           : "이번 주 누적 학습 점수"}
                       </p>
@@ -151,7 +144,7 @@ function CommunityRankingPage() {
                   </article>
                 ))}
 
-                {rankingList.length === 0 ? (
+                {displayRankingList.length === 0 ? (
                   <div className="admin-content-empty-state">
                     주간 랭킹 정보가 없습니다.
                   </div>

@@ -122,7 +122,7 @@ function CoachingPage() {
     return (
       <div className="coaching-page">
         <CoachingAccessDenied
-          onGoMap={() => navigate('/mapingo')}
+          onGoMap={() => navigate('/map')}
           onGoPremium={() => navigate('/premium/plans')}
         />
       </div>

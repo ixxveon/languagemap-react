@@ -57,7 +57,7 @@ function normalizePreviousMessages(messages = []) {
 
 function CoachingChatSection({
   summary,
-  modes,
+  modes = [],
   phase,
   selectedModeId,
   onSelectMode,
@@ -75,9 +75,13 @@ function CoachingChatSection({
 
   const chatLogRef = useRef(null);
 
-  const learnerName = summary.name ?? summary.userName ?? '학습자';
-  const placeName = summary.placeName ?? summary.mapArea?.title ?? '방금 학습한 장소';
-  const learningSessionId = summary.sessionId ?? summary.learningSessionId ?? null;
+  const safeSummary = summary ?? {};
+  const safeMapArea = safeSummary.mapArea ?? {};
+  const safePreviousEvaluation = safeSummary.previousEvaluation ?? {};
+
+  const learnerName = safeSummary.name ?? safeSummary.userName ?? '학습자';
+  const placeName = safeSummary.placeName ?? safeMapArea.title ?? '방금 학습한 장소';
+  const learningSessionId = safeSummary.sessionId ?? safeSummary.learningSessionId ?? null;
 
   const modeReplies = useMemo(
     () => modes.map((mode) => ({ id: mode.id, label: mode.label, modeId: mode.id })),
@@ -166,22 +170,22 @@ AI Coach랑 조금 더 재밌게 이어서 대화해봐요~ 히히
       });
 
       const previousMessages = (
-        summary.sessionMessages?.length
-          ? normalizePreviousMessages(summary.sessionMessages)
-          : normalizePreviousMessages(summary.mapArea?.conversationLog)
+        safeSummary.sessionMessages?.length
+          ? normalizePreviousMessages(safeSummary.sessionMessages)
+          : normalizePreviousMessages(safeMapArea.conversationLog)
       ).slice(-4);
 
       const scriptResponse = await coachingService.prepareCoachingScript({
         sessionId: learningSessionId,
         optionType,
-        placeName: summary.placeName ?? summary.mapArea?.title ?? '',
-        country: summary.country ?? '',
-        city: summary.city ?? '',
-        placeAddress: summary.placeAddress ?? summary.mapArea?.address ?? '',
+        placeName: safeSummary.placeName ?? safeMapArea.title ?? '',
+        country: safeSummary.country ?? '',
+        city: safeSummary.city ?? '',
+        placeAddress: safeSummary.placeAddress ?? safeMapArea.address ?? '',
         evaluation:
-          typeof summary.evaluation === 'string'
-            ? summary.evaluation
-            : summary.previousEvaluation?.content ?? '',
+          typeof safeSummary.evaluation === 'string'
+            ? safeSummary.evaluation
+            : safePreviousEvaluation.content ?? '',
         previousMessages,
       });
 

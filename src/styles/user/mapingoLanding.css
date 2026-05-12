@@ -5371,16 +5371,29 @@
 }
 
 .mapingo-profile-card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  align-items: start;
   gap: 18px;
+}
+
+.mapingo-profile-action-group {
+  display: flex;
+  align-items: start;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 220px;
+  min-width: 220px;
+  flex-shrink: 0;
+  align-self: start;
 }
 
 .mapingo-profile-identity {
   display: flex;
   align-items: center;
   gap: 18px;
+  min-width: 0;
 }
 
 .mapingo-profile-level-pill {
@@ -5438,6 +5451,16 @@
 .mapingo-profile-identity-copy {
   display: grid;
   gap: 8px;
+  min-width: 0;
+}
+
+.mapingo-profile-kicker {
+  margin: 0;
+  color: #0f766e;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .mapingo-profile-identity-copy h2 {
@@ -5453,123 +5476,175 @@
   color: #5f7084;
 }
 
-.mapingo-profile-badge-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  min-height: 34px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: #ede9fe;
-  color: #7c3aed;
-  font-size: 0.9rem;
-  font-weight: 700;
+.mapingo-profile-level-summary {
+  display: grid;
+  gap: 10px;
+  width: min(100%, 430px);
+  margin-top: 8px;
 }
 
-.mapingo-profile-progress {
-  width: min(100%, 320px);
+.mapingo-profile-level-summary-head,
+.mapingo-profile-level-summary-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.mapingo-profile-level-summary-head span,
+.mapingo-profile-level-summary-foot span {
+  color: #64748b;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.mapingo-profile-level-summary-head span {
+  color: #0f766e;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mapingo-profile-level-summary-head strong,
+.mapingo-profile-level-summary-foot strong {
+  color: #0f5c60;
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.mapingo-profile-level-progress {
+  width: 100%;
   height: 12px;
   border-radius: 999px;
-  background: #e7ebf3;
   overflow: hidden;
+  background: #dff3ef;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
-.mapingo-profile-progress-fill {
+.mapingo-profile-level-progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #8b5cf6 0%, #b794f6 100%);
+  background: linear-gradient(90deg, #18a89f 0%, #1fb8ad 100%);
+  box-shadow: 0 6px 16px rgba(31, 184, 173, 0.24);
 }
 
-.mapingo-profile-identity-copy small {
-  color: #708195;
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-.mapingo-profile-info-grid {
+.mapingo-profile-info-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   margin-top: 24px;
 }
 
-.mapingo-profile-info-tile {
-  padding: 20px;
+.mapingo-profile-info-row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  min-height: 78px;
+  padding: 18px 20px;
   border-radius: 20px;
   background: #f5fcfb;
-}
-
-.mapingo-profile-info-tile strong {
-  display: block;
-  color: #0f5c60;
-  font-size: 1rem;
-}
-
-.mapingo-profile-info-tile p {
-  margin: 10px 0 0;
-  color: #4f6475;
-  line-height: 1.6;
+  border: 1px solid #dcefeb;
+  box-sizing: border-box;
 }
 
 .mapingo-profile-info-label {
   margin: 0;
   color: #64748b;
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.4;
 }
 
-.mapingo-profile-info-value {
+.mapingo-profile-info-text {
   display: block;
-  margin-top: 8px;
+  margin: 0;
   color: #0f5c60;
-  font-size: 2rem;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  font-size: 1rem;
+  line-height: 1.5;
+  letter-spacing: -0.015em;
+  word-break: break-word;
 }
 
-.mapingo-profile-info-hint {
-  margin: 12px 0 0;
-  color: #5f7477;
-  font-size: 0.95rem;
-  line-height: 1.55;
+.mapingo-profile-inline-input {
+  width: 100%;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border-color: #cfe7e2;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f5c60;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 40px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-sizing: border-box;
 }
 
-.mapingo-profile-side-column {
+.mapingo-profile-inline-input::placeholder {
+  color: #8ca0ad;
+  font-weight: 500;
+}
+
+.mapingo-danger-button {
+  border-color: #f3c4c4;
+  background: #fff5f5;
+  color: #c24141;
+}
+
+.mapingo-danger-button:hover {
+  background: #ffe9e9;
+  color: #b42318;
+}
+
+.mapingo-profile-cancel-button {
+  margin-left: auto;
+}
+
+.mapingo-profile-action-group.is-editing {
   display: grid;
-  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(44px, auto);
+  align-items: start;
+}
+
+.mapingo-profile-action-group.is-editing .mapingo-profile-cancel-button {
+  grid-column: 2;
 }
 
 .mapingo-profile-side-card {
   padding: 28px;
 }
 
+.mapingo-profile-side-card-unified {
+  display: grid;
+  align-content: start;
+  gap: 24px;
+}
+
+.mapingo-profile-side-section {
+  display: grid;
+  gap: 16px;
+}
+
+.mapingo-profile-side-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(203, 238, 233, 0),
+    rgba(203, 238, 233, 1),
+    rgba(203, 238, 233, 0)
+  );
+}
+
 .mapingo-profile-side-card h3 {
   margin: 0;
   color: #0f5c60;
-  font-size: 2rem;
-  line-height: 1.08;
+  font-size: 1.6rem;
+  line-height: 1.14;
   letter-spacing: -0.04em;
-}
-
-.mapingo-profile-side-card p {
-  margin: 18px 0 0;
-  color: #5f7084;
-  font-size: 1.02rem;
-  line-height: 1.72;
-}
-
-.mapingo-profile-side-card.is-linkable {
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.mapingo-profile-side-card.is-linkable:hover,
-.mapingo-profile-side-card.is-linkable:focus-visible {
-  transform: translateY(-2px);
-  border-color: #8fded3;
-  box-shadow: 0 20px 36px rgba(21, 94, 99, 0.1);
 }
 
 .mapingo-profile-side-head {
@@ -5579,172 +5654,62 @@
   gap: 12px;
 }
 
-.mapingo-profile-side-head span {
-  color: #6b7d90;
-  font-size: 1.3rem;
-  font-weight: 700;
-}
-
-.mapingo-profile-badge-status-card {
+.mapingo-profile-learning-list,
+.mapingo-profile-goal-list {
   display: grid;
-  gap: 18px;
-  cursor: default;
+  gap: 12px;
 }
 
-.mapingo-profile-badge-status-list {
-  display: grid;
-  gap: 14px;
-}
-
-.mapingo-profile-badge-status-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px 18px;
-  border: 1px solid #d8eeea;
+.mapingo-profile-learning-item,
+.mapingo-profile-goal-item,
+.mapingo-profile-empty-state {
+  padding: 18px 20px;
   border-radius: 20px;
-  background: #ffffff;
+  border: 1px solid #d8eeea;
+  background: #f8fffe;
 }
 
-.mapingo-profile-badge-status-media {
-  width: 88px;
-  height: 88px;
-  flex-shrink: 0;
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+.mapingo-profile-learning-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
 }
 
-.mapingo-profile-badge-status-image {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: contain;
-  object-position: center;
-  filter: drop-shadow(0 10px 18px rgba(15, 118, 110, 0.12));
-}
-
-.mapingo-profile-badge-status-copy {
-  flex: 1;
+.mapingo-profile-learning-copy {
   min-width: 0;
+  display: grid;
+  gap: 6px;
 }
 
-.mapingo-profile-badge-status-copy strong {
-  display: block;
+.mapingo-profile-learning-copy strong,
+.mapingo-profile-goal-item strong,
+.mapingo-profile-empty-state strong {
   color: #0f5c60;
-  font-size: 1.02rem;
+  font-size: 1rem;
   line-height: 1.35;
 }
 
-.mapingo-profile-badge-status-copy p {
-  margin: 6px 0 0;
-  color: #5f7084;
-  font-size: 0.9rem;
-  line-height: 1.55;
-}
-
-.mapingo-profile-badge-status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  min-height: 34px;
-  padding: 0 14px;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.mapingo-profile-badge-status-pill.is-success {
-  background: #eafbf6;
-  color: #0f8a60;
-}
-
-.mapingo-profile-badge-status-pill.is-info {
-  background: #eef6ff;
-  color: #2f6bdb;
-}
-
-.mapingo-profile-badge-status-pill.is-muted {
-  background: #f3f5f7;
-  color: #6b7280;
-}
-
-.mapingo-profile-growth-section {
-  display: grid;
-  gap: 18px;
-  margin-top: 22px;
-  padding: 26px;
-  border: 1px solid #cbeee9;
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 16px 32px rgba(21, 94, 99, 0.08);
-}
-
-.mapingo-profile-growth-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.mapingo-profile-growth-head h2 {
-  margin: 8px 0 0;
-  color: #0f5c60;
-  font-size: 1.8rem;
-  line-height: 1.12;
-  letter-spacing: 0;
-}
-
-.mapingo-profile-growth-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.mapingo-profile-growth-card {
-  min-height: 178px;
-  display: grid;
-  align-content: start;
-  gap: 10px;
-  padding: 20px;
-  border: 1px solid #d8eeea;
-  border-radius: 20px;
-  background: #f5fcfb;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.mapingo-profile-growth-card:hover,
-.mapingo-profile-growth-card:focus-visible {
-  transform: translateY(-2px);
-  border-color: #8fded3;
-  box-shadow: 0 18px 28px rgba(21, 94, 99, 0.1);
-  outline: none;
-}
-
-.mapingo-profile-growth-card span {
-  color: #64748b;
-  font-size: 0.86rem;
-  font-weight: 800;
-}
-
-.mapingo-profile-growth-card strong {
-  color: #0f5c60;
-  font-size: 1.35rem;
-  line-height: 1.25;
-}
-
-.mapingo-profile-growth-card p {
+.mapingo-profile-learning-copy p,
+.mapingo-profile-goal-item p,
+.mapingo-profile-empty-state p {
   margin: 0;
   color: #5f7084;
-  font-size: 0.95rem;
-  line-height: 1.62;
+  font-size: 0.94rem;
+  line-height: 1.6;
+}
+
+.mapingo-profile-learning-item span,
+.mapingo-profile-goal-item span {
+  color: #6c8090;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.mapingo-profile-goal-item {
+  display: grid;
+  gap: 6px;
 }
 
 .mapingo-friend-layout {

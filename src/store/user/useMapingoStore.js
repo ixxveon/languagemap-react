@@ -192,6 +192,22 @@ export const useMapingoStore = create(
         })),
       setProfileName: (profileName) => set({ profileName }),
       setProfileNickname: (profileNickname) => set({ profileNickname }),
+      updateProfileDetails: (profile) =>
+        set((state) => {
+          const currentUser = state.session?.user ?? {};
+          const nextUser = {
+            ...currentUser,
+            ...profile,
+          };
+
+          return {
+            profileName: nextUser.name ?? state.profileName,
+            session: {
+              ...state.session,
+              user: nextUser,
+            },
+          };
+        }),
       setCurrentLevel: ({ id, label }) => set({ currentLevelId: id, currentLevel: label }),
       setWeeklyGoalCompleted: (weeklyGoalCompleted) => set({ weeklyGoalCompleted }),
       setBadgeCount: (badgeCount) => set({ badgeCount }),

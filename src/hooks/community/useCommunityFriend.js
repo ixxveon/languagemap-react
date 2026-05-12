@@ -15,6 +15,14 @@ const getResponseData = (response) => {
 const getUserFallbackName = (userId) =>
     userId ? `사용자 #${userId}` : '알 수 없는 사용자';
 
+const getApiErrorMessage = (error, fallbackMessage) => {
+    return (
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        fallbackMessage
+    );
+};
+
 const normalizeRelation = (row) => {
     const requesterId = row.requester_id ?? row.requesterId;
     const addresseeId = row.addressee_id ?? row.addresseeId;
@@ -309,7 +317,9 @@ export function useCommunityFriends() {
             );
         } catch (error) {
             console.error(error);
-            setFeedbackMessage('친구 요청에 실패했어요.');
+            setFeedbackMessage(
+                getApiErrorMessage(error, '친구 요청에 실패했어요.')
+            );
         }
     };
 
@@ -346,7 +356,9 @@ export function useCommunityFriends() {
             setInviteQuery('');
         } catch (error) {
             console.error(error);
-            setFeedbackMessage('친구 요청에 실패했어요.');
+            setFeedbackMessage(
+                getApiErrorMessage(error, '친구 요청에 실패했어요.')
+            );
         }
     };
 
