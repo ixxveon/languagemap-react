@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MapingoMetricGrid, MapingoPageSection } from '../../components/MapingoPageBlocks';
-import { adminService } from '../../api/admin/adminService';
+import { adminUserService } from '../../api/admin/user/adminUserService';
 
 const statusClassMap = {
   정상: 'is-active',
@@ -12,80 +13,75 @@ const statusClassMap = {
 const roleOptions = ['일반 회원', '관리자'];
 const statusOptions = ['정상', '정지', '탈퇴'];
 
-function normalizeStatus(status) {
-  if (status === '정지' || status === '탈퇴') return status;
+function normalizeStatusFromDB(status) {
+  if (status === 'SUSPENDED') return '정지';
+  if (status === 'DELETED') return '탈퇴';
   return '정상';
 }
 
+function statusToDBValue(status) {
+  if (status === '정지') return 'SUSPENDED';
+  if (status === '탈퇴') return 'DELETED';
+  return 'ACTIVE';
+}
+
 function normalizeRole(role) {
-  return String(role).includes('관리') ? '관리자' : '일반 회원';
+  return String(role).includes('ADMIN') ? '관리자' : '일반 회원';
 }
-
-function buildInitialMembers() {
-  return adminService.fetchAdminMembers().map((member, index) => ({
-    ...member,
-    status: normalizeStatus(member.status),
-    role: normalizeRole(member.role),
-    paymentStatus: member.plan === 'Premium' ? '결제 완료' : '무료 이용',
-    reportHistory:
-      index === 2
-        ? [
-            {
-              id: 1,
-              reason: member.reviewReason || '신고 내역 확인 필요',
-              status: '처리 대기',
-              createdAt: '2026-04-24',
-            },
-          ]
-        : [],
-    learningHistory: [
-      {
-        id: 1,
-        label: member.goal || '학습 목표 없음',
-        meta: `${member.studyCount ?? 0}회 학습 · 연속 ${member.streakDays ?? 0}일`,
-      },
-      {
-        id: 2,
-        label: '최근 활동',
-        meta: member.lastActive || '-',
-      },
-    ],
-  }));
-}
-
-function includesNameOrEmail(member, query) {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) return true;
-  return [member.name, member.email].join(' ').toLowerCase().includes(normalizedQuery);
-}
-
-const initialMemberSeeds = buildInitialMembers();
 
 function AdminMembersPage() {
   const navigate = useNavigate();
-  const [members, setMembers] = useState(() => initialMemberSeeds);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMemberId, setSelectedMemberId] = useState(() => initialMemberSeeds[0]?.id ?? null);
-  const [memberDraft, setMemberDraft] = useState(() => ({
-    status: initialMemberSeeds[0]?.status ?? '',
-    role: initialMemberSeeds[0]?.role ?? '',
-  }));
+  const [selectedMemberId, setSelectedMemberId] = useState(null);
+  const [memberDraft, setMemberDraft] = useState({ status: '', role: '' });
 
-  const filteredMembers = useMemo(
-    () => members.filter((member) => includesNameOrEmail(member, searchTerm)),
-    [members, searchTerm],
-  );
+  // DB에서 회원 목록 조회
+  const { data: members = [] } = useQuery({
+    queryKey: ['adminUsers', searchTerm],
+    queryFn: async () => {
+      const result = await adminUserService.getAdminUsers(searchTerm || null);
+      return result.map((user) => ({
+        id: user.userId,
+        name: user.name,
+        email: user.email,
+        status: normalizeStatusFromDB(user.status),
+        role: normalizeRole(user.role),
+        paymentStatus: '확인 필요',
+        joinedAt: user.createdAt?.slice(0, 10) ?? '-',
+        lastActive: '-',
+        studyCount: 0,
+        streakDays: 0,
+        goal: '-',
+        plan: '-',
+        reportHistory: [],
+        learningHistory: [],
+        phoneNumber: user.phoneNumber ?? '미등록',
+        address: user.address ?? '미등록',        
+        birthDate: user.birthDate ?? '미등록',    
+      }));
+    },
+  });
+
+  // 회원 상태 변경
+  const { mutate: updateStatus } = useMutation({
+    mutationFn: ({ userId, status }) =>
+      adminUserService.updateAdminUserStatus(userId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      alert('상태가 변경되었습니다.');
+    },
+    onError: () => {
+      alert('상태 변경에 실패했습니다.');
+    },
+  });
+
+  const filteredMembers = members;
 
   const selectedMember = useMemo(
     () => members.find((member) => member.id === selectedMemberId) ?? null,
     [members, selectedMemberId],
   );
-
-  const updateMember = (memberId, updates) => {
-    setMembers((currentMembers) =>
-      currentMembers.map((member) => (member.id === memberId ? { ...member, ...updates } : member)),
-    );
-  };
 
   const handleSelectMember = (member) => {
     setSelectedMemberId(member.id);
@@ -97,7 +93,10 @@ function AdminMembersPage() {
 
   const handleSaveSelectedMember = () => {
     if (!selectedMember) return;
-    updateMember(selectedMember.id, memberDraft);
+    updateStatus({
+      userId: selectedMember.id,
+      status: statusToDBValue(memberDraft.status),
+    });
   };
 
   const handleCloseSelectedMember = () => {
@@ -126,8 +125,8 @@ function AdminMembersPage() {
           items={[
             { label: '전체 회원', value: String(members.length), hint: '등록된 회원 수' },
             { label: '정상 회원', value: String(normalMembers), hint: '정상 이용 가능' },
-            { label: '정지 회원', value: String(suspendedMembers), hint: '관리자 정지 처리' },
-            { label: '관리자', value: String(adminMembers), hint: `탈퇴 ${withdrawnMembers}명` },
+            { label: '정지 회원', value: String(suspendedMembers), hint: `탈퇴 ${withdrawnMembers}명` },
+            { label: '관리자', value: String(adminMembers), },
           ]}
         />
       </MapingoPageSection>
@@ -199,7 +198,11 @@ function AdminMembersPage() {
                   {member.lastActive}
                 </p>
                 <div role="cell" className="admin-member-actions">
-                  <button type="button" className="mapingo-submit-button" onClick={() => handleSelectMember(member)}>
+                  <button
+                    type="button"
+                    className="mapingo-submit-button"
+                    onClick={() => handleSelectMember(member)}
+                  >
                     상세 조회
                   </button>
                 </div>
@@ -227,19 +230,16 @@ function AdminMembersPage() {
 
             <div className="admin-member-detail-grid">
               <article className="admin-member-detail-card">
-                <p className="mapingo-field-label">학습 기록</p>
-                <strong>{`${selectedMember.studyCount ?? 0}회 학습`}</strong>
-                <span>{`연속 ${selectedMember.streakDays ?? 0}일 · ${selectedMember.goal || '-'}`}</span>
+                <p className="mapingo-field-label">생년월일</p>
+                <strong>{selectedMember.birthDate ?? '미등록'}</strong>
               </article>
               <article className="admin-member-detail-card">
-                <p className="mapingo-field-label">결제 상태</p>
-                <strong>{selectedMember.paymentStatus}</strong>
-                <span>{selectedMember.plan}</span>
+                <p className="mapingo-field-label">전화번호</p>
+                <strong>{selectedMember.phoneNumber ?? '미등록'}</strong>
               </article>
               <article className="admin-member-detail-card">
-                <p className="mapingo-field-label">신고 내역</p>
-                <strong>{`${selectedMember.reportHistory.length}건`}</strong>
-                <span>{selectedMember.reportHistory[0]?.reason ?? '신고 내역 없음'}</span>
+                <p className="mapingo-field-label">주소</p>
+                <strong>{selectedMember.address ?? '미등록'}</strong>
               </article>
             </div>
 
@@ -249,7 +249,9 @@ function AdminMembersPage() {
                 <select
                   className="mapingo-input"
                   value={memberDraft.status}
-                  onChange={(event) => setMemberDraft((current) => ({ ...current, status: event.target.value }))}
+                  onChange={(event) =>
+                    setMemberDraft((current) => ({ ...current, status: event.target.value }))
+                  }
                 >
                   {statusOptions.map((status) => (
                     <option key={status} value={status}>
@@ -258,51 +260,26 @@ function AdminMembersPage() {
                   ))}
                 </select>
               </label>
-              <label className="mapingo-field">
-                <span className="mapingo-field-label">권한 변경</span>
-                <select
-                  className="mapingo-input"
-                  value={memberDraft.role}
-                  onChange={(event) => setMemberDraft((current) => ({ ...current, role: event.target.value }))}
-                >
-                  {roleOptions.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
-              </label>
             </div>
 
             <div className="admin-member-detail-actions">
-              <button type="button" className="mapingo-submit-button" onClick={handleSaveSelectedMember}>
+              <button
+                type="button"
+                className="mapingo-submit-button"
+                onClick={handleSaveSelectedMember}
+              >
                 저장
               </button>
-              <button type="button" className="mapingo-ghost-button" onClick={handleCloseSelectedMember}>
+              <button
+                type="button"
+                className="mapingo-ghost-button"
+                onClick={handleCloseSelectedMember}
+              >
                 닫기
               </button>
             </div>
 
             <div className="admin-entity-stack">
-              <section className="admin-entity-section">
-                <div className="admin-entity-head">
-                  <strong>학습 기록</strong>
-                  <span>{selectedMember.learningHistory.length}개</span>
-                </div>
-                <div className="mapingo-selectable-list">
-                  {selectedMember.learningHistory.map((history) => (
-                    <article key={history.id} className="mapingo-post-card admin-content-card">
-                      <div className="mapingo-admin-item-head">
-                        <div>
-                          <strong>{history.label}</strong>
-                          <p>{history.meta}</p>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </section>
-
               <section className="admin-entity-section">
                 <div className="admin-entity-head">
                   <strong>신고 내역</strong>
