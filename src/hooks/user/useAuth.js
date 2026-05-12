@@ -143,6 +143,9 @@ const exchangeOauthCode = async (code) => {
                     name: user.name,
                     role: user.role.toLowerCase(),
                     status: user.status,
+                    birthDate: user.birthDate,      
+                    address: user.address,          
+                    phoneNumber: user.phoneNumber,  
                     provider: 'local',
                 },
             });
