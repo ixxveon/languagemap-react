@@ -33,6 +33,7 @@ function RouteMap({
   onCompleteMission,
   remainingChatCount,
   chatLimit,
+  missionActionLoading,
 }) {
   const chatLogRef = useRef(null);
 
@@ -132,6 +133,7 @@ function RouteMap({
             completedMissionIds={completedMissionIds}
             onStartMission={onStartMission}
             onCompleteMission={onCompleteMission}
+            missionActionLoading={missionActionLoading}
           />
         </div>
       </div>

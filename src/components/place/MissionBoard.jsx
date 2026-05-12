@@ -6,6 +6,7 @@ function MissionBoard({
     completedMissionIds,
     onStartMission,
     onCompleteMission,
+    missionActionLoading = null,
 }) {
 
     return (
@@ -18,10 +19,27 @@ function MissionBoard({
             <div className="map-domain-mission-list">
                 {(selectedPlace?.missions ?? []).length > 0 ? (
                     selectedPlace.missions.map((mission, index) => {
+                        const isLoading =
+                            Number(missionActionLoading?.missionId) === Number(mission.id);
+
+                        const isStartLoading =
+                            isLoading && missionActionLoading?.type === 'start';
+
+                        const isCompleteLoading =
+                            isLoading && missionActionLoading?.type === 'complete';
+
                         const isCompleted = completedMissionIds
                             .map(Number)
                             .includes(Number(mission.id));
+
                         const isRunning = Number(activeMissionId) === Number(mission.id);
+
+                        const hasActiveMission =
+                            activeMissionId !== null && activeMissionId !== undefined;
+
+                        const isAnotherMissionRunning =
+                            hasActiveMission && !isRunning;
+
                         const hasLearningSession = !!learningSession;
 
                         return (
@@ -37,6 +55,11 @@ function MissionBoard({
                                         type="button"
                                         className="map-domain-mission-button"
                                         onClick={() => {
+                                            if (isAnotherMissionRunning) {
+                                                alert('진행중인 미션을 종료한 뒤 새로운 미션을 시작해주세요.');
+                                                return;
+                                            }
+
                                             if (isRunning) {
                                                 onCompleteMission(mission.id);
                                                 return;
@@ -44,13 +67,20 @@ function MissionBoard({
 
                                             onStartMission(mission.id);
                                         }}
-                                        disabled={isCompleted}
+                                        disabled={
+                                            isCompleted ||
+                                            missionActionLoading !== null
+                                        }
                                     >
                                         {isCompleted
                                             ? '완료됨'
-                                            : isRunning
-                                                ? '미션 종료'
-                                                : '미션 시작'}
+                                            : isStartLoading
+                                                ? '미션 시작하는중...'
+                                                : isCompleteLoading
+                                                    ? '미션 종료하는중...'
+                                                    : isRunning
+                                                        ? '미션 종료'
+                                                        : '미션 시작'}
                                     </button>
                                 )}
                             </article>
@@ -68,9 +98,3 @@ function MissionBoard({
 }
 
 export default MissionBoard;
-
-
-
-
-
-

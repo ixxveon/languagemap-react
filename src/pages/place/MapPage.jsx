@@ -79,6 +79,7 @@ function MapPage() {
   const [activeRegionId, setActiveRegionId] = useState(null);
   const USER_CHAT_LIMIT = 10;
   const hasKorean = (text) => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text);
+  const [missionActionLoading, setMissionActionLoading] = useState(null);
 
   useEffect(() => {
     const loadPlaceMarkers = async () => {
@@ -347,6 +348,11 @@ function MapPage() {
     }
 
     try {
+      setMissionActionLoading({
+        type: 'start',
+        missionId: Number(missionId),
+      });
+
       const response = await placeService.startMissionSession(
         learningSession.learningSessionId,
         missionId,
@@ -371,6 +377,7 @@ function MapPage() {
       setPanelMode('chat');
       setChatInput('');
       setChatCompleted(false);
+
       const nextChatLog = [...chatLog, aiMessage];
 
       setChatLog(nextChatLog);
@@ -379,6 +386,8 @@ function MapPage() {
     } catch (error) {
       console.error('미션 세션 시작 실패:', error);
       alert('미션을 시작하지 못했습니다.');
+    } finally {
+      setMissionActionLoading(null);
     }
   };
 
@@ -475,6 +484,11 @@ function MapPage() {
     }
 
     try {
+      setMissionActionLoading({
+        type: 'complete',
+        missionId: Number(activeMissionId),
+      });
+
       const response = await placeService.completeMissionSession(
         learningSession.learningSessionId,
         activeMissionId,
@@ -526,6 +540,8 @@ function MapPage() {
     } catch (error) {
       console.error('미션 완료 실패:', error);
       alert('미션 완료 처리에 실패했습니다.');
+    } finally {
+      setMissionActionLoading(null);
     }
   };
 
@@ -586,6 +602,7 @@ function MapPage() {
           onCompleteMission={handleCompleteMission}
           remainingChatCount={remainingChatCount}
           chatLimit={USER_CHAT_LIMIT}
+          missionActionLoading={missionActionLoading}
         />
       </section>
     </div>
