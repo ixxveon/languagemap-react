@@ -66,6 +66,8 @@ function MapPage() {
   const session = useMapingoStore((state) => state.session);
   const selectedPlaceId = useMapingoStore((state) => state.selectedRouteId);
   const setSelectedPlaceId = useMapingoStore((state) => state.setSelectedRouteId);
+  const favoriteRouteIds = useMapingoStore((state) => state.favoriteRouteIds);
+  const toggleFavoriteRoute = useMapingoStore((state) => state.toggleFavoriteRoute);
   const setRecentMapChatLog = useMapingoStore((state) => state.setRecentMapChatLog);
   const setRecentMapLearningSummary = useMapingoStore((state) => state.setRecentMapLearningSummary);
   const [panelVisible, setPanelVisible] = useState(false);
@@ -192,6 +194,9 @@ function MapPage() {
   }, [activeRegionId, places]);
 
   const selectedPlace = selectedPlaceDetail;
+  const selectedPlaceFavoriteId = selectedPlace ? String(selectedPlace.id) : '';
+  const isSelectedPlaceFavorite =
+    selectedPlaceFavoriteId !== '' && favoriteRouteIds.includes(selectedPlaceFavoriteId);
 
   const learningSession = selectedPlace?.id
     ? learningSessionMap[selectedPlace.id]
@@ -549,6 +554,14 @@ function MapPage() {
     setPanelMode(selectedPlace ? 'detail' : 'guide');
   };
 
+  const handleToggleFavoritePlace = () => {
+    if (!selectedPlaceFavoriteId) {
+      return;
+    }
+
+    toggleFavoriteRoute(selectedPlaceFavoriteId);
+  };
+
   return (
     <div className="map-domain-page">
       <section className="map-domain-shell">
@@ -571,6 +584,8 @@ function MapPage() {
           onClosePanel={() => handleSelectPlace(null)}
           onStartLearning={handleStartLearning}
           onBackToDetail={handleBackToDetail}
+          onToggleFavoritePlace={handleToggleFavoritePlace}
+          isSelectedPlaceFavorite={isSelectedPlaceFavorite}
           onOpenCoaching={() => {
             const sessionId = learningSession?.learningSessionId;
 

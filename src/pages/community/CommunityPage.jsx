@@ -40,6 +40,12 @@ const communityEntryCards = [
   },
 ];
 
+const starterMessages = [
+  '오늘 영어 회화 루틴 같이 할 사람?',
+  '여행 표현 연습할 분 있나요?',
+  '방금 배운 문장 같이 복습해요.',
+];
+
 function CommunityPage() {
   const navigate = useNavigate();
   const chatLogRef = useRef(null);
@@ -126,6 +132,20 @@ function CommunityPage() {
                     </div>
                   ))
                 )}
+              </div>
+
+              <div className="community-live-chat-suggestions">
+                {starterMessages.map((message) => (
+                  <button
+                    key={message}
+                    type="button"
+                    className="community-live-chat-chip"
+                    onClick={() => sendMessage(message)}
+                    disabled={!canSend}
+                  >
+                    {message}
+                  </button>
+                ))}
               </div>
 
               <div className="community-live-chat-composer">

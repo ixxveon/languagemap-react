@@ -4,13 +4,12 @@ import { MapingoPageSection } from '../../components/MapingoPageBlocks';
 import PingPopCharacterImage from '../../components/user/PingPopCharacterImage';
 import { useMapingoStore } from '../../store/user/useMapingoStore';
 import { placeService } from '../../api/place/placeService';
+import { userService } from '../../api/user/userService';
+import { paymentService } from '../../api/user/paymentService';
+import { useQuery } from '@tanstack/react-query';
 
 function formatRoleLabel(role) {
   return role === 'admin' ? '관리자' : '일반 사용자';
-}
-
-function formatPlanLabel(plan) {
-  return plan === 'Premium' ? 'Premium' : 'Basic';
 }
 
 function formatBirthDate(value) {
@@ -102,6 +101,7 @@ function buildProfileForm(profileName, profileEmail, user) {
 function ProfilePage() {
   const navigate = useNavigate();
   const session = useMapingoStore((state) => state.session);
+  const setSession = useMapingoStore((state) => state.setSession);
   const profileName = useMapingoStore((state) => state.profileName);
   const currentLevelId = useMapingoStore((state) => state.currentLevelId);
   const recentLearning = useMapingoStore((state) => state.recentLearning);
@@ -110,7 +110,6 @@ function ProfilePage() {
   const streakDays = useMapingoStore((state) => state.streakDays);
   const pronunciationScore = useMapingoStore((state) => state.pronunciationScore);
   const badgeCount = useMapingoStore((state) => state.badgeCount);
-  const subscriptionPlan = useMapingoStore((state) => state.subscriptionPlan);
   const updateProfileDetails = useMapingoStore((state) => state.updateProfileDetails);
   const clearSession = useMapingoStore((state) => state.clearSession);
   const [recentLearningPlaces, setRecentLearningPlaces] = useState([]);
@@ -125,6 +124,47 @@ function ProfilePage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState(() => buildProfileForm(profileName, profileEmail, user));
+
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const dbUser = await userService.getMe();
+        setSession({
+          ...session,
+          user: {
+            ...session.user,
+            name: dbUser.name,
+            email: dbUser.email,
+            birthDate: dbUser.birthDate,
+            address: dbUser.address,
+            phoneNumber: dbUser.phoneNumber,
+            role: dbUser.role?.toLowerCase(),
+            status: dbUser.status,
+          },
+        });
+      } catch (error) {
+        console.error('유저 정보 조회 실패:', error);
+      }
+    };
+
+    fetchMe();
+  }, []);
+
+  const { data: subscriptionData } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: async () => {
+      try {
+        return await paymentService.getSubscription();
+      } catch {
+        return null;
+      }
+    },
+    retry: false,
+  });
+
+  const activePlanType = subscriptionData?.planType;
+  const planStartAt = subscriptionData?.planStartAt;
+  const planEndAt = subscriptionData?.planEndAt;
 
   useEffect(() => {
     if (!isEditing) {
@@ -150,13 +190,13 @@ function ProfilePage() {
 
   const profileInfoItems = [
     { key: 'name', label: '이름', value: profileName || '미등록', type: 'text', editable: true },
-    { key: 'email', label: '이메일', value: profileEmail || '미등록', type: 'email', editable: true },
+    { key: 'email', label: '이메일', value: profileEmail || '미등록', type: 'email', editable: false },
     {
       key: 'birthDate',
       label: '생년월일',
       value: formatBirthDate(user.birthDate),
       type: 'date',
-      editable: true,
+      editable: false,
     },
     {
       key: 'phoneNumber',
@@ -170,7 +210,9 @@ function ProfilePage() {
     {
       key: 'subscriptionPlan',
       label: '현재 구독 플랜',
-      value: formatPlanLabel(subscriptionPlan),
+      value: activePlanType
+        ? `${activePlanType === 'MONTHLY' ? '1개월 플랜' : '1년 플랜'} (${planStartAt?.slice(0, 10)} ~ ${planEndAt?.slice(0, 10)})`
+        : 'Free',
       type: 'text',
       editable: false,
     },
@@ -216,22 +258,39 @@ function ProfilePage() {
     setIsEditing(false);
   };
 
-  const handleSaveProfile = () => {
-    updateProfileDetails({
-      name: form.name.trim() || profileName,
-      email: form.email.trim() || profileEmail,
-      birthDate: form.birthDate || '',
-      phoneNumber: form.phoneNumber.trim(),
-      address: form.address.trim(),
-      role: form.role.includes('관리') ? 'admin' : 'user',
-    });
-    setIsEditing(false);
+  const handleSaveProfile = async () => {
+    try {
+      await userService.updateMe({
+        name: form.name.trim() || profileName,
+        birthDate: form.birthDate || null,
+        address: form.address.trim() || null,
+        phoneNumber: form.phoneNumber.trim() || null,
+      });
+
+      updateProfileDetails({
+        name: form.name.trim() || profileName,
+        email: form.email.trim() || profileEmail,
+        birthDate: form.birthDate || '',
+        phoneNumber: form.phoneNumber.trim(),
+        address: form.address.trim(),
+        role: form.role.includes('관리') ? 'admin' : 'user',
+      });
+      setIsEditing(false);
+    } catch (error) {
+      alert(error.message || '정보 수정에 실패했습니다.');
+    }
   };
 
-  const handleDeleteAccount = () => {
-    localStorage.removeItem('accessToken');
-    clearSession();
-    navigate('/', { replace: true });
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    try {
+      await userService.deleteMe();
+      localStorage.removeItem('accessToken');
+      clearSession();
+      navigate('/', { replace: true });
+    } catch (error) {
+      alert(error.message || '회원 탈퇴에 실패했습니다.');
+    }
   };
 
   return (
