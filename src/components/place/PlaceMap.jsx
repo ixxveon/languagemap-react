@@ -26,6 +26,43 @@ function loadGoogleMaps(apiKey) {
     });
 }
 
+const getMarkerIcon = (maps, place, isSelected) => {
+    const isCompleted = place.learningStatus === 'COMPLETED';
+
+    if (isCompleted) {
+        return {
+            path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z M10.5 13.5l-2.5-2.5 1.2-1.2 1.3 1.3 3.8-3.8 1.2 1.2-5 5z',
+
+            fillColor: '#14B8A6',
+            fillOpacity: 1,
+
+            strokeColor: '#ffffff',
+            strokeWeight: 2,
+
+            scale: isSelected ? 1.5 : 1.28,
+
+            anchor: new maps.Point(12, 22),
+        };
+    }
+
+    return {
+        path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z',
+
+        fillColor: isSelected
+            ? '#155E63'
+            : '#14B8A6',
+
+        fillOpacity: 1,
+
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+
+        scale: isSelected ? 1.5 : 1.28,
+
+        anchor: new maps.Point(12, 22),
+    };
+};
+
 function PlaceMap({
     places = [],
     activeRegion,
@@ -81,6 +118,16 @@ function PlaceMap({
                 places.forEach((place) => {
                     const isSelected = Number(place.id) === Number(selectedPlaceId);
 
+                    let markerColor = '#14B8A6';
+
+                    if (place.learningStatus === 'COMPLETED') {
+                        markerColor = '#2563EB';
+                    }
+
+                    if (place.learningStatus === 'RUNNING') {
+                        markerColor = '#F59E0B';
+                    }
+
                     const marker = new maps.Marker({
                         position: {
                             lat: Number(place.lat),
@@ -88,15 +135,7 @@ function PlaceMap({
                         },
                         map,
                         zIndex: isSelected ? 999 : 10,
-                        icon: {
-                            path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z',
-                            fillColor: isSelected ? '#155E63' : '#14B8A6',
-                            fillOpacity: 1,
-                            strokeColor: '#ffffff',
-                            strokeWeight: 2,
-                            scale: isSelected ? 1.5 : 1.28,
-                            anchor: new maps.Point(12, 22),
-                        },
+                        icon: getMarkerIcon(maps, place, isSelected),
                     });
 
                     marker.addListener('click', () => onSelectPlace(place.id));

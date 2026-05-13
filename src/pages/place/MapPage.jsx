@@ -85,19 +85,26 @@ function MapPage() {
   const hasKorean = (text) => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text);
   const [missionActionLoading, setMissionActionLoading] = useState(null);
 
+  const loadPlaceMarkers = async () => {
+    try {
+      const data = await placeService.readPlaceMarkers();
+      setPlaces(data);
+
+      console.log('장소 마커 목록 조회 성공:', data);
+    } catch (error) {
+      console.error('장소 마커 목록 조회 실패:', error);
+      alert('장소 목록을 불러오지 못했습니다.');
+    }
+  };
+
   useEffect(() => {
-    const loadPlaceMarkers = async () => {
-      try {
-        const data = await placeService.readPlaceMarkers();
-        setPlaces(data);
+    if (!currentUser) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+    }
+  }, [currentUser, navigate]);
 
-        console.log('장소 마커 목록 조회 성공:', data);
-      } catch (error) {
-        console.error('장소 마커 목록 조회 실패:', error);
-        alert('장소 목록을 불러오지 못했습니다.');
-      }
-    };
-
+  useEffect(() => {
     loadPlaceMarkers();
   }, []);
 
@@ -146,6 +153,7 @@ function MapPage() {
 
     setPanelVisible(false);
     setPanelMode('guide');
+    loadPlaceMarkers();
   }, [currentUser?.userId]);
 
   useEffect(() => {
@@ -566,6 +574,8 @@ function MapPage() {
       }));
 
       setChatCompleted(isAllMissionCompleted);
+
+      await loadPlaceMarkers();
     } catch (error) {
       console.error('미션 완료 실패:', error);
       alert('미션 완료 처리에 실패했습니다.');

@@ -158,12 +158,12 @@ export const useMapingoStore = create(
           const resolvedRole = resolveSessionRole(session);
           const normalizedSession = session?.user
             ? {
-                ...session,
-                user: {
-                  ...session.user,
-                  role: resolvedRole,
-                },
-              }
+              ...session,
+              user: {
+                ...session.user,
+                role: resolvedRole,
+              },
+            }
             : initialSession;
 
           return {
@@ -180,12 +180,23 @@ export const useMapingoStore = create(
       clearSession: () =>
         set(() => ({
           session: initialSession,
+
           isAuthenticated: false,
+
           profileName: 'Mapingo Learner',
           profileNickname: 'Route Runner',
+
           subscriptionPlan: 'Free',
           subscriptionProductId: null,
           subscriptionUpdatedAt: 0,
+
+          selectedRouteId: '',
+
+          recentMapChatLog: [],
+
+          recentMapLearningSummary: null,
+
+          favoriteRouteIds: [],
         })),
 
       setIsLoggedIn: (isLoggedIn) =>
