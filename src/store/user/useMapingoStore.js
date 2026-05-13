@@ -6,7 +6,7 @@ const initialPosts = [
   {
     id: 1,
     title: '\uce74\ud398 \uc8fc\ubb38 \ub8e8\ud2b8 \ud6c4\uae30',
-    body: '\uc9dd\uc740 \ubb38\uc7a5\ub9cc \uc678\uc6cc\ub3c4 \uc8fc\ubb38 \ud750\ub984\uc774 \uc815\ub9d0 \ud3b8\ud574\uc84c\uc5b4\uc694.',
+    body: '\uc9a7\uc740 \ubb38\uc7a5\ub9cc \uc678\uc6cc\ub3c4 \uc8fc\ubb38 \ud750\ub984\uc774 \uc815\ub9d0 \ud3b8\ud574\uc84c\uc5b4\uc694.',
     tag: '\ud6c4\uae30',
     likes: 12,
   },
@@ -60,14 +60,16 @@ const initialRecentLearning = [
     id: 1,
     title: '\uce74\ud398 \uc8fc\ubb38 \ud45c\ud604',
     meta: '\uc11c\uc6b8 \uc131\uc218 · \uc624\ub298 \uc624\uc804 8:40',
-    description: '\uc8fc\ubb38 \ubcc0\uacbd, \uc0ac\uc774\uc988 \ud655\uc778, \ud3ec\uc7a5 \uc5ec\ubd80\ub97c \uc790\uc5f0\uc2a4\ub7fd\uac8c \ub9d0\ud558\ub294 \ub8e8\ud2b8\ub97c \ub9c8\ucce4\uc5b4\uc694.',
+    description:
+      '\uc8fc\ubb38 \ubcc0\uacbd, \uc0ac\uc774\uc988 \ud655\uc778, \ud3ec\uc7a5 \uc5ec\ubd80\ub97c \uc790\uc5f0\uc2a4\ub7fd\uac8c \ub9d0\ud558\ub294 \ub8e8\ud2b8\ub97c \ub9c8\ucce4\uc5b4\uc694.',
     cta: '\uc774\uc5b4 \ud559\uc2b5\ud558\uae30',
   },
   {
     id: 2,
     title: '\uacf5\ud56d \uc785\uad6d \uc2ec\uc0ac',
     meta: '\uc778\ucc9c\uacf5\ud56d · \uc5b4\uc81c \uc624\ud6c4 7:20',
-    description: '\uc9c8\ubb38 \uc758\ub3c4 \ud30c\uc545\uacfc \uc9e7\uace0 \uc815\ud655\ud55c \ub2f5\ubcc0 \uc5f0\uc2b5\uc774 \uc911\uc2ec\uc778 \uc2dc\ub098\ub9ac\uc624\uc600\uc5b4\uc694.',
+    description:
+      '\uc9c8\ubb38 \uc758\ub3c4 \ud30c\uc545\uacfc \uc9e7\uace0 \uc815\ud655\ud55c \ub2f5\ubcc0 \uc5f0\uc2b5\uc774 \uc911\uc2ec\uc778 \uc2dc\ub098\ub9ac\uc624\uc600\uc5b4\uc694.',
     cta: '\ubcf5\uc2b5\ud558\uae30',
   },
 ];
@@ -124,6 +126,7 @@ export const useMapingoStore = create(
       streakDays: 7,
       badgeCount: 5,
       weeklyGoalCompleted: 4,
+
       subscriptionPlan: 'Free',
       subscriptionProductId: null,
       subscriptionUpdatedAt: 0,
@@ -150,12 +153,6 @@ export const useMapingoStore = create(
       notification: 'all',
       badgeProgress: defaultBadgeProgress,
 
-
-      partialize: (state) => {
-    const { subscriptionProductId, ...rest } = state;
-    return rest;
-  },
-
       setSession: (session) =>
         set(() => {
           const resolvedRole = resolveSessionRole(session);
@@ -179,6 +176,7 @@ export const useMapingoStore = create(
             subscriptionUpdatedAt: normalizedSession?.user?.subscriptionUpdatedAt ?? 0,
           };
         }),
+
       clearSession: () =>
         set(() => ({
           session: initialSession,
@@ -189,15 +187,16 @@ export const useMapingoStore = create(
           subscriptionProductId: null,
           subscriptionUpdatedAt: 0,
         })),
+
       setIsLoggedIn: (isLoggedIn) =>
         set((state) => ({
           isAuthenticated: isLoggedIn,
-          session: isLoggedIn
-            ? state.session
-            : initialSession,
+          session: isLoggedIn ? state.session : initialSession,
         })),
+
       setProfileName: (profileName) => set({ profileName }),
       setProfileNickname: (profileNickname) => set({ profileNickname }),
+
       updateProfileDetails: (profile) =>
         set((state) => {
           const currentUser = state.session?.user ?? {};
@@ -214,6 +213,7 @@ export const useMapingoStore = create(
             },
           };
         }),
+
       setCurrentLevel: ({ id, label }) => set({ currentLevelId: id, currentLevel: label }),
       setWeeklyGoalCompleted: (weeklyGoalCompleted) => set({ weeklyGoalCompleted }),
       setBadgeCount: (badgeCount) => set({ badgeCount }),
@@ -227,6 +227,7 @@ export const useMapingoStore = create(
       setSelectedRouteId: (selectedRouteId) => set({ selectedRouteId }),
       setRecentMapChatLog: (recentMapChatLog) => set({ recentMapChatLog }),
       setRecentMapLearningSummary: (recentMapLearningSummary) => set({ recentMapLearningSummary }),
+
       toggleFavoriteRoute: (routeId) =>
         set((state) => ({
           favoriteRouteIds: state.favoriteRouteIds.includes(routeId)
@@ -238,6 +239,7 @@ export const useMapingoStore = create(
       setCommunitySortBy: (communitySortBy) => set({ communitySortBy }),
       setCommunityForm: (communityForm) => set({ communityForm }),
       resetCommunityForm: () => set({ communityForm: defaultCommunityForm }),
+
       addCommunityPost: ({ title, body, tag }) =>
         set((state) => ({
           communityPosts: [
@@ -251,14 +253,17 @@ export const useMapingoStore = create(
             ...state.communityPosts,
           ],
         })),
+
       likeCommunityPost: (id) =>
         set((state) => ({
           communityPosts: state.communityPosts.map((post) =>
             post.id === id ? { ...post, likes: post.likes + 1 } : post,
           ),
         })),
+
       setSupportInquiryForm: (supportInquiryForm) => set({ supportInquiryForm }),
       resetSupportInquiryForm: () => set({ supportInquiryForm: defaultSupportInquiryForm }),
+
       addSupportInquiry: ({ category, title, body }) =>
         set((state) => ({
           supportInquiries: [
@@ -280,6 +285,7 @@ export const useMapingoStore = create(
       setLanguage: (language) => set({ language }),
       setTheme: (theme) => set({ theme }),
       setNotification: (notification) => set({ notification }),
+
       setBadgeProgress: (badgeProgress) =>
         set((state) => ({
           badgeProgress: {
@@ -290,6 +296,16 @@ export const useMapingoStore = create(
     }),
     {
       name: 'mapingo-ui-store',
+
+      partialize: (state) => {
+        const {
+          subscriptionPlan,
+          subscriptionProductId,
+          subscriptionUpdatedAt,
+          ...rest
+        } = state;
+        return rest;
+      },
     },
   ),
 );

@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import MapingoHeader from './MapingoHeader';
 import MapingoHero from './MapingoHero';
 import { mapingoPalette } from '../../data/user/mapingoData';
@@ -18,42 +18,28 @@ function MapingoLayout() {
   const subscriptionProductId = useMapingoStore((state) => state.subscriptionProductId);
   const isAdmin = useMapingoStore((state) => (state.session?.user?.role ?? 'user') === 'admin');
   const currentPage = useMemo(() => pathToPage[location.pathname] ?? 'home', [location.pathname]);
-  const { logout } = useAuth();
+  const { logout, restoreSession } = useAuth();
+
+  const [sessionRestored, setSessionRestored] = useState(false);
+
+  useEffect(() => {
+    restoreSession().finally(() => setSessionRestored(true));
+  }, []);
 
   const navigateToPage = (page) => {
     navigate(pageToPath[page] ?? '/');
   };
 
   const handlePrimaryAction = () => {
-    if (currentPage === 'home') {
-      navigateToPage('map');
-      return;
-    }
-
-    if (currentPage === 'growth') {
-      navigateToPage('settings');
-      return;
-    }
-
-    if (currentPage === 'signup') {
-      navigateToPage('home');
-      return;
-    }
-
+    if (currentPage === 'home') { navigateToPage('map'); return; }
+    if (currentPage === 'growth') { navigateToPage('settings'); return; }
+    if (currentPage === 'signup') { navigateToPage('home'); return; }
     navigateToPage('map');
   };
 
   const handleSecondaryAction = () => {
-    if (currentPage === 'home') {
-      navigateToPage('growth');
-      return;
-    }
-
-    if (currentPage === 'map') {
-      navigateToPage('support');
-      return;
-    }
-
+    if (currentPage === 'home') { navigateToPage('growth'); return; }
+    if (currentPage === 'map') { navigateToPage('support'); return; }
     navigateToPage('home');
   };
 
@@ -66,8 +52,8 @@ function MapingoLayout() {
         isLoggedIn={isAuthenticated}
         isAdmin={isAdmin}
         profileName={profileName}
-        subscriptionPlan={subscriptionPlan}
-        subscriptionProductId={subscriptionProductId}
+        subscriptionPlan={sessionRestored ? subscriptionPlan : ''}
+        subscriptionProductId={sessionRestored ? subscriptionProductId : null}
         onLogout={logout}
       />
 

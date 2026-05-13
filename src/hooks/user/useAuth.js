@@ -18,7 +18,29 @@ export function useAuth() {
             setIsSubmitting(true);
             setErrorMessage('');
             const session = await authService.loginWithEmail({ email, password, rememberMe });
-            setSession(session);
+
+            // 구독 정보 조회 후 같이 세팅
+            let subscriptionPlan = 'Free';
+            let subscriptionProductId = null;
+            try {
+                const subscription = await paymentService.getSubscription();
+                if (subscription?.planStatus === 'ACTIVE') {
+                    subscriptionPlan = 'Premium';
+                    subscriptionProductId = subscription.planType === 'MONTHLY' ? 'monthly' : 'yearly';
+                }
+            } catch {
+                // 구독 없으면 Free 유지
+            }
+
+            setSession({
+                ...session,
+                user: {
+                    ...session.user,
+                    subscriptionPlan,
+                    subscriptionProductId,
+                },
+            });
+
             navigate('/');
         } catch (error) {
             setErrorMessage('이메일 또는 비밀번호를 확인해주세요.');
@@ -136,57 +158,58 @@ export function useAuth() {
         try {
             const user = await userService.getMe();
 
-            // 구독 정보도 같이 조회
             let subscriptionPlan = 'Free';
+            let subscriptionProductId = null;
+
             try {
                 const subscription = await paymentService.getSubscription();
                 if (subscription?.planStatus === 'ACTIVE') {
                     subscriptionPlan = 'Premium';
-                    // planType으로 productId 설정
-                    const productId = subscription.planType === 'MONTHLY' ? 'monthly' : 'yearly';
-                    useMapingoStore.getState().setSubscriptionProductId(productId);
+                    subscriptionProductId =
+                        subscription.planType === 'MONTHLY' ? 'monthly' : 'yearly';
+                }
+            } catch {
+                // 구독 없으면 Free 유지
             }
-        } catch {
-            // 구독 없으면 Free 유지
+
+            // setSession 한 번에 구독 정보까지 같이 넘김
+            setSession({
+                loginMethod: 'restore',
+                keepSignedIn: true,
+                user: {
+                    userId: user.userId,
+                    email: user.email,
+                    name: user.name,
+                    role: user.role.toLowerCase(),
+                    status: user.status,
+                    birthDate: user.birthDate,
+                    address: user.address,
+                    phoneNumber: user.phoneNumber,
+                    provider: 'local',
+                    subscriptionPlan,
+                    subscriptionProductId,
+                },
+            });
+
+        } catch (error) {
+            localStorage.removeItem('accessToken');
+            clearSession();
         }
-
-        setSession({
-            loginMethod: 'restore',
-            keepSignedIn: true,
-            user: {
-                userId: user.userId,
-                email: user.email,
-                name: user.name,
-                role: user.role.toLowerCase(),
-                status: user.status,
-                birthDate: user.birthDate,
-                address: user.address,
-                phoneNumber: user.phoneNumber,
-                provider: 'local',
-            },
-        });
-
-        useMapingoStore.getState().setSubscriptionPlan(subscriptionPlan);
-
-    } catch (error) {
-        localStorage.removeItem('accessToken');
-        clearSession();
-    }
-};
+    };
 
 
 
 
-return {
-    login,
-    signup,
-    logout,
-    loginWithGoogle,
-    restoreSession,
-    exchangeOauthCode,
-    setupProfile,
-    isSubmitting,
-    errorMessage,
-    setErrorMessage,
-};
+    return {
+        login,
+        signup,
+        logout,
+        loginWithGoogle,
+        restoreSession,
+        exchangeOauthCode,
+        setupProfile,
+        isSubmitting,
+        errorMessage,
+        setErrorMessage,
+    };
 }
