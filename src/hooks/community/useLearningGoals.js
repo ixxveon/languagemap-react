@@ -2,8 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { learningService } from '../../api/user/learningService';
 
 const MAX_ACTIVE_GOALS = 3;
-const INITIAL_AVAILABLE_GOAL_COUNT = 2;
-const GOAL_PAGE_SIZE = 2;
 
 function isGoalAchieved(goal) {
     return goal.currentValue >= goal.targetValue;
@@ -14,18 +12,7 @@ export function useLearningGoals() {
     const [activeGoals, setActiveGoals] = useState([]);
     const [completedGoals, setCompletedGoals] = useState([]);
     const [feedbackMessage, setFeedbackMessage] = useState('');
-    const [visibleAvailableGoalCount, setVisibleAvailableGoalCount] = useState(
-        INITIAL_AVAILABLE_GOAL_COUNT,
-    );
     const [loading, setLoading] = useState(false);
-
-    const visibleAvailableGoals = useMemo(
-        () => availableGoals.slice(0, visibleAvailableGoalCount),
-        [availableGoals, visibleAvailableGoalCount],
-    );
-
-    const hasMoreAvailableGoals =
-        visibleAvailableGoalCount < availableGoals.length;
 
     const selectedGoalMasterIds = useMemo(
         () => activeGoals.map((goal) => goal.goalMasterId),
@@ -101,10 +88,6 @@ export function useLearningGoals() {
         }
     };
 
-    const handleShowMoreGoals = () => {
-        setVisibleAvailableGoalCount((current) => current + GOAL_PAGE_SIZE);
-    };
-
     useEffect(() => {
         fetchLearningGoals();
     }, [fetchLearningGoals]);
@@ -116,14 +99,11 @@ export function useLearningGoals() {
         completedGoals,
         feedbackMessage,
         loading,
-        visibleAvailableGoals,
-        hasMoreAvailableGoals,
         selectedGoalMasterIds,
         inProgressGoals,
         achievedActiveGoals,
         displayCompletedGoals,
         handleAddGoal,
         handleCancelGoal,
-        handleShowMoreGoals,
     };
 }

@@ -148,15 +148,12 @@ export default function CommunityLearningPage() {
     activeGoals,
     feedbackMessage,
     loading,
-    visibleAvailableGoals,
-    hasMoreAvailableGoals,
     selectedGoalMasterIds,
     inProgressGoals,
     achievedActiveGoals,
     displayCompletedGoals,
     handleAddGoal,
     handleCancelGoal,
-    handleShowMoreGoals,
   } = useLearningGoals();
 
   const handleMoveToCompleted = () => {
@@ -235,8 +232,8 @@ export default function CommunityLearningPage() {
                 </div>
               ) : (
                 <>
-                  <div className="mapingo-selectable-list">
-                    {visibleAvailableGoals.map((goal) => {
+                  <div className="mapingo-selectable-list community-favorites-scroll-list">
+                    {availableGoals.map((goal) => {
                       const alreadySelected = selectedGoalMasterIds.includes(
                         goal.goalMasterId,
                       );
@@ -255,16 +252,6 @@ export default function CommunityLearningPage() {
                       );
                     })}
                   </div>
-
-                  {hasMoreAvailableGoals ? (
-                    <button
-                      type="button"
-                      className="community-favorites-more-button"
-                      onClick={handleShowMoreGoals}
-                    >
-                      목표 더보기
-                    </button>
-                  ) : null}
                 </>
               )}
 

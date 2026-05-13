@@ -71,7 +71,7 @@ function MapingoLayout() {
         onLogout={logout}
       />
 
-      <main className="mapingo-page-shell">
+      <main className={`mapingo-page-shell ${currentPage === 'home' ? 'is-home' : ''}`}>
         {currentPage === 'home' ? (
           <MapingoHero
             isLoggedIn={isAuthenticated}

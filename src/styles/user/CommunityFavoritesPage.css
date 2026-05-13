@@ -64,6 +64,22 @@ html{
   margin-top: 18px;
 }
 
+.community-favorites-scroll-list {
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-gutter: stable;
+}
+
+.community-favorites-scroll-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.community-favorites-scroll-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #cfe8e2;
+}
+
 .community-favorites-subsection-head {
   display: flex;
   align-items: center;
