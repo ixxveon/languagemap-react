@@ -12,11 +12,13 @@ function MapingoHeader({
   subscriptionPlan,
   subscriptionProductId,
 }) {
-  const subscriptionLabel =
+const subscriptionLabel =
     subscriptionPlan === 'Premium'
-      ? subscriptionProductId === 'monthly'
+      ? subscriptionProductId === 'monthly' || subscriptionProductId === 'MONTHLY'
         ? 'Premium Monthly'
-        : 'Premium Yearly'
+        : subscriptionProductId === 'yearly' || subscriptionProductId === 'YEARLY'
+        ? 'Premium Yearly'
+        : 'Premium' 
       : 'Free Plan';
 
   return (

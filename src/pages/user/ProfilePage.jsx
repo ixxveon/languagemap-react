@@ -129,6 +129,21 @@ function ProfilePage() {
     const fetchMe = async () => {
       try {
         const dbUser = await userService.getMe();
+
+        // 구독 정보도 같이 조회
+        let subscriptionPlan = 'Free';
+        try {
+          const subscription = await paymentService.getSubscription();
+          if (subscription?.planStatus === 'ACTIVE') {
+            subscriptionPlan = 'Premium';
+            // planType으로 productId 설정
+            const productId = subscription.planType === 'MONTHLY' ? 'monthly' : 'yearly';
+            useMapingoStore.getState().setSubscriptionProductId(productId);
+          }
+        } catch {
+          // 구독 없으면 Free 유지
+        }
+
         setSession({
           ...session,
           user: {
@@ -142,6 +157,8 @@ function ProfilePage() {
             status: dbUser.status,
           },
         });
+        useMapingoStore.getState().setSubscriptionPlan(subscriptionPlan);
+
       } catch (error) {
         console.error('유저 정보 조회 실패:', error);
       }
