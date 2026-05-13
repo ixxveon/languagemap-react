@@ -15,7 +15,9 @@ function toMarkerPlace(place) {
     id: place.placeId,
     lat: place.latitude,
     lng: place.longitude,
-    regionId: place.regionId
+    regionId: place.regionId,
+    learningSessionId: place.learningSessionId,
+    learningStatus: place.learningStatus,
   };
 }
 

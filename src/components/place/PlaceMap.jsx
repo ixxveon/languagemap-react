@@ -81,6 +81,16 @@ function PlaceMap({
                 places.forEach((place) => {
                     const isSelected = Number(place.id) === Number(selectedPlaceId);
 
+                    let markerColor = '#14B8A6';
+
+                    if (place.learningStatus === 'COMPLETED') {
+                        markerColor = '#2563EB';
+                    }
+
+                    if (place.learningStatus === 'RUNNING') {
+                        markerColor = '#F59E0B';
+                    }
+
                     const marker = new maps.Marker({
                         position: {
                             lat: Number(place.lat),
@@ -90,11 +100,22 @@ function PlaceMap({
                         zIndex: isSelected ? 999 : 10,
                         icon: {
                             path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z',
-                            fillColor: isSelected ? '#155E63' : '#14B8A6',
+
+                            fillColor: isSelected
+                                ? '#155E63'
+                                : markerColor,
+
                             fillOpacity: 1,
                             strokeColor: '#ffffff',
                             strokeWeight: 2,
-                            scale: isSelected ? 1.5 : 1.28,
+
+                            scale:
+                                place.learningStatus === 'COMPLETED'
+                                    ? 1.45
+                                    : isSelected
+                                        ? 1.5
+                                        : 1.28,
+
                             anchor: new maps.Point(12, 22),
                         },
                     });
@@ -102,7 +123,7 @@ function PlaceMap({
                     marker.addListener('click', () => onSelectPlace(place.id));
                     markersRef.current.push(marker);
                 });
-
+                
                 if (selectedPlaceId) {
                     const currentPlace = places.find(
                         (place) => Number(place.id) === Number(selectedPlaceId)
