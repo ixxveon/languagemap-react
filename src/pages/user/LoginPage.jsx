@@ -9,7 +9,7 @@ function LoginPage() {
     const [form, setForm] = useState({
         email: '',
         password: '',
-        rememberMe: false,
+        // rememberMe: false,
     });
 
     const handleChange = (event) => {
@@ -92,7 +92,7 @@ function LoginPage() {
                     />
                 </div>
 
-                <div className="mapingo-login-meta-row">
+                {/* <div className="mapingo-login-meta-row">
                     <label className="mapingo-login-check">
                         <input
                             type="checkbox"
@@ -105,7 +105,7 @@ function LoginPage() {
                     <button type="button" className="mapingo-link-button">
                         비밀번호 찾기
                     </button>
-                </div>
+                </div> */}
 
                 {/* 에러 메시지 표시 */}
                 {errorMessage ? <p className="mapingo-form-error">{errorMessage}</p> : null}
