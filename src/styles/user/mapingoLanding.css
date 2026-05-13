@@ -70,7 +70,7 @@
 }
 
 .mapingo-header-inner {
-  width: min(1280px, calc(100% - 48px));
+  width: min(1440px, calc(100% - 48px));
   margin: 0 auto;
   padding: 14px 0;
   display: flex;
@@ -247,12 +247,16 @@
 }
 
 .mapingo-page-shell {
-  width: min(1280px, calc(100% - 48px));
+  width: min(1440px, calc(100% - 48px));
   margin: 0 auto;
   padding: 40px 0 72px;
   display: flex;
   flex-direction: column;
   gap: 34px;
+}
+
+.mapingo-page-shell.is-home {
+  width: min(1520px, calc(100% - 56px));
 }
 
 .mapingo-home-sections {
@@ -354,18 +358,18 @@
 
 .mapingo-home-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.02fr) minmax(370px, 0.98fr);
-  gap: 36px;
+  grid-template-columns: minmax(0, 1.12fr) minmax(460px, 0.88fr);
+  gap: 52px;
   align-items: start;
-  padding: 46px 0 22px;
+  padding: 54px 0 28px;
 }
 
 .mapingo-home-copy {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  max-width: 650px;
-  padding-top: 8px;
+  max-width: 760px;
+  padding-top: 14px;
 }
 
 .mapingo-home-pill {
@@ -382,12 +386,12 @@
 }
 
 .mapingo-home-title {
-  max-width: 10.2em;
+  max-width: 11em;
   margin: 18px 0 0;
   color: #155e63;
-  font-size: clamp(3rem, 4.7vw, 4.65rem);
+  font-size: clamp(3.4rem, 4.9vw, 5.25rem);
   font-weight: 900;
-  line-height: 1.03;
+  line-height: 0.98;
   letter-spacing: -0.052em;
   text-wrap: pretty;
   word-break: keep-all;
@@ -402,11 +406,11 @@
 }
 
 .mapingo-home-description {
-  max-width: 520px;
-  margin-top: 18px;
+  max-width: 620px;
+  margin-top: 22px;
   color: #59697b;
-  line-height: 1.84;
-  font-size: 1rem;
+  line-height: 1.9;
+  font-size: 1.08rem;
   letter-spacing: -0.012em;
 }
 
@@ -438,17 +442,17 @@
 
 .mapingo-home-feature-grid {
   width: 100%;
-  max-width: 650px;
-  margin-top: 34px;
+  max-width: 760px;
+  margin-top: 42px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 14px;
 }
 
 .mapingo-home-feature-card {
-  min-height: 92px;
-  padding: 16px 16px 14px;
-  border-radius: 16px;
+  min-height: 108px;
+  padding: 20px 18px 18px;
+  border-radius: 20px;
   border: 1px solid #bfeee7;
   background: rgba(255, 255, 255, 0.88);
   box-shadow: none;
@@ -457,7 +461,7 @@
 
 .mapingo-home-feature-card h2 {
   color: #155e63;
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.3;
   letter-spacing: -0.02em;
 }
@@ -465,13 +469,13 @@
 .mapingo-home-feature-card p {
   margin-top: 8px;
   color: #5c6c7d;
-  line-height: 1.58;
-  font-size: 0.84rem;
+  line-height: 1.65;
+  font-size: 0.9rem;
 }
 
 .mapingo-home-preview-card {
-  padding: 20px 20px 72px;
-  border-radius: 24px;
+  padding: 24px 24px 32px;
+  border-radius: 28px;
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid #e4f4f0;
   box-shadow: 0 18px 36px rgba(21, 94, 99, 0.09);
@@ -494,17 +498,17 @@
 .mapingo-home-preview-card h2 {
   margin-top: 6px;
   color: #155e63;
-  font-size: 1.42rem;
+  font-size: 1.68rem;
   line-height: 1.15;
   letter-spacing: -0.035em;
 }
 
 .mapingo-home-preview-copy {
-  max-width: 360px;
-  margin-top: 6px;
+  max-width: 420px;
+  margin-top: 8px;
   color: #6a7b8b;
-  line-height: 1.5;
-  font-size: 0.8rem;
+  line-height: 1.62;
+  font-size: 0.9rem;
 }
 
 .mapingo-home-time-chip {
@@ -524,8 +528,8 @@
 
 .mapingo-home-map-card {
   position: relative;
-  margin-top: 14px;
-  min-height: 248px;
+  margin-top: 18px;
+  min-height: 320px;
   border-radius: 22px;
   overflow: hidden;
   background:
@@ -536,8 +540,57 @@
 
 .mapingo-google-map {
   width: 100%;
-  min-height: 260px;
+  min-height: 360px;
   background: linear-gradient(180deg, #f6f9f8, #eef6f4);
+}
+
+@media (max-width: 1360px) {
+  .mapingo-header-inner {
+    width: min(100% - 40px, 1360px);
+  }
+
+  .mapingo-page-shell {
+    width: min(100% - 40px, 1360px);
+  }
+
+  .mapingo-page-shell.is-home {
+    width: min(100% - 40px, 1400px);
+  }
+
+  .mapingo-home-hero {
+    grid-template-columns: minmax(0, 1.04fr) minmax(400px, 0.96fr);
+    gap: 34px;
+    padding-top: 42px;
+  }
+
+  .mapingo-home-copy {
+    max-width: 680px;
+    padding-top: 8px;
+  }
+
+  .mapingo-home-title {
+    font-size: clamp(3rem, 4.4vw, 4.5rem);
+  }
+
+  .mapingo-home-description {
+    max-width: 560px;
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+
+  .mapingo-home-feature-grid {
+    max-width: 680px;
+    margin-top: 32px;
+  }
+
+  .mapingo-home-preview-card {
+    padding: 22px 22px 26px;
+  }
+
+  .mapingo-home-map-card,
+  .mapingo-google-map {
+    min-height: 320px;
+  }
 }
 
 .mapingo-google-map.placeholder {
@@ -6227,6 +6280,10 @@
     width: min(100% - 32px, 1280px);
   }
 
+  .mapingo-page-shell.is-home {
+    width: min(100% - 32px, 1280px);
+  }
+
   .mapingo-header-inner {
     flex-wrap: wrap;
     padding: 15px 0 16px;
@@ -6333,6 +6390,41 @@
     padding: 24px 22px 20px;
   }
 
+  .mapingo-home-copy {
+    max-width: none;
+    padding-top: 0;
+  }
+
+  .mapingo-home-title,
+  .mapingo-home-description,
+  .mapingo-home-feature-grid {
+    max-width: none;
+  }
+
+  .mapingo-home-title {
+    font-size: clamp(2.9rem, 7vw, 4.2rem);
+  }
+
+  .mapingo-home-description {
+    margin-top: 18px;
+    font-size: 1rem;
+    line-height: 1.76;
+  }
+
+  .mapingo-home-feature-grid {
+    margin-top: 28px;
+    gap: 12px;
+  }
+
+  .mapingo-home-feature-card {
+    min-height: 96px;
+  }
+
+  .mapingo-home-map-card,
+  .mapingo-google-map {
+    min-height: 340px;
+  }
+
   .mapingo-home-overview-head {
     flex-direction: column;
   }
@@ -6355,6 +6447,10 @@
 @media (max-width: 760px) {
   .mapingo-header-inner,
   .mapingo-page-shell {
+    width: min(100% - 24px, 1280px);
+  }
+
+  .mapingo-page-shell.is-home {
     width: min(100% - 24px, 1280px);
   }
 
@@ -6480,6 +6576,17 @@
     line-height: 0.98;
   }
 
+  .mapingo-home-hero {
+    gap: 24px;
+    padding: 24px 0 8px;
+  }
+
+  .mapingo-home-pill {
+    min-height: 34px;
+    padding: 7px 14px;
+    font-size: 0.82rem;
+  }
+
   .mapingo-home-description {
     max-width: none;
     font-size: 0.99rem;
@@ -6500,6 +6607,13 @@
 
   .mapingo-home-feature-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .mapingo-home-feature-card {
+    min-height: auto;
+    padding: 18px 16px;
   }
 
   .mapingo-profile-identity {
@@ -6558,6 +6672,10 @@
   }
 
   .mapingo-home-map-card {
+    min-height: 320px;
+  }
+
+  .mapingo-google-map {
     min-height: 320px;
   }
 
@@ -6627,6 +6745,10 @@
     width: min(100% - 18px, 1280px);
   }
 
+  .mapingo-page-shell.is-home {
+    width: min(100% - 18px, 1280px);
+  }
+
   .mapingo-brand-title {
     font-size: 1rem;
   }
@@ -6641,8 +6763,56 @@
     padding: 18px;
   }
 
+  .mapingo-home-hero {
+    gap: 20px;
+    padding-top: 18px;
+  }
+
+  .mapingo-home-copy h1 {
+    max-width: none;
+    font-size: clamp(2.15rem, 11vw, 3rem);
+    line-height: 1;
+  }
+
+  .mapingo-home-description {
+    margin-top: 16px;
+    font-size: 0.94rem;
+    line-height: 1.68;
+  }
+
+  .mapingo-hero-actions {
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .mapingo-home-primary {
+    width: 100%;
+    min-width: 0;
+    padding: 14px 18px;
+  }
+
+  .mapingo-home-feature-card h2 {
+    font-size: 0.94rem;
+  }
+
+  .mapingo-home-feature-card p {
+    font-size: 0.84rem;
+  }
+
+  .mapingo-home-preview-card h2 {
+    font-size: 1.34rem;
+  }
+
+  .mapingo-home-preview-copy {
+    font-size: 0.84rem;
+  }
+
   .mapingo-home-map-card {
-    min-height: 372px;
+    min-height: 280px;
+  }
+
+  .mapingo-google-map {
+    min-height: 280px;
   }
 
   .mapingo-home-stop-card {
