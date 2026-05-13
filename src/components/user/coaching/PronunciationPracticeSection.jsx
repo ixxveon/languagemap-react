@@ -7,7 +7,17 @@ function parseProblemWords(problemWords) {
     return problemWords
       .map((item) => {
         if (typeof item === 'string') return item;
-        if (item && typeof item === 'object') return item.word ?? '';
+
+        if (item && typeof item === 'object') {
+          return (
+            item.word ??
+            item.text ??
+            item.errorWord ??
+            item.problemWord ??
+            ''
+          );
+        }
+
         return '';
       })
       .filter(Boolean);
@@ -17,68 +27,92 @@ function parseProblemWords(problemWords) {
     try {
       return parseProblemWords(JSON.parse(problemWords));
     } catch {
-      return [];
+      return problemWords
+        .split(',')
+        .map((word) => word.trim())
+        .filter(Boolean);
     }
   }
 
   return [];
 }
 
-function levelToDots(level) {
-  if (level === 'GOOD') return 4;
-  if (level === 'CHECK') return 3;
-  return 2;
+function scoreToDots(score) {
+  const safeScore = Number(score) || 0;
+
+  if (safeScore >= 80) return 5;
+  if (safeScore >= 60) return 4;
+  if (safeScore >= 40) return 3;
+  if (safeScore >= 20) return 2;
+  return 1;
 }
 
 function levelToTone(level) {
-  if (level === 'GOOD') return 'green';
-  if (level === 'CHECK') return 'orange';
+  if (level === 'GOOD' || level === 'EXCELLENT') return 'green';
+  if (level === 'CHECK' || level === 'NORMAL') return 'orange';
   return 'blue';
+}
+
+function getAverageByKey(items, key) {
+  if (!items.length) return 0;
+
+  return Math.round(
+    items.reduce((sum, item) => sum + (Number(item?.[key]) || 0), 0) / items.length,
+  );
 }
 
 function PronunciationPracticeSection({ result }) {
   const feedback = result?.feedback;
   const pronunciationResults = result?.pronunciationResults?.pronunciationResults ?? [];
 
-  const averageScore = feedback?.totalScore ??
-    (pronunciationResults.length
-      ? Math.round(
-          pronunciationResults.reduce(
-            (sum, sentence) => sum + (sentence.pronunciationScore ?? 0),
-            0,
-          ) / pronunciationResults.length,
-        )
-      : 0);
+  const averageScore =
+    feedback?.totalScore ??
+    getAverageByKey(pronunciationResults, 'pronunciationScore');
+
+  const naturalnessScore =
+    feedback?.naturalnessScore ??
+    getAverageByKey(pronunciationResults, 'fluencyScore') ??
+    averageScore;
+
+  const flowScore =
+    feedback?.flowScore ??
+    getAverageByKey(pronunciationResults, 'completenessScore') ??
+    averageScore;
+
+  const pronunciationScore =
+    feedback?.pronunciationScore ??
+    getAverageByKey(pronunciationResults, 'accuracyScore') ??
+    averageScore;
 
   const feedbackCards = [
     {
       title: '자연스러움',
-      status: feedback?.naturalnessLevel ?? 'CHECK',
+      status: feedback?.naturalnessLevel ?? 'NORMAL',
       tone: levelToTone(feedback?.naturalnessLevel),
       text: feedback?.naturalnessComment ?? '자연스러움 피드백이 아직 없습니다.',
-      dots: levelToDots(feedback?.naturalnessLevel),
+      dots: scoreToDots(naturalnessScore),
     },
     {
       title: '응답 흐름',
-      status: feedback?.flowLevel ?? 'CHECK',
+      status: feedback?.flowLevel ?? 'NORMAL',
       tone: levelToTone(feedback?.flowLevel),
       text: feedback?.flowComment ?? '응답 흐름 피드백이 아직 없습니다.',
-      dots: levelToDots(feedback?.flowLevel),
+      dots: scoreToDots(flowScore),
     },
     {
       title: '발음 포인트',
-      status: feedback?.pronunciationLevel ?? 'CHECK',
+      status: feedback?.pronunciationLevel ?? 'NORMAL',
       tone: levelToTone(feedback?.pronunciationLevel),
       text: feedback?.pronunciationComment ?? '발음 포인트 피드백이 아직 없습니다.',
-      dots: levelToDots(feedback?.pronunciationLevel),
+      dots: scoreToDots(pronunciationScore),
     },
   ];
 
-  const sentenceCards = pronunciationResults.map((sentence) => ({
-    id: sentence.pronunciationResultId,
+  const sentenceCards = pronunciationResults.map((sentence, index) => ({
+    id: sentence.pronunciationResultId ?? `${sentence.expectedText}-${index}`,
     sentence: sentence.expectedText ?? sentence.recognizedText ?? '',
     score: Math.round(sentence.pronunciationScore ?? 0),
-    accuracy: `${Math.round(sentence.accuracyScore ?? 0)}%`,
+    accuracy: `${Math.round(sentence.accuracyScore ?? sentence.pronunciationScore ?? 0)}%`,
     errorWords: parseProblemWords(sentence.problemWords),
     feedback: sentence.feedback ?? '문장 피드백이 아직 없습니다.',
   }));
@@ -104,8 +138,7 @@ function PronunciationPracticeSection({ result }) {
             <i style={{ width: `${Math.min(100, averageScore)}%` }} />
           </div>
           <p>
-            발음 {Math.round(sentenceCards[0]?.score ?? averageScore)}점 ·
-            문장 수 {sentenceCards.length}개
+            발음 {Math.round(pronunciationScore)}점 · 문장 수 {sentenceCards.length}개
           </p>
           <div className="score-character" aria-hidden="true">
             <span className="score-character-face">

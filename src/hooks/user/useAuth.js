@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../api/user/authService';
-import { userService } from '../../api/user/userService';  
+import { userService } from '../../api/user/userService';
 import { useMapingoStore } from '../../store/user/useMapingoStore';
+import { paymentService } from '../../api/user/paymentService';
 
 export function useAuth() {
     const navigate = useNavigate();
@@ -20,7 +21,7 @@ export function useAuth() {
             setSession(session);
             navigate('/');
         } catch (error) {
-            setErrorMessage(error.message || '로그인에 실패했습니다.');
+            setErrorMessage('이메일 또는 비밀번호를 확인해주세요.');
         } finally {
             setIsSubmitting(false);
         }
@@ -81,19 +82,19 @@ export function useAuth() {
     };
 
     // 소셜 로그인 
-const exchangeOauthCode = async (code) => {
-    try {
-        setIsSubmitting(true);
-        const session = await authService.exchangeOauthCode(code);
-        setSession(session);
-        return session;
-    } catch (error) {
-        setErrorMessage(error.message || '소셜 로그인에 실패했습니다.');
-        throw error;
-    } finally {
-        setIsSubmitting(false);
-    }
-};
+    const exchangeOauthCode = async (code) => {
+        try {
+            setIsSubmitting(true);
+            const session = await authService.exchangeOauthCode(code);
+            setSession(session);
+            return session;
+        } catch (error) {
+            setErrorMessage(error.message || '소셜 로그인에 실패했습니다.');
+            throw error;
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     // 프로필 정보 입력
     const setupProfile = async (form) => {
@@ -112,20 +113,20 @@ const exchangeOauthCode = async (code) => {
             setErrorMessage('올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)');
             return;
         }
-    try {
-        setIsSubmitting(true);
-        setErrorMessage('');
-        await userService.setupProfile({
+        try {
+            setIsSubmitting(true);
+            setErrorMessage('');
+            await userService.setupProfile({
                 ...form,
                 phoneNumber: phoneClean,
             });
-        navigate('/');
-    } catch (error) {
-        setErrorMessage(error.message || '프로필 입력에 실패했습니다.');
-    } finally {
-        setIsSubmitting(false);
-    }
-};
+            navigate('/');
+        } catch (error) {
+            setErrorMessage(error.message || '프로필 입력에 실패했습니다.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
 
     const restoreSession = async () => {
@@ -134,37 +135,58 @@ const exchangeOauthCode = async (code) => {
 
         try {
             const user = await userService.getMe();
-            setSession({
-                loginMethod: 'restore',
-                keepSignedIn: true,
-                user: {
-                    userId: user.userId,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role.toLowerCase(),
-                    status: user.status,
-                    provider: 'local',
-                },
-            });
-        } catch (error) {
-            localStorage.removeItem('accessToken');
-            clearSession();
+
+            // 구독 정보도 같이 조회
+            let subscriptionPlan = 'Free';
+            try {
+                const subscription = await paymentService.getSubscription();
+                if (subscription?.planStatus === 'ACTIVE') {
+                    subscriptionPlan = 'Premium';
+                    // planType으로 productId 설정
+                    const productId = subscription.planType === 'MONTHLY' ? 'monthly' : 'yearly';
+                    useMapingoStore.getState().setSubscriptionProductId(productId);
+            }
+        } catch {
+            // 구독 없으면 Free 유지
         }
-    };
+
+        setSession({
+            loginMethod: 'restore',
+            keepSignedIn: true,
+            user: {
+                userId: user.userId,
+                email: user.email,
+                name: user.name,
+                role: user.role.toLowerCase(),
+                status: user.status,
+                birthDate: user.birthDate,
+                address: user.address,
+                phoneNumber: user.phoneNumber,
+                provider: 'local',
+            },
+        });
+
+        useMapingoStore.getState().setSubscriptionPlan(subscriptionPlan);
+
+    } catch (error) {
+        localStorage.removeItem('accessToken');
+        clearSession();
+    }
+};
 
 
 
 
-    return {
-        login,
-        signup,
-        logout,
-        loginWithGoogle,
-        restoreSession,
-        exchangeOauthCode,
-        setupProfile ,
-        isSubmitting,
-        errorMessage,
-        setErrorMessage,
-    };
+return {
+    login,
+    signup,
+    logout,
+    loginWithGoogle,
+    restoreSession,
+    exchangeOauthCode,
+    setupProfile,
+    isSubmitting,
+    errorMessage,
+    setErrorMessage,
+};
 }

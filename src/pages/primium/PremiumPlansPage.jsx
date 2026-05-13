@@ -12,6 +12,9 @@ function PremiumPlansPage() {
     const setSubscriptionProductId = useMapingoStore((state) => state.setSubscriptionProductId);
     const [toastMessage, setToastMessage] = useState('');
 
+
+    
+
 // DB에서 현재 구독 정보 조회
 const { data: subscriptionData } = useQuery({
     queryKey: ['subscription'],

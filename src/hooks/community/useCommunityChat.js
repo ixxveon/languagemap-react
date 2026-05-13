@@ -3,7 +3,7 @@ import SockJS from 'sockjs-client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMapingoStore } from '../../store/user/useMapingoStore';
 
-const CHAT_SOCKET_URL = 'http://localhost:8080/ws';
+const CHAT_SOCKET_URL = import.meta.env.VITE_CHAT_SOCKET_URL;
 
 const formatChatTime = (sentAt) => {
   if (!sentAt) return '지금';

@@ -20,6 +20,12 @@ function LoginPage() {
         }));
     };
 
+    const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+        login(form);
+    }
+};
+
     return (
         <section className="mapingo-login-shell">
             <article className="mapingo-login-benefit-card">
@@ -67,6 +73,7 @@ function LoginPage() {
                         name="email"
                         value={form.email}
                         onChange={handleChange}
+                        onKeyDown={handleKeyDown}
                         placeholder="example@mapingo.ai"
                     />
                 </div>
@@ -80,6 +87,7 @@ function LoginPage() {
                         name="password"
                         value={form.password}
                         onChange={handleChange}
+                        onKeyDown={handleKeyDown}
                         placeholder="비밀번호를 입력하세요"
                     />
                 </div>

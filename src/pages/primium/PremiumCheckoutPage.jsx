@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { MapingoPageSection } from '../../components/MapingoPageBlocks';
+import { useEffect } from 'react';  
 import { useMapingoStore } from '../../store/user/useMapingoStore';
 import { subscriptionService } from '../../api/user/subscriptionService';
 import { usePayment } from '../../hooks/user/usePayment';
@@ -7,19 +8,34 @@ import { usePayment } from '../../hooks/user/usePayment';
 function PremiumCheckoutPage() {
     const navigate = useNavigate();
     const subscriptionProductId = useMapingoStore((state) => state.subscriptionProductId);
+    const isAuthenticated = useMapingoStore((state) => state.isAuthenticated);
     const products = subscriptionService.fetchSubscriptionProducts();
     const selectedProduct =
         products.find((product) => product.id === subscriptionProductId) ?? products[0];
 
-    // << 변경: 결제 수단 고정 (카카오페이 기본)
+    // 결제 수단 고정 
     const { checkout, isSubmitting, errorMessage } = usePayment();
+
+    useEffect(() => {
+        if (!isAuthenticated) {
+            navigate('/login');
+        }
+    }, [isAuthenticated, navigate]);
 
     const handleCheckout = async () => {
         await checkout({
             productId: subscriptionProductId ?? selectedProduct.id,
-            paymentMethod: 'kakao', // << 고정
+            paymentMethod: 'kakao',
         });
     };
+    if (!isAuthenticated) return null;
+
+    // 선택된 플랜 없으면 플랜 선택 페이지로 이동
+    useEffect(() => {
+    if (!subscriptionProductId) {
+        navigate('/premium/plans');
+        }
+    }, [subscriptionProductId, navigate]);
 
     return (
         <div className="mapingo-dashboard">

@@ -125,7 +125,7 @@ export const useMapingoStore = create(
       badgeCount: 5,
       weeklyGoalCompleted: 4,
       subscriptionPlan: 'Free',
-      subscriptionProductId: 'yearly',
+      subscriptionProductId: null,
       subscriptionUpdatedAt: 0,
       recentLearning: initialRecentLearning,
       mapQuery: '',
@@ -150,6 +150,12 @@ export const useMapingoStore = create(
       notification: 'all',
       badgeProgress: defaultBadgeProgress,
 
+
+      partialize: (state) => {
+    const { subscriptionProductId, ...rest } = state;
+    return rest;
+  },
+
       setSession: (session) =>
         set(() => {
           const resolvedRole = resolveSessionRole(session);
@@ -169,7 +175,7 @@ export const useMapingoStore = create(
             profileName: normalizedSession?.user?.name ?? 'Mapingo Learner',
             profileNickname: normalizedSession?.user?.nickname ?? 'Route Runner',
             subscriptionPlan: normalizedSession?.user?.subscriptionPlan ?? 'Free',
-            subscriptionProductId: normalizedSession?.user?.subscriptionProductId ?? 'yearly',
+            subscriptionProductId: normalizedSession?.user?.subscriptionProductId ?? null,
             subscriptionUpdatedAt: normalizedSession?.user?.subscriptionUpdatedAt ?? 0,
           };
         }),
@@ -180,7 +186,7 @@ export const useMapingoStore = create(
           profileName: 'Mapingo Learner',
           profileNickname: 'Route Runner',
           subscriptionPlan: 'Free',
-          subscriptionProductId: 'yearly',
+          subscriptionProductId: null,
           subscriptionUpdatedAt: 0,
         })),
       setIsLoggedIn: (isLoggedIn) =>

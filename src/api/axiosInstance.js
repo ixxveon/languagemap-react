@@ -1,13 +1,13 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const axiosInstance = axios.create({
-    // Spring Boot 백엔드 주소
-    baseURL: 'http://localhost:8080',
+    baseURL: API_BASE_URL,
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
     },
-    // HttpOnly Cookie 자동 전송에 필수
     withCredentials: true,
 });
 
@@ -54,7 +54,7 @@ axiosInstance.interceptors.response.use(
             try {
                 // refreshToken(Cookie)으로 재발급 요청
                 const response = await axios.post(
-                    'http://localhost:8080/api/auth/tokens',
+                    `${API_BASE_URL}/api/auth/tokens`,
                     {},
                     { withCredentials: true }
                 );

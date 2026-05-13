@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { placeService } from '../../api/place/placeService';
+import { favoriteService } from '../../api/user/favoriteService';
 import { useMapingoStore } from '../../store/user/useMapingoStore';
 import { toPlaceDetail } from '../../utils/place/placeMapper';
 import RouteMap from '../../components/place/RouteMap';
@@ -66,6 +67,8 @@ function MapPage() {
   const session = useMapingoStore((state) => state.session);
   const selectedPlaceId = useMapingoStore((state) => state.selectedRouteId);
   const setSelectedPlaceId = useMapingoStore((state) => state.setSelectedRouteId);
+  const favoriteRouteIds = useMapingoStore((state) => state.favoriteRouteIds);
+  const toggleFavoriteRoute = useMapingoStore((state) => state.toggleFavoriteRoute);
   const setRecentMapChatLog = useMapingoStore((state) => state.setRecentMapChatLog);
   const setRecentMapLearningSummary = useMapingoStore((state) => state.setRecentMapLearningSummary);
   const [panelVisible, setPanelVisible] = useState(false);
@@ -76,6 +79,7 @@ function MapPage() {
   const [chatCompleted, setChatCompleted] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState('Starter');
   const [regions, setRegions] = useState([]);
+  const [favoritePlaceIds, setFavoritePlaceIds] = useState([]);
   const [activeRegionId, setActiveRegionId] = useState(null);
   const USER_CHAT_LIMIT = 10;
   const hasKorean = (text) => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text);
@@ -145,6 +149,28 @@ function MapPage() {
   }, [currentUser?.userId]);
 
   useEffect(() => {
+    const loadFavoritePlaces = async () => {
+      if (!currentUser?.userId) {
+        setFavoritePlaceIds([]);
+        return;
+      }
+
+      try {
+        const favorites = await favoriteService.fetchFavoritePlaces(currentUser.userId);
+        setFavoritePlaceIds(
+          favorites
+            .map((favorite) => String(favorite.placeId))
+            .filter(Boolean)
+        );
+      } catch (error) {
+        console.error('장소 즐겨찾기 조회 실패:', error);
+      }
+    };
+
+    loadFavoritePlaces();
+  }, [currentUser?.userId]);
+
+  useEffect(() => {
     const loadMyLearningProgress = async () => {
       if (!currentUser) {
         return;
@@ -192,6 +218,9 @@ function MapPage() {
   }, [activeRegionId, places]);
 
   const selectedPlace = selectedPlaceDetail;
+  const selectedPlaceFavoriteId = selectedPlace ? String(selectedPlace.id) : '';
+  const isSelectedPlaceFavorite =
+    selectedPlaceFavoriteId !== '' && favoriteRouteIds.includes(selectedPlaceFavoriteId);
 
   const learningSession = selectedPlace?.id
     ? learningSessionMap[selectedPlace.id]
@@ -318,7 +347,7 @@ function MapPage() {
         {
           role: 'ai',
           speaker: 'AI Coach',
-          text: `${selectedPlace.title} 학습 세션이 시작되었습니다. 이제 미션을 선택해서 대화를 시작해보세요.`,
+          text: `${selectedPlace.title} 학습 세션이 시작되었습니다. 이제 미션을 선택해서 대화를 시작해보세요. 미션당 대화 횟수는 10회입니다. 미션 수행 후 미션 종료를 눌러 대화를 종료해주세요.`,
         },
       ];
 
@@ -549,6 +578,14 @@ function MapPage() {
     setPanelMode(selectedPlace ? 'detail' : 'guide');
   };
 
+  const handleToggleFavoritePlace = () => {
+    if (!selectedPlaceFavoriteId) {
+      return;
+    }
+
+    toggleFavoriteRoute(selectedPlaceFavoriteId);
+  };
+
   return (
     <div className="map-domain-page">
       <section className="map-domain-shell">
@@ -571,6 +608,8 @@ function MapPage() {
           onClosePanel={() => handleSelectPlace(null)}
           onStartLearning={handleStartLearning}
           onBackToDetail={handleBackToDetail}
+          onToggleFavoritePlace={handleToggleFavoritePlace}
+          isSelectedPlaceFavorite={isSelectedPlaceFavorite}
           onOpenCoaching={() => {
             const sessionId = learningSession?.learningSessionId;
 

@@ -19,8 +19,9 @@ const coachingModes = [
   { id: 'DIALOGUE', label: '더 많은 대화' },
 ];
 
-// 시연용 임시 권한 설정
 const TEST_USER_IDS = [1];
+
+const LAST_COACHING_SESSION_STORAGE_KEY = 'lastCoachingLearningSessionId';
 
 function toNumberOrNull(value) {
   if (value === null || value === undefined || value === '') return null;
@@ -34,17 +35,21 @@ function CoachingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+
   const [phase, setPhase] = useState('intro');
   const [selectedModeId, setSelectedModeId] = useState('');
   const [finalResult, setFinalResult] = useState(null);
+
   const session = useMapingoStore((state) => state.session);
   const recentMapLearningSummary = useMapingoStore((state) => state.recentMapLearningSummary);
   const recentMapChatLog = useMapingoStore((state) => state.recentMapChatLog);
+
   const userId = session?.user?.userId;
-  const hasAiCoachingAccess = TEST_USER_IDS.includes(userId);
+  const isSessionReady = Boolean(session?.user);
+  const hasAiCoachingAccess = isSessionReady && TEST_USER_IDS.includes(userId);
 
   const sessionId = useMemo(() => {
-    return (
+    const foundSessionId =
       toNumberOrNull(searchParams.get('sessionId')) ??
       toNumberOrNull(location.state?.sessionId) ??
       toNumberOrNull(location.state?.learningSessionId) ??
@@ -54,17 +59,24 @@ function CoachingPage() {
       toNumberOrNull(recentMapLearningSummary?.id) ??
       toNumberOrNull(recentMapLearningSummary?.session?.sessionId) ??
       toNumberOrNull(recentMapLearningSummary?.data?.sessionId) ??
-      toNumberOrNull(recentMapChatLog?.[0]?.sessionId) ??
-      null
-    );
+      toNumberOrNull(Array.isArray(recentMapChatLog) ? recentMapChatLog[0]?.sessionId : null) ??
+      toNumberOrNull(localStorage.getItem(LAST_COACHING_SESSION_STORAGE_KEY)) ??
+      null;
+
+    if (foundSessionId) {
+      localStorage.setItem(LAST_COACHING_SESSION_STORAGE_KEY, String(foundSessionId));
+    }
+
+    return foundSessionId;
   }, [location.state, recentMapChatLog, recentMapLearningSummary, searchParams]);
 
   const {
     data: coachingEntry,
     isLoading,
     isError,
-    error,
-  } = useCoachingEntryQuery(sessionId);
+  } = useCoachingEntryQuery(sessionId, {
+    enabled: Boolean(sessionId),
+  });
 
   const learningSummary = useMemo(() => {
     if (!coachingEntry) return null;
@@ -95,10 +107,7 @@ function CoachingPage() {
         lng: coachingEntry.longitude ?? 126.978,
         zoom: 16,
         conversationLog: sessionMessages.map((message) => ({
-          speaker:
-            message.role === 'ASSISTANT'
-              ? 'AI Coach'
-              : userName,
+          speaker: message.role === 'ASSISTANT' ? 'AI Coach' : userName,
           text: message.message,
           role: message.role,
         })),
@@ -118,12 +127,60 @@ function CoachingPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  if (!isSessionReady) {
+    return (
+      <div className="coaching-page">
+        <CoachingPageState
+          title="로그인 정보를 확인하는 중입니다"
+          description="AI Coaching 이용 권한을 확인하고 있습니다."
+        />
+      </div>
+    );
+  }
+
   if (!hasAiCoachingAccess) {
     return (
       <div className="coaching-page">
         <CoachingAccessDenied
           onGoMap={() => navigate('/map')}
           onGoPremium={() => navigate('/premium/plans')}
+        />
+      </div>
+    );
+  }
+
+  if (!sessionId) {
+    return (
+      <div className="coaching-page">
+        <CoachingPageState
+          title="지도 학습 기록이 필요합니다"
+          description="AI Coaching은 지도 학습 완료 후 시작할 수 있습니다. 먼저 지도 학습을 완료해주세요."
+          actionLabel="지도 학습으로 이동"
+          onAction={() => navigate('/map')}
+        />
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="coaching-page">
+        <CoachingPageState
+          title="AI Coaching 정보를 불러오는 중입니다"
+          description="지도 학습 기록을 기준으로 코칭 정보를 준비하고 있습니다."
+        />
+      </div>
+    );
+  }
+
+  if (isError || !learningSummary) {
+    return (
+      <div className="coaching-page">
+        <CoachingPageState
+          title="AI Coaching 정보를 불러올 수 없습니다"
+          description="지도 학습 기록을 다시 확인해주세요."
+          actionLabel="지도 학습으로 이동"
+          onAction={() => navigate('/map')}
         />
       </div>
     );

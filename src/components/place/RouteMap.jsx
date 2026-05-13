@@ -25,6 +25,8 @@ function RouteMap({
   onClosePanel,
   onStartLearning,
   onBackToDetail,
+  onToggleFavoritePlace,
+  isSelectedPlaceFavorite,
   onOpenCoaching,
   onStartMission,
   learningSession,
@@ -115,6 +117,8 @@ function RouteMap({
                   selectedLevel={selectedLevel}
                   onSelectLevel={onSelectLevel}
                   onStartLearning={onStartLearning}
+                  onToggleFavoritePlace={onToggleFavoritePlace}
+                  isFavorite={isSelectedPlaceFavorite}
                   onClosePanel={onClosePanel}
                 />
               )}

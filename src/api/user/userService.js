@@ -32,7 +32,37 @@ async function setupProfile({ birthDate, address, phoneNumber }) {
     }
 }
 
+// 내 정보 수정
+async function updateMe({ name, birthDate, address, phoneNumber }) {
+    const response = await axiosInstance.patch('/api/users/me', {
+        name,
+        birthDate,
+        address,
+        phoneNumber: phoneNumber ? phoneNumber.replace(/-/g, '') : null,
+    });
+    return response.data;
+}
+
+// 비밀번호 변경
+async function changePassword({ currentPassword, newPassword, newPasswordConfirm }) {
+    const response = await axiosInstance.patch('/api/users/me/password', {
+        currentPassword,
+        newPassword,
+        newPasswordConfirm,
+    });
+    return response.data;
+}
+
+// 회원 탈퇴
+async function deleteMe() {
+    const response = await axiosInstance.delete('/api/users/me');
+    return response.data;
+}
+
 export const userService = {
     getMe,
-    setupProfile
+    setupProfile,
+    updateMe,
+    changePassword,
+    deleteMe,
 };

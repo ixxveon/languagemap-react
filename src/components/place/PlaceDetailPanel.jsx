@@ -1,27 +1,51 @@
+const STAR_PATH =
+    'M12 2.4l2.9 5.88 6.49.95-4.69 4.57 1.11 6.46L12 17.2l-5.81 3.06 1.11-6.46-4.69-4.57 6.49-.95L12 2.4z';
+
 function PlaceDetailPanel({
     selectedPlace,
     selectedRegion,
     selectedLevel,
     onSelectLevel,
     onStartLearning,
+    onToggleFavoritePlace,
+    isFavorite,
     onClosePanel,
 }) {
     return (
         <div className="map-domain-panel-inner">
             <div className="map-domain-panel-top">
-                <div>
-                    <h2>{selectedPlace.title}</h2>
+                <div className="map-domain-panel-heading">
+                    <div className="map-domain-title-row">
+                        <button
+                            type="button"
+                            className={`map-domain-favorite-button ${isFavorite ? 'is-active' : ''}`}
+                            onClick={onToggleFavoritePlace}
+                            aria-label={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                            aria-pressed={isFavorite}
+                        >
+                            <svg
+                                className="map-domain-favorite-icon"
+                                viewBox="0 0 24 24"
+                                aria-hidden="true"
+                            >
+                                <path d={STAR_PATH} />
+                            </svg>
+                        </button>
+                        <h2>{selectedPlace.title}</h2>
+                    </div>
                     <p className="map-domain-panel-address">{selectedRegion?.city}</p>
                 </div>
 
-                <button
-                    type="button"
-                    className="map-domain-close-button"
-                    onClick={onClosePanel}
-                    aria-label="Close place panel"
-                >
-                    ×
-                </button>
+                <div className="map-domain-panel-top-actions">
+                    <button
+                        type="button"
+                        className="map-domain-close-button"
+                        onClick={onClosePanel}
+                        aria-label="Close place panel"
+                    >
+                        ×
+                    </button>
+                </div>
             </div>
 
             <section className="map-domain-panel-section">
@@ -52,18 +76,17 @@ function PlaceDetailPanel({
             <section className="map-domain-panel-section">
                 <h3>레벨 선택</h3>
 
-                <div className="map-domain-level-row">
-                    {['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].map((level) => (
-                        <button
-                            key={level}
-                            type="button"
-                            className={`map-domain-level-button ${selectedLevel === level ? 'is-active' : ''
-                                }`}
-                            onClick={() => onSelectLevel(level)}
-                        >
-                            {level}
-                        </button>
-                    ))}
+                <div className="map-domain-level-select-wrap">
+                    <select
+                        className="map-domain-level-select"
+                        value={selectedLevel}
+                        onChange={(event) => onSelectLevel(event.target.value)}
+                        aria-label="학습 레벨 선택"
+                    >
+                        <option value="BEGINNER">BEGINNER</option>
+                        <option value="INTERMEDIATE">INTERMEDIATE</option>
+                        <option value="ADVANCED">ADVANCED</option>
+                    </select>
                 </div>
             </section>
 

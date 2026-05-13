@@ -93,7 +93,7 @@ function CoachingChatSection({
       createTextMessage(
         'ai',
         'AI Coach',
-        `${learnerName}님, 방금 ${placeName} 다녀오셨군요! ☕️
+        `${learnerName}님, 방금 ${placeName} 다녀오셨군요!
 이제 막 연습한 표현들이 아직 머리에 남아있을 때,
 AI Coach랑 조금 더 재밌게 이어서 대화해봐요~ 히히
 
@@ -271,9 +271,17 @@ You: ${turn.expectedText}`)
       });
 
       const turnResponse = await coachingService.processUserSpeech(coachingSessionId, audioFile);
+      const userAudioUrl = URL.createObjectURL(audioBlob);
 
       const nextMessages = [
-        createTextMessage('user', learnerName, turnResponse.recognizedText || '음성 인식 결과가 비어 있어요.'),
+        createVoiceMessage({
+          role: 'user',
+          speaker: learnerName,
+          text: turnResponse.recognizedText || '음성 인식 결과가 비어 있어요.',
+          audioUrl: userAudioUrl,
+          coachingScriptTurnId: turnResponse.coachingScriptTurnId,
+          turnOrder: turnResponse.turnOrder,
+        }),
       ];
 
       if (turnResponse.userFeedback) {

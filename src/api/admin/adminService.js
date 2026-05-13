@@ -11,6 +11,9 @@ import {
   adminScenarioLevelOptions,
   adminScenarioSeeds,
 } from '../../mocks/admin/adminMockData';
+import { 
+  adminUserService 
+} from '../../api/admin/user/adminUserService';
 import {
   adminCommunityConfigSeeds,
   adminCommunityFriendSeeds,

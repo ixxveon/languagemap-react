@@ -89,7 +89,7 @@ async function logout() {
 
 // Google OAuth 시작
 function loginWithGoogle() {
-    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/api/oauth2/authorization/google`;
 }
 
 // OAuth code 교환
