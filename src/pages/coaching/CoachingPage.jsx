@@ -43,6 +43,7 @@ function CoachingPage() {
   const session = useMapingoStore((state) => state.session);
   const recentMapLearningSummary = useMapingoStore((state) => state.recentMapLearningSummary);
   const recentMapChatLog = useMapingoStore((state) => state.recentMapChatLog);
+  const subscriptionPlan = useMapingoStore((state) => state.subscriptionPlan);
 
   const isSessionReady = Boolean(session?.user);
 
@@ -62,7 +63,13 @@ function CoachingPage() {
     retry: false,
   });
 
-  const hasAiCoachingAccess = Boolean(subscriptionData);
+  const storeSubscriptionPlan = String(
+    session?.user?.subscriptionPlan ?? subscriptionPlan ?? 'Free'
+  ).toLowerCase();
+
+  const hasAiCoachingAccess =
+    subscriptionData?.planStatus === 'ACTIVE' ||
+    storeSubscriptionPlan === 'premium';
 
   const sessionId = useMemo(() => {
     const foundSessionId =
