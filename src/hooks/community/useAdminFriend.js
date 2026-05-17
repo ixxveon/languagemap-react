@@ -47,7 +47,9 @@ export function useAdminFriend() {
     const [friendSearch, setFriendSearch] = useState('');
     const [selectedReportId, setSelectedReportId] = useState(null);
     const [reportDrafts, setReportDrafts] = useState({});
+    const [editableReportIds, setEditableReportIds] = useState(new Set());
     const [reportError, setReportError] = useState('');
+    const [feedbackMessage, setFeedbackMessage] = useState('');
     const [loading, setLoading] = useState(false);
 
     const filteredReports = useMemo(
@@ -82,6 +84,10 @@ export function useAdminFriend() {
             status: 'RESOLVED',
             adminMemo: '',
         };
+
+    const isSelectedReportLocked = selectedReport
+        ? reportStatusOptions.includes(selectedReport.status) && !editableReportIds.has(selectedReport.id)
+        : false;
 
     const fetchFriendData = async () => {
         try {
@@ -141,13 +147,27 @@ export function useAdminFriend() {
                 adminMemo: trimmedMemo,
             });
 
-            alert('신고 상태가 변경되었습니다.');
             await fetchFriendData();
             setReportError('');
+            setEditableReportIds((currentIds) => {
+                const nextIds = new Set(currentIds);
+                nextIds.delete(reportId);
+                return nextIds;
+            });
+            setFeedbackMessage('상태 변경이 완료되었습니다.');
         } catch (error) {
             console.error(error);
-            alert(error.response?.data?.message || '신고 상태 변경 중 오류가 발생했습니다.');
+            setFeedbackMessage(error.response?.data?.message || '상태 변경 중 오류가 발생했습니다.');
         }
+    };
+
+    const clearFeedbackMessage = () => {
+        setFeedbackMessage('');
+    };
+
+    const handleEditReportStatus = (reportId) => {
+        setEditableReportIds((currentIds) => new Set(currentIds).add(reportId));
+        setReportError('');
     };
 
     return {
@@ -162,7 +182,11 @@ export function useAdminFriend() {
         setReportDrafts,
         reportError,
         setReportError,
+        feedbackMessage,
+        clearFeedbackMessage,
+        isSelectedReportLocked,
         loading,
         handleSaveReportStatus,
+        handleEditReportStatus,
     };
 }

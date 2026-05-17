@@ -16,8 +16,12 @@ function AdminFrinedPage() {
         setReportDrafts,
         reportError,
         setReportError,
+        feedbackMessage,
+        clearFeedbackMessage,
+        isSelectedReportLocked,
         loading,
         handleSaveReportStatus,
+        handleEditReportStatus,
     } = useAdminFriend();
 
     return (
@@ -145,6 +149,7 @@ function AdminFrinedPage() {
                                     <select
                                         className="mapingo-input"
                                         value={activeReportDraft.status}
+                                        disabled={isSelectedReportLocked}
                                         onChange={(event) => {
                                             setReportDrafts((currentDrafts) => ({
                                                 ...currentDrafts,
@@ -172,6 +177,7 @@ function AdminFrinedPage() {
                                 <textarea
                                     className="mapingo-input mapingo-admin-textarea admin-friend-memo-textarea"
                                     value={activeReportDraft.adminMemo}
+                                    disabled={isSelectedReportLocked}
                                     onChange={(event) => {
                                         setReportDrafts((currentDrafts) => ({
                                             ...currentDrafts,
@@ -195,10 +201,21 @@ function AdminFrinedPage() {
                                 <button
                                     type="button"
                                     className="mapingo-submit-button"
+                                    disabled={isSelectedReportLocked}
                                     onClick={() => handleSaveReportStatus(selectedReport.id)}
                                 >
                                     상태 변경 저장
                                 </button>
+
+                                {isSelectedReportLocked ? (
+                                    <button
+                                        type="button"
+                                        className="mapingo-ghost-button admin-friend-edit-button"
+                                        onClick={() => handleEditReportStatus(selectedReport.id)}
+                                    >
+                                        수정
+                                    </button>
+                                ) : null}
                             </div>
                         </section>
                     ) : (
@@ -267,6 +284,23 @@ function AdminFrinedPage() {
                     ) : null}
                 </div>
             </div>
+
+            {feedbackMessage ? (
+                <div className="admin-friend-popup-backdrop">
+                    <div className="admin-friend-popup" role="dialog" aria-modal="true">
+                        <h3>알림</h3>
+                        <p>{feedbackMessage}</p>
+
+                        <button
+                            type="button"
+                            className="mapingo-submit-button"
+                            onClick={clearFeedbackMessage}
+                        >
+                            확인
+                        </button>
+                    </div>
+                </div>
+            ) : null}
         </section>
     );
 }
